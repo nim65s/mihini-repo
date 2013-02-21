@@ -1,0 +1,105 @@
+#!/bin/sh
+
+#*******************************************************************************
+# Copyright (c) 2012 Sierra Wireless and others.
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+#     Sierra Wireless - initial API and implementation
+#*******************************************************************************
+
+case "$1" in
+
+    init)
+    #read conf
+    #read parameters
+    ITF=$(ifconfig eth 2>/dev/null)
+    # some eth device found, try to find exact eth interface
+    if [ ITF ]
+    then
+        unset ITF
+        for i in $(seq 0 10); do
+            TMP=$(ifconfig eth${i})
+            if [ TMP ]
+            then
+                echo eth${i}
+                exit 0
+            fi
+        done
+    fi
+
+    echo "eth1"
+
+    exit 0
+    ;;
+
+    start)
+    if [ -z "$2" ]; then
+        exit 1
+    fi
+    #configure
+    #start
+    /sbin/ifconfig $2 up
+    #add static route
+
+
+
+    ETHDEVICE=$2
+    IFCONFIG=`ifconfig  ${ETHDEVICE} 2>/dev/null`
+    IPADDR=`echo $IFCONFIG | sed -n 's_.*inet addr:\([0-9\.]\+\) .*_\1_p'`
+    HWADDR=`echo $IFCONFIG | sed -n 's_.*HWaddr \([0-9:a-f]\+\).*_\1_p'`
+    NETMASK=`echo $IFCONFIG | sed -n 's_.*Mask:\([0-9\.]\+\) .*_\1_p'`
+    #get the default gateway for current device, only get the first one.
+    GW=`route -n | grep UG | grep ${ETHDEVICE} | sed -n -e 's/^\([0-9\.]*\)\s*\([0-9\.]*\).*/\2/p' -e 'q'`
+    DNS=`cat /etc/resolv.conf | sed -n 's_^nameserver \([0-9\.]\+\)_\1_p'`
+    #default value "NULL" if values are undef/null
+    RES="${IPADDR:-NULL} ${HWADDR:-NULL} ${NETMASK:-NULL} ${GW:-NULL} ${DNS:-NULL}"
+    echo $RES
+
+    exit 0
+    ;;
+
+    stop)
+    if [ -z "$2" ]; then
+        exit 1
+    fi
+    #remove static route
+    #stop
+    /sbin/ifconfig $2 down
+    exit 0
+    ;;
+
+    default)
+    if [ -z "$2" ] || [ -z "$3" ]; then
+        exit 1
+    fi
+    /sbin/route del default 1>/dev/null 2>/dev/null
+    /sbin/route add default gw $3 dev $2  1>/dev/null 2>/dev/null
+
+    #DNS are also given as parameters, may use them to alter /etc/resolv.conf
+
+    exit 0
+    ;;
+
+    stats)
+
+    if [ -z "$2" ]; then
+        exit 1
+    fi
+    ETHDEVICE=$2
+    IFCONFIG=`ifconfig $ETHDEVICE 2>/dev/null`
+    RX=`echo $IFCONFIG | sed -n 's_.*RX bytes:\([0-9]\+\) .*_\1_p'`
+    TX=`echo $IFCONFIG | sed -n 's_.*TX bytes:\([0-9]\+\) .*_\1_p'`
+
+    echo $RX $TX
+    exit 0
+    ;;
+
+
+    *)
+    exit 0
+    ;;
+esac

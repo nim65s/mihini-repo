@@ -1,0 +1,22 @@
+<!--
+    Copyright (c) 2012 Sierra Wireless and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+   
+    Contributors:
+        Sierra Wireless - initial API and implementation
+ -->
+<CONFIG name="Config">
+  <TARGETS name="Targets">
+    <TARGET name="Standalone" options="toto" destination ="./"></TARGET>
+    <TARGET name="Unittest" options="titi" destination ="./"></TARGET>
+  </TARGETS>
+  <LINUX name="Linux">
+    <TESTSUITE name="Toto" TestSuite="./Totoremote.lua" Type="Unittest"></TESTSUITE>
+    <TESTSUITE name="Titi" TestSuite="./local.lua" Type="Standalone"></TESTSUITE>
+  </LINUX>
+</CONFIG>
+
+

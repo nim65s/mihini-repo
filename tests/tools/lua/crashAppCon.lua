@@ -1,0 +1,31 @@
+#!/usr/bin/lua
+-------------------------------------------------------------------------------
+-- Copyright (c) 2012 Sierra Wireless and others.
+-- All rights reserved. This program and the accompanying materials
+-- are made available under the terms of the Eclipse Public License v1.0
+-- which accompanies this distribution, and is available at
+-- http://www.eclipse.org/legal/epl-v10.html
+--
+-- Contributors:
+--     Sierra Wireless - initial API and implementation
+-------------------------------------------------------------------------------
+
+-- FILE: crashAppCon.lua
+-- lua application
+-- perform an infinite loop waiting for a kill signal
+--require 'math'
+require 'os'
+
+function main()
+    while true do
+        print "Application is running"
+    end
+end
+
+local result, err = os.rename("toto", "titi")
+if result then
+  -- succeed to rename, so kill the application
+  os.exit(-1)
+else
+  main()
+end
