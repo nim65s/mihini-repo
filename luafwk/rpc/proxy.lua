@@ -34,7 +34,7 @@ function M.signature(what, a, b)
         local class_name, method_name, results = what, a, b
         if type(results)~='table' then results = { results } end
         local methods = M.method_signatures[class_name]
-        if methods then methods[method_name] = results 
+        if methods then methods[method_name] = results
         else M.method_signatures[class_name] = { [method_name] = results } end
     else -- function signature
         checks('string', '?string|table|boolean')
@@ -107,10 +107,10 @@ function M.localref(what, stype)
     -- Retrieve if already cached
     local ref = M.localref_byobj[what]
     if ref ~= nil then return ref end
-    
+
     -- Give up for non-cached, non-typed values
     if not stype then return nil end
-    
+
     -- Create, cache and return when a type is provided
     local n = localref_index+1; localref_index = n
     local ref = setmetatable({ n=n, type=stype }, M.localref_mt)
@@ -128,7 +128,7 @@ function M.serialize (what, stype)
     else
         log('LUARPC', 'DEBUG', "Serialize "..(stype or "structurally"))
     end
-    local ref = M.localref(what, stype) 
+    local ref = M.localref(what, stype)
     if ref then return ref :serialize()
     else return l2b.serialize(what) end
 end

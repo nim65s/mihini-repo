@@ -9,23 +9,29 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-include_directories(${LIBTOMCRYPT_SOURCE_DIR}/headers 
-					${LIBTOMCRYPT_SOURCE_DIR}/ciphers/aes
-					${LIBTOMCRYPT_SOURCE_DIR}/hashes/sha2
-					${KEYSTORE_SOURCE_DIR}
-					)
-	
-add_lua_library(cipher DESTINATION crypto lcipher.c)
-target_link_libraries(cipher tomcrypt keystore)
-					
-add_lua_library(hmac DESTINATION crypto lhmac.c)
-target_link_libraries(hmac tomcrypt keystore)
+PROJECT(MIHINI_CRYPTO)
 
-add_lua_library(hash DESTINATION crypto lhash.c)
-target_link_libraries(hash tomcrypt)
+# TODO check whether all the includes are required
+INCLUDE_DIRECTORIES(${LIB_TOMCRYPT_SOURCE_DIR}/headers
+                    ${LIB_MIHINI_KEYSTORE_SOURCE_DIR}
+                    )
 
-add_lua_library(rng DESTINATION crypto lrng.c)
-target_link_libraries(rng tomcrypt)
+ADD_LUA_LIBRARY(crypto_cipher DESTINATION crypto lcipher.c)
+TARGET_LINK_LIBRARIES(crypto_cipher lib_tomcrypt lib_keystore)
+SET_TARGET_PROPERTIES(crypto_cipher PROPERTIES OUTPUT_NAME cipher)
 
-add_lua_library(ecdh DESTINATION crypto lecdh.c)
-target_link_libraries(ecdh tomcrypt tommath)
+ADD_LUA_LIBRARY(crypto_hmac DESTINATION crypto lhmac.c)
+TARGET_LINK_LIBRARIES(crypto_hmac lib_tomcrypt lib_keystore)
+SET_TARGET_PROPERTIES(crypto_hmac PROPERTIES OUTPUT_NAME hmac)
+
+ADD_LUA_LIBRARY(crypto_hash DESTINATION crypto lhash.c)
+TARGET_LINK_LIBRARIES(crypto_hash lib_tomcrypt)
+SET_TARGET_PROPERTIES(crypto_hash PROPERTIES OUTPUT_NAME hash)
+
+ADD_LUA_LIBRARY(crypto_rng DESTINATION crypto lrng.c)
+TARGET_LINK_LIBRARIES(crypto_rng lib_tomcrypt)
+SET_TARGET_PROPERTIES(crypto_rng PROPERTIES OUTPUT_NAME rng)
+
+ADD_LUA_LIBRARY(crypto_ecdh DESTINATION crypto lecdh.c)
+TARGET_LINK_LIBRARIES(crypto_ecdh lib_tomcrypt lib_tommath)
+SET_TARGET_PROPERTIES(crypto_ecdh PROPERTIES OUTPUT_NAME ecdh)

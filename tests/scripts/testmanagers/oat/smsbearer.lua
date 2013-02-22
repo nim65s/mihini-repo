@@ -47,15 +47,15 @@ function t:test_wakeupsms()
 
   t.rpcclient:call('require ', 'tests.libtests')
   t.rpcclient:call('TST_createassetSU')
-  
+
   local jobnumber = wsa.createJob(request)
   print(jobnumber)
-  
+
   wsa.getJobStatus(jobnumber)
   u.assert_not_nil(jobnumber, "Job ID is nil")
   u.assert_gt(0,jobnumber, "Job ID error")
-   
+
   sched.wait(60)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
-   
+
   u.assert_true(t.rpcclient:call('TST_isassetupdated'), "AWTDA: asset not updated")
 end

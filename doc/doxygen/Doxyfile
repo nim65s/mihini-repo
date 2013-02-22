@@ -602,8 +602,8 @@ INPUT                  =  mainpage.txt                                \
                           ../../cfwk/update/swi_update.h      \
                           ../../cfwk/devicetree/swi_devicetree.h  \
                           ../../cfwk/sms/swi_sms.h         \
-                          ../../cfwk/system/swi_system.h      
- 
+                          ../../cfwk/system/swi_system.h
+
 #                         ../../libs/c/AwtDaProtocol/common/libAwtDaProtocol.h \
 #                         ../../libs/c/AwtCom/common/libAwtCom_async.h \
 #                         ../../libs/c/AwtCom/linux/libAwtCom_sync.h \
@@ -611,7 +611,7 @@ INPUT                  =  mainpage.txt                                \
 #                         ../../libs/c/AwtDaHL/common/libAwtDaHL.h \
 #                         ../../libs/c/AwtDaHL/linux/libAwtDaHL_sync.h \
 #                         ../../libs/c/AwtDaHL/common/libAwtDaHL_async.h \
-#                         ../../libs/c/AwtDaHL/common/libAwtDaHL_containers.h \ 
+#                         ../../libs/c/AwtDaHL/common/libAwtDaHL_containers.h \
 #                         ../../libs/c/common/awt_async.h \
 #                         ../../libs/c/common/swi_trace.h
 

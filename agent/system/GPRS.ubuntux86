@@ -234,7 +234,7 @@ case "$1" in
         exit 1
     fi
     #   killall `basename ${PPPD}`
-    #	sleep 5
+    #    sleep 5
     exit 0
     ;;
 

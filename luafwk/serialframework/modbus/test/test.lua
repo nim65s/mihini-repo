@@ -13,8 +13,8 @@
 function slog(buff)
     if not buff then return end
     local s
-    if type(buff) == "table" then 
-        s = table.concat(buff, ",") 
+    if type(buff) == "table" then
+        s = table.concat(buff, ",")
     else
         s = tostring(buff)
     end

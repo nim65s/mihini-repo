@@ -55,7 +55,7 @@ static void insertbuflines(Editor* ed, int from, int nb)
   checkmaxlines(ed, nb);
 
   for (i = ed->nbOfLines; i < ed->nbOfLines+nb; ++i) // free allocated lines that may be overwritten by the following move
-	  MEM_FREE(ed->lines[i]);
+      MEM_FREE(ed->lines[i]);
 
   memmove(ed->lines+from+nb, ed->lines+from, (ed->nbOfLines-from)*sizeof(*ed->lines));
 
@@ -74,7 +74,7 @@ static void deletebufline(Editor* ed, int from, int nb)
   int i;
 
   for (i = from; i < from+nb; ++i) // free lines to delete
-	  MEM_FREE(ed->lines[i]);
+      MEM_FREE(ed->lines[i]);
 
   memmove(ed->lines+from, ed->lines+from+nb, (ed->nbOfLines-from-nb)*sizeof(*ed->lines)); //fills in the gap !
 
@@ -87,7 +87,7 @@ static void freelinesbuffer(Line** lines, int nb)
 {
   int i;
   for (i = 0; i < nb; ++i)
-	  MEM_FREE(lines[i]);
+      MEM_FREE(lines[i]);
   MEM_FREE(lines);
 }
 
@@ -912,7 +912,7 @@ void tl_editor_cleareditingarea(TeelInstance* ti)
 
 void tl_editor_saveandcleareditingarea(TeelInstance* ti)
 {
-	MEM_FREE(ti->previousline);
+    MEM_FREE(ti->previousline);
 
   tl_editor_getline(ti, &ti->previousline, &ti->previouslinesize, 0);
   tl_editor_cleareditingarea(ti);

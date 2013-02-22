@@ -27,7 +27,7 @@ local levels = log.levels
 ----------------------
 -- log policy that stores:
 -- * all logs in ram
--- * only ERROR or WARNING logs in flash (no context) 
+-- * only ERROR or WARNING logs in flash (no context)
 ----------------------
 
 local function logpolicy_sole(ram, min_level, module, severity, s)
@@ -97,7 +97,7 @@ end
 --takes as parameter a table with log tools config
 --this tables must have *name* parameter corresponding to one of the log policies,
 --plus parameters used to init low level storing api (ramlogger and flashlogger)
---e.g.: log_config = {name="sole", params={level = "WARNING", ramlogger = {size=2048}, flashlogger={size=2048} } } 
+--e.g.: log_config = {name="sole", params={level = "WARNING", ramlogger = {size=2048}, flashlogger={size=2048} } }
 -- ->init(log_config)
 --successive init call are not supported because:
 --lograminit and logflashinit may not support successive init calls.
@@ -109,4 +109,4 @@ function init(config)
     init_func[config.name](config.params)
 end
 
- 
+

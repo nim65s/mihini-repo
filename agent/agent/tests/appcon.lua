@@ -25,7 +25,8 @@
 
 local sched  = require "sched"
 local u = require"unittest"
-local sys = require"agent.system"
+local os = require"os"
+local systemutils = require"utils.system"
 local log = require"log"
 local tableutils = require"utils.table"
 local config = require"agent.config"
@@ -62,9 +63,9 @@ local function kill_appmon()
     if last_config then sndcmd(last_config.p, "destroy")
         sched.wait(1)
     end
-    sys.execute("killall appmon_daemon")
+    os.execute("killall appmon_daemon")
     sched.wait(1)
-    sys.execute("killall -9 appmon_daemon")
+    os.execute("killall -9 appmon_daemon")
 end
 
 --start appmon, finding correct port to listen local function start_appmon(config).
@@ -76,7 +77,7 @@ local function start_appmon(config)
         local cmd = "bin/appmon_daemon -p "..config.p
         if config.n then cmd = cmd .. " -n "..config.n end
         log("APPMON-TEST", "DEBUG", "start_appmon cmd=%s", tostring(cmd))
-        local res, err= sys.execute(cmd)
+        local res, err= os.execute(cmd)
         if res ~= BIND_ERROR then
             u.assert_equal(0, res, string.format("cannot start appmon succesfully, config:%s, res= %s, err=%s", sprint(config), tostring(res), tostring(err)) )
             last_config={};tableutils.copy(config, last_config, true)
@@ -85,7 +86,7 @@ local function start_appmon(config)
         --else keep seaching for available port
         config.p = config.p+math.random(10)
     end
-    local res, out = sys.pexec("ps aux | grep [b]in/appmon")
+    local res, out = systemutils.pexec("ps aux | grep [b]in/appmon")
     u.assert_equal(0, res, "cannot start appmon succesfully, pexec returned error")
     u.assert_match("bin/appmon_daemon", out, "cannot start appmon succesfully, appmon is not found using ps command")
     log("APPMON-TEST", "DEBUG", "start_appmon ok with port =%d", config.p)
@@ -104,7 +105,7 @@ function t_appmon:setup()
     log.setlevel("ALL", "APPMON-TEST")
     log.setlevel("ALL", "APPCON")
     --assert we are running as root !!!!!!
-    local res, out = sys.pexec("id")
+    local res, out = systemutils.pexec("id")
     u.assert( (res == 0) and out , out or "cannot get id")
     local uid=tonumber(out:match("uid=(%d+)%("))
     if uid ~= 0 then u.abort("This test file need to run as root") end
@@ -132,7 +133,7 @@ local function create_start_app(dconfig)
     u.assert(file, err)
     u.assert(file:write(app_content))
     u.assert(file:close())
-    local res, err = sys.execute("chmod 755 "..file_name)
+    local res, err = os.execute("chmod 755 "..file_name)
     u.assert_equal(0, res, "cannot chmod tmp app file")
 
     local res, err = sndcmd(dconfig.p, "setup /tmp "..file_name)
@@ -146,14 +147,14 @@ local function create_start_app(dconfig)
 end
 
 local function delete_app(file_path)
-    local res, err = sys.execute("rm "..file_path)
+    local res, err = os.execute("rm "..file_path)
     u.assert_equal(0, res, "cannot delete tmp app file")
 end
 
 local function get_process_priority(process_name)
     process_name = "["..process_name:sub(1,1).."]"..process_name:sub(2)
     log("APPMON-TEST", "DEBUG", "get_process_priority: %s", process_name)
-    local res, out = sys.pexec("ps alx | grep "..process_name)
+    local res, out = systemutils.pexec("ps alx | grep "..process_name)
     u.assert( (res == 0) and out, out or "cannot find priority using ps")
     log("APPMON-TEST", "DEBUG", "get_process_priority: res=%s, out=%s", res, out)
     return tonumber(out:match("%d+%s+%d+%s+%d+%s+%d+%s+%d+%s+(%-?%d+)"));
@@ -161,7 +162,7 @@ end
 
 local function get_current_priority()
     -- get current priority
-    local res, out = sys.pexec("nice")
+    local res, out = systemutils.pexec("nice")
     u.assert( (res ==0) and out, out or "cannot retrieve agent priority")
     return tonumber(out:match("%d+"));
 end
@@ -169,11 +170,11 @@ end
 
 local function renice_daemon(renice_value)
     --get daemon pid first:
-    local res, out = sys.pexec("ps ao pid,cmd | grep [a]ppmon_daemon")
+    local res, out = systemutils.pexec("ps ao pid,cmd | grep [a]ppmon_daemon")
     local dpid = out:match("(%d+)%s")
     u.assert(dpid, "cannot get daemon pid")
     -- do renice
-    u.assert(0 == sys.execute("renice -n "..renice_value.." -p "..dpid))
+    u.assert(0 == os.execute("renice -n "..renice_value.." -p "..dpid))
 end
 
 local function test_factory(dconfig, expected_daemon_prio, expected_app_prio, renice_value)
@@ -205,7 +206,7 @@ function t_appmon:test_01()
     local dconfig = {p=7410, n=5} --appmon daemon config
 
     -- get current priority
-    local res, out = sys.pexec("nice")
+    local res, out = systemutils.pexec("nice")
     u.assert( (res == 0) and out, out or "cannot retrieve agent priority")
     local current_priority = tonumber(out:match("%d+"));
 
@@ -275,17 +276,17 @@ local appmon_config = { p=8888 }
 function t_appcon:setup()
 
     --save persistore
-    sys.execute("cp -Rp persist persist_saved_by_appcon_unittest")
+    os.execute("cp -Rp persist persist_saved_by_appcon_unittest")
 
     log.setlevel("ALL", "APPMON-TEST")
     log.setlevel("ALL", "APPCON")
-    
+    assert(config.set('appcon.activate',false))
     u.assert_false(config.appcon.activate, "appcon must not be activated before running the test suite")
     -- kill any running appmon
     kill_appmon()
     --start appmon
     start_appmon(appmon_config)
-    
+
     log("APPMON-TEST", "appmon_config %s", sprint(appmon_config))
     log("APPMON-TEST", "last_config %s", sprint(appmon_config))
 
@@ -315,10 +316,10 @@ echo 'app from appcon testsuite'
 --the app can be runnable or not, depending on 'runnable' param
 local function create_app(runnable)
     local tmpfolder = os.tmpname()
-    sys.execute("rm -rf "..tmpfolder)
+    os.execute("rm -rf "..tmpfolder)
     tmpfolder = tmpfolder..'_dir'
     u.assert(tmpfolder, "cannot create tmp folder to put app")
-    local res, err = sys.execute("mkdir "..tmpfolder)
+    local res, err = os.execute("mkdir "..tmpfolder)
     u.assert(res == 0, err or "unknown error")
     local file, err = io.open(tmpfolder.."/file1", "w+")
     u.assert(file, err)
@@ -333,13 +334,13 @@ end
 
 --checks application parameter are correct: access rights, user etc.
 local function post_install_tests(id)
-    local res, err = sys.pexec("whoami")
+    local res, err = systemutils.pexec("whoami")
     u.assert_equal(0, res, "Cannot get current user")
     local user=err:match("(.*)[%c*]$")
     local access_rights = "rwxr%-xr%-x"
-    res, err = sys.pexec("ls -lRa apps/"..id)
-    u.assert(res, err)    
-    local output = err    
+    res, err = systemutils.pexec("ls -lRa apps/"..id)
+    u.assert(res, err)
+    local output = err
     for line in output:gmatch("[^\r\n]+") do
         local res,err =  line:match("^[dlspcb%-].*")
         if line:match("^[dlspcb%-].*") then
@@ -360,7 +361,7 @@ function t_appcon:test_01_install_not_runnable()
     u.assert_equal("ok", res, err)
     post_install_tests(id)
     --clean tmp files created for install
-    u.assert(0 == sys.execute("rm -rf "..path))
+    u.assert(0 == os.execute("rm -rf "..path))
     --check app status
     u.assert_equal("Not runnable", appcon.status(id))
     --check start API
@@ -376,7 +377,7 @@ function t_appcon:test_01_install_not_runnable()
     u.assert_equal("ok", res)
     u.assert_nil(err)
     --check uninstall removed all files
-    res = sys.execute("ls apps/"..id)
+    res = os.execute("ls apps/"..id)
     u.assert_not_equal(0, res, "uninstall should have removed app folder")
 end
 
@@ -389,7 +390,7 @@ function t_appcon:test_02_install_runnable()
     u.assert_equal("ok", res, err)
     post_install_tests(id)
     --clean tmp files created for install
-    u.assert_equal(0, sys.execute("rm -rf "..path))
+    u.assert_equal(0, os.execute("rm -rf "..path))
     --check app status
     u.assert_not_equal("Not runnable", appcon.status(id))
     u.assert_match("^prog=%[.*", appcon.status(id), "Cannot get acceptable status from appmon")
@@ -404,7 +405,7 @@ function t_appcon:test_02_install_runnable()
     u.assert_equal("ok", res)
     u.assert_nil(err)
     --check uninstall removed all files
-    res = sys.execute("ls apps/"..id)
+    res = os.execute("ls apps/"..id)
     u.assert_not_equal(0, res, "uninstall should have removed app folder")
 end
 
@@ -433,23 +434,23 @@ function t_appcon:test_03_reinstall_no_purge()
     u.assert(res and not err, "stop on runnable app must succes")
 
     -- now add new file in app folder (#1)
-    res, err = sys.execute("touch apps/"..id.."/unit_test_app_3_file_1")
+    res, err = os.execute("touch apps/"..id.."/unit_test_app_3_file_1")
     u.assert_equal( 0, res, err or "cannot add new file in app folder")
     -- add new file in install source folder (#2)
-    res, err = sys.execute("touch "..path.."/unit_test_app_3_file_2")
+    res, err = os.execute("touch "..path.."/unit_test_app_3_file_2")
     u.assert_equal( 0, res, err or "cannot add new file in install folder")
     -- modify the common file in install source folder (#3)
-    res, err = sys.execute("echo blabla >"..path.."/file1")
+    res, err = os.execute("echo blabla >"..path.."/file1")
     u.assert_equal( 0, res, err or "cannot modify file in install folder")
 
     -- now add a folder in app folder with the same name than file #2  (#4)
-    res, err = sys.execute("mkdir apps/"..id.."/unit_test_app_3_file_2")
+    res, err = os.execute("mkdir apps/"..id.."/unit_test_app_3_file_2")
     u.assert_equal( 0, res, err or "cannot add new folder in app folder")
     -- add new file in app folder (#5)
-    res, err = sys.execute("touch apps/"..id.."/unit_test_app_3_file_3")
+    res, err = os.execute("touch apps/"..id.."/unit_test_app_3_file_3")
     u.assert_equal( 0, res, err or "cannot add new file in app folder")
     -- now add new folder in  install folder (#6)
-    res, err = sys.execute("mkdir "..path.."/unit_test_app_3_file_3")
+    res, err = os.execute("mkdir "..path.."/unit_test_app_3_file_3")
     u.assert_equal( 0, res, err or "cannot add new file in app folder")
 
     -- reinstall app
@@ -458,10 +459,10 @@ function t_appcon:test_03_reinstall_no_purge()
     post_install_tests(id)
 
     -- check file #1 is here
-    res, err = sys.execute("ls apps/"..id.."/unit_test_app_3_file_1")
+    res, err = os.execute("ls apps/"..id.."/unit_test_app_3_file_1")
     u.assert_equal( 0, res, err or "new file #1 absent from app folder")
     -- check file #2 is here
-    res, err = sys.execute("ls apps/"..id.."/unit_test_app_3_file_2")
+    res, err = os.execute("ls apps/"..id.."/unit_test_app_3_file_2")
     u.assert_equal( 0, res, err or "new file #2 absent from app folder")
     -- check file #3 is modified
     local file,err=io.open("apps/"..id.."/file1", "r")
@@ -481,10 +482,10 @@ function t_appcon:test_03_reinstall_no_purge()
     u.assert_equal("ok", res)
     u.assert_nil(err)
     --check uninstall removed all files
-    res = sys.execute("ls apps/"..id)
+    res = os.execute("ls apps/"..id)
     u.assert_not_equal(0, res, "uninstall should have removed app folder")
     --finally clean files used for install and reinstall
-    u.assert_equal(0, sys.execute("rm -rf "..path))
+    u.assert_equal(0, os.execute("rm -rf "..path))
 end
 
 
@@ -509,23 +510,23 @@ function t_appcon:test_04_reinstall_purge()
     u.assert(res and not err, "stop on runnable app must succes")
 
     -- now add new file in app folder (#1)
-    res, err = sys.execute("touch apps/"..id.."/unit_test_app_3_file_1")
+    res, err = os.execute("touch apps/"..id.."/unit_test_app_3_file_1")
     u.assert_equal( 0, res, err or "cannot add new file in app folder")
     -- add new file in install source folder (#2)
-    res, err = sys.execute("touch "..path.."/unit_test_app_3_file_2")
+    res, err = os.execute("touch "..path.."/unit_test_app_3_file_2")
     u.assert_equal( 0, res, err or "cannot add new file in install folder")
     -- modify the common file in install source folder (#3)
-    res, err = sys.execute("echo blabla >"..path.."/file1")
+    res, err = os.execute("echo blabla >"..path.."/file1")
     u.assert_equal( 0, res, err or "cannot modify file in install folder")
     -- reinstall app with purge param
     res,err = appcon.install(id, path, false, "purge")
     u.assert_equal("ok", res, err)
     post_install_tests(id)
     -- check file #1 is not here
-    res, err = sys.execute("ls apps/"..id.."/unit_test_app_3_file_1")
+    res, err = os.execute("ls apps/"..id.."/unit_test_app_3_file_1")
     u.assert_not_equal( 0, res, "new file #1 should be absent from app folder")
     -- check file #2 is here
-    res, err = sys.execute("ls apps/"..id.."/unit_test_app_3_file_2")
+    res, err = os.execute("ls apps/"..id.."/unit_test_app_3_file_2")
     u.assert_equal( 0, res, err or "new file #2 absent from app folder")
     -- check file #3 is modified
     local file,err=io.open("apps/"..id.."/file1", "r")
@@ -539,10 +540,10 @@ function t_appcon:test_04_reinstall_purge()
     u.assert_equal("ok", res)
     u.assert_nil(err)
     --check uninstall removed all files
-    res = sys.execute("ls apps/"..id)
+    res = os.execute("ls apps/"..id)
     u.assert_not_equal(0, res, "uninstall should have removed app folder")
     --finally clean files used for install and reinstall
-    u.assert_equal(0, sys.execute("rm -rf "..path))
+    u.assert_equal(0, os.execute("rm -rf "..path))
 end
 
 
@@ -559,10 +560,10 @@ function t_appcon:teardown()
     kill_appmon()
     log.setlevel("INFO", "APPMON-TEST")
     log.setlevel("INFO", "APPCON")
-    
+
     --restore persist
-    sys.execute("rm -rf persist")
-    sys.execute("mv persist_saved_by_appcon_unittest persist")    
+    os.execute("rm -rf persist")
+    os.execute("mv persist_saved_by_appcon_unittest persist")
 end
 
 

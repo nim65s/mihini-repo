@@ -21,20 +21,20 @@
 -- - **element separator is  '.'** (dot)
 -- - provided **path is always cleaned** before being processed:
 --     - if the path starts and/or ends with one or several dots, there are automatically removed.<br />
---       e.g.: `'...toto.tutu....'` means `'toto.tutu'`  
+--       e.g.: `'...toto.tutu....'` means `'toto.tutu'`
 --     - internal repetitions of successives dots are replaced by a single dot.<br />
---       e.g.: `'toto...tutu.tata..foo.bar'` means `'toto.tutu.tata.foo.bar'`  
+--       e.g.: `'toto...tutu.tata..foo.bar'` means `'toto.tutu.tata.foo.bar'`
 -- - if a path element can be **converted to a number**, then it is returned as a number,
 --   otherwise all elements or paths are returned as strings.<br />
---   e.g.: `split('a.2', 1)` -> `('a', 2)`   (where 2 is returned as a number) <br /> 
---   e.g.: `split('a.b.2e3.c', 1)` -> `('a', 'b.2000.c')`  
--- 
+--   e.g.: `split('a.2', 1)` -> `('a', 2)`   (where 2 is returned as a number) <br />
+--   e.g.: `split('a.b.2e3.c', 1)` -> `('a', 'b.2000.c')`
+--
 -- @module utils.path
 --
 
 local checks = require"checks"
 
- 
+
 
 
 local M = { }
@@ -47,12 +47,12 @@ local function pathconcat(pt, starti, endi)
     local empties = 0
     starti = starti or 1
     endi = endi or #pt
-    
+
     for i = starti, endi do
         local v = pt[i]
         if not v then break
         elseif v == '' then
-        	empties = empties+1
+            empties = empties+1
         else
             table.insert(t, prev)
             prev = v
@@ -78,9 +78,9 @@ end
 
 --------------------------------------------------------------------------------
 -- Cleans a path.
--- 
+--
 -- Removes trailing/preceding/doubling '.'.
--- 
+--
 -- @function [parent=#utils.path] clean
 -- @param path string containing the path to clean.
 -- @return cleaned path as a string.
@@ -102,7 +102,7 @@ end
 --
 -- @function [parent=#utils.path] set
 -- @param t table where to set the value.
--- @param path can be either a string (see @{#(utils.path).split}) 
+-- @param path can be either a string (see @{#(utils.path).split})
 --  or an array where path[1] is the root and path[n] is the leaf.
 -- @param value the value to set.
 --
@@ -122,10 +122,10 @@ end
 -- The field to get is indicated by a path relative to the table.
 --
 -- @function [parent=#utils.path] get
--- @param t table where to set the value.
--- @param path can be eiher a string (see @{split}) or an array where path[1] is the root and path[n] is the leaf.
+-- @param t table where to get the value.
+-- @param path can be either a string (see @{split}) or an array where path[1] is the root and path[n] is the leaf.
 -- @return value if the field is found.
--- @return nil otherthise.
+-- @return nil otherwise.
 --
 function get(t, path)
     checks('table', 'string|table')
@@ -139,7 +139,7 @@ end
 
 --------------------------------------------------------------------------------
 -- Enumerates path partitions in a for-loop generator, starting from the right.
--- 
+--
 -- For instance, `gsplit "a.b.c"` will generate successively
 -- `("a.b.c", ""), ("a.b", "c"), ("a", "b.c"), ("", "a.b.c")`.
 --
@@ -173,8 +173,8 @@ end
 --
 -- If there are less then `-n` segments, returns an empty path followed by the
 -- path argument.
--- 
--- Note that if a half is a single element and that this element can be converted into a number, 
+--
+-- Note that if a half is a single element and that this element can be converted into a number,
 -- it is returned as a number.
 --
 -- @function [parent=#utils.path] split
@@ -208,15 +208,15 @@ end
 
 function segments(path)
     checks('string')
-    local t = {}    
+    local t = {}
     local index, newindex, elt = 1
     repeat
         newindex = path:find(".", index, true) or #path+1 --last round
         elt = path:sub(index, newindex-1)
-        elt = tonumber(elt) or elt        
+        elt = tonumber(elt) or elt
         if elt and elt ~= "" then table.insert(t, elt) end
-        index = newindex+1     
-    until newindex==#path+1    
+        index = newindex+1
+    until newindex==#path+1
     return t
 end
 

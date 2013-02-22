@@ -11,7 +11,7 @@
 
 ---
 -- System related tasks
--- 
+--
 -- @module system
 --
 
@@ -44,9 +44,9 @@ end
 -- @return `nil` followed by an error message otherwise.
 --
 function M.reboot(reason)
-	checks('?string')
-	if not M.initialized then error "Module not initialized" end
-	return common.sendcmd("Reboot", reason or "")
+    checks('?string')
+    if not M.initialized then error "Module not initialized" end
+    return common.sendcmd("Reboot", reason or "")
 end
 
 

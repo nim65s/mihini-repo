@@ -9,4 +9,8 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(smspdu smspdu.c messaging.lua)
+PROJECT(MIHINI_MESSAGING)
+
+ADD_LUA_LIBRARY(smspdu smspdu.c)
+ADD_LUA_LIBRARY(messaging messaging.lua)
+ADD_DEPENDENCIES(messaging smspdu)

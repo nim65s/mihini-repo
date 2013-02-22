@@ -41,7 +41,7 @@ local request = {
   method = "",
   entries = {
     {
-      tag = "getAvailableCommandsRequest", 
+      tag = "getAvailableCommandsRequest",
       {tag="asset", 2254}
     }
   }
@@ -94,12 +94,12 @@ end
 -- send the request on the backend server (backendURL shall be initialized
 function performCommand(request)
   local b, c, h, s = doHttpRequest(backendURL, request)
-  
+
   if not b then
     error(c)
   end
   local ns, methode, entries = soap.decode(b)
-  
+
   return entries
 end
 
@@ -107,10 +107,10 @@ end
 -- Perform a data writing job
 function writeData(name, value)
   local request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.sierrawireless.com/airvantage/schema/ws/asset/1.0/\" xmlns:ns1=\"http://www.sierrawireless.com/airvantage/schema/api/commons/1.0/\"><soapenv:Header/><soapenv:Body><ns:writeDataRequest><ns:assets>2254</ns:assets><ns:parameters><ns1:name>TestData</ns1:name><ns1:path>/</ns1:path><ns1:stringValue>FirstTest</ns1:stringValue></ns:parameters><ns:options sendNotification=\"true\"></ns:options></ns:writeDataRequest></soapenv:Body></soapenv:Envelope>"
-  
+
   local entries = performCommand(request)
   p(entries)
-  
+
   -- check if it's a valid result and extract job number
   --local result = string.find(entries,)
   return entries
@@ -143,7 +143,7 @@ local function findtagvalue(obj, key)
       return o
     end
   end
-end 
+end
 
 
 -- Extract the table containing the job number
@@ -170,7 +170,7 @@ local function extractJobStates(JobStatesTable)
         if o[1] == "1" then return o.tag end
       end
   end
-  
+
   return "unknown"
 end
 
@@ -194,19 +194,19 @@ function queryAsset()
   local entries = performCommand(request)
   local assetID = extractAssetID(entries)
   u.assert_not_nil(assetID)
-  
+
   return assetID
 end
-  
+
 
 -- Call this to create a job on the server
 -- Returns the job number
 function createJob(request)
   local entries = performCommand(request)
   local job = extractJobID(entries)
-  
+
   u.assert(job)
-  
+
   return (0+job[1])
 end
 
@@ -217,9 +217,9 @@ function getJobStatus(jobNumber)
   request = request .. jobNumber
   request = request .. "</ns1:id></jobs><targetType>ASSET</targetType></ns:criteria><ns:pagination start=\"0\" count=\"1\"/><ns:select type=\"CUSTOM\"><ns1:field>state</ns1:field><ns1:field>affected</ns1:field><ns1:field>waiting</ns1:field><ns1:field>succeses</ns1:field><ns1:field>failed</ns1:field></ns:select></ns:queryRequest></soapenv:Body></soapenv:Envelope>"
   local entries = performCommand(request)
-  
+
   local result = extractJobStates(entries);
-  
+
   return result
 end
 
@@ -239,12 +239,12 @@ function waitJobStatus(jobNumber, status, timeout)
   local starttime = os.time()
   local currenttime = os.time()
   local currentjobstatus = nil
-  
+
   while (currenttime - starttime < timeout) do
     currentjobstatus = getJobStatus(jobNumber)
     if currentjobstatus == status then return status end
     sched.wait(5)
   end
-  
+
   return nil, currentjobstatus
 end

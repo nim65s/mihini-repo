@@ -584,7 +584,7 @@ static int l_interpret(lua_State *L)
   // free the input buffer if it was allocated and is empty
   else if (in->mark == in->p && !in->len && in->buffer)
   {
-	MEM_FREE(in->buffer);
+    MEM_FREE(in->buffer);
     in->buffer = in->p = in->mark = 0;
     in->len = 0;
   }

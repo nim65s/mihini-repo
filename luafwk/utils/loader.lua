@@ -9,14 +9,14 @@
 --     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
---- 
+---
 -- Code loading/unloading utils.
 --
 -- This module provides additional utility functions to handle the lifecycle
 -- of Lua files.
 --
 --@module utils.loader
--- 
+--
 
 local table = table
 local load = load
@@ -57,7 +57,7 @@ end
 -- name as a parameter. It will remove references to the module in `package`'s
 -- internal tables, thus allowing the module's resources to be reclaimed by the
 -- garbage collector if no deangling references remain in the application.
--- 
+--
 -- 1. Call function `package.loaded[name].__unload()` if it exists
 -- 2. Clear `package.loaded[name]`
 -- 3. Clear `_G[name]`
@@ -76,6 +76,6 @@ function unload(name)
     _G.rawset(_G, name, nil)
 end
 
-M.unload=unload; 
+M.unload=unload;
 M.loadbuffer=loadbuffer;M.loadBuffer=loadbuffer
 return M

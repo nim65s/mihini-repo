@@ -9,7 +9,7 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(embeddedtestslua DESTINATION tests EXCLUDE_FROM_ALL
+ADD_LUA_LIBRARY(embeddedtestslua DESTINATION tests EXCLUDE_FROM_ALL
   linux/x86/embeddedunittests.lua
   linux/x86/raconunittests.lua
   common/embeddedlogstore.lua

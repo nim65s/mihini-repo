@@ -9,22 +9,30 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project (AGENT)
+PROJECT(MIHINI_AGENT)
 
-include_directories (${LUA_SOURCE_DIR}/lua)
-include_directories (executable)
-include_directories (${COMMON_SOURCE_DIR})
+INCLUDE_DIRECTORIES (${LUA_SOURCE_DIR})
+INCLUDE_DIRECTORIES (executable)
+INCLUDE_DIRECTORIES (${LIB_MIHINI_COMMON_SOURCE_DIR})
 
-add_executable (agent executable/agent.c)
+ADD_EXECUTABLE(agent_exec executable/agent.c)
+TARGET_LINK_LIBRARIES (agent_exec lualib pthread)
+#link to pthread should not be necessary here but prevent a segfault when using uClibc (to be removed when NPTL is used)
 
-target_link_libraries (agent luavm pthread)  #link to pthread should not be necessary here but prevent a segfault when using uClibc (to be removed when NPTL is used)
+SET_TARGET_PROPERTIES(agent_exec PROPERTIES OUTPUT_NAME agent)
 
-add_lua_library(versions DESTINATION agent executable/version.c executable/sysversion.c)
+ADD_LUA_LIBRARY(agent_versions DESTINATION agent executable/version.c executable/sysversion.c)
+SET_TARGET_PROPERTIES(agent_versions PROPERTIES OUTPUT_NAME versions)
 
-add_subdirectory(agent)
+ADD_SUBDIRECTORY(agent)
 
-add_custom_command(TARGET agent POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/system/start.sh ${CMAKE_INSTALL_PREFIX}/start.sh
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/system/GPRS ${CMAKE_INSTALL_PREFIX}/bin/GPRS
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/system/ETH ${CMAKE_INSTALL_PREFIX}/bin/ETH
+ADD_CUSTOM_TARGET(agent ALL DEPENDS agent_exec agent_modules)
+
+SET(SYS_DIR ${MIHINI_AGENT_SOURCE_DIR}/system)
+ADD_CUSTOM_COMMAND(TARGET agent POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/start.sh ${CMAKE_INSTALL_PREFIX}/start.sh
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/GPRS ${CMAKE_INSTALL_PREFIX}/bin/GPRS
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/ETH ${CMAKE_INSTALL_PREFIX}/bin/ETH
+    COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/crypto
 )
+

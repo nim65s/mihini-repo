@@ -16,10 +16,10 @@
 
 #define YAJL_GEN_ALLOC(gen)    \
 gen = yajl_gen_alloc(NULL); \
-if (gen == NULL)	    \
-{									\
+if (gen == NULL)        \
+{                                    \
   SWI_LOG("YAJL_HLPS", ERROR, "%s: Failed to allocate serializer\n", __FUNCTION__); \
- return SWI_STATUS_ALLOC_FAILED;					\
+ return SWI_STATUS_ALLOC_FAILED;                    \
 }
 
 #define YAJL_GEN_ELEMENT(func, id)                                                          \

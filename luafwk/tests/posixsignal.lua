@@ -42,11 +42,11 @@ function t:setup()
     u.assert_not_nil(pid)
     pid = string.match(pid, "%d+")
     log("TEST-PSIGNAL", "INFO", "pid='%s'", pid)
-    log.setlevel("DEBUG", "sched")
+    log.setlevel("DEBUG", "SCHED")
 end
 
 function t:teardown()
-     log.setlevel("INFO", "sched")
+     log.setlevel("INFO", "SCHED")
 end
 
 function t:test_signal_simple()
@@ -55,7 +55,7 @@ function t:test_signal_simple()
     counter = 0
     log("TEST-PSIGNAL", "INFO", "kill -TERM %s", pid)
     for i=1, 10 do
-    	os.execute("kill -TERM "..pid)
+        os.execute("kill -TERM "..pid)
     end
     sched.wait("TEST-PSIGNAL", "A", 1)
     u.assert_equal(10, counter)
@@ -64,7 +64,7 @@ function t:test_signal_simple()
     u.assert_equal("ok", s, err)
     log("TEST-PSIGNAL", "INFO", "kill -TERM %s", pid)
     for i=1, 10 do
-    	os.execute("kill -TERM "..pid)
+        os.execute("kill -TERM "..pid)
     end
     sched.wait("TEST-PSIGNAL", "B", 1)
     u.assert_equal(20, counter)
@@ -72,7 +72,7 @@ function t:test_signal_simple()
     s, err = psignal.signal(15)
     u.assert_equal("ok", s, err)
     for i=1, 10 do
-    	os.execute("kill -TERM "..pid)
+        os.execute("kill -TERM "..pid)
     end
     u.assert_equal(20, counter)
 end
@@ -92,9 +92,9 @@ function t:test_signal_multiple()
     log("TEST-PSIGNAL", "INFO", "kill -14 %s", pid)
     log("TEST-PSIGNAL", "INFO", "kill -BUS %s", pid)
     for i=1, 15 do
-    	os.execute("kill -TERM "..pid)
-    	os.execute("kill -14 "..pid)
-    	os.execute("kill -BUS "..pid)
+        os.execute("kill -TERM "..pid)
+        os.execute("kill -14 "..pid)
+        os.execute("kill -BUS "..pid)
     end
     sched.wait("TEST-PSIGNAL", "C", 1)
     u.assert_equal(15, counter)
@@ -117,8 +117,8 @@ function t:test_raise()
     counter = 0
     log("TEST-PSIGNAL", "INFO", "raise SIGUSR1")
     for i=1, 10 do
-    	s, err = psignal.raise("SIGUSR1")
-    	u.assert_equal("ok", s, err)
+        s, err = psignal.raise("SIGUSR1")
+        u.assert_equal("ok", s, err)
     end
     sched.wait("TEST-PSIGNAL", "D", 1)
     u.assert_equal(10, counter)
@@ -133,8 +133,8 @@ function t:test_kill()
     counter = 0
     log("TEST-PSIGNAL", "INFO", "kill %s SIGTERM", pid)
     for i=1, 10 do
-    	s, err = psignal.kill(tonumber(pid), 'SIGTERM')
-    	u.assert_equal("ok", s, err)
+        s, err = psignal.kill(tonumber(pid), 'SIGTERM')
+        u.assert_equal("ok", s, err)
     end
     sched.wait("TEST-PSIGNAL", "E", 1)
     u.assert_equal(10, counter)

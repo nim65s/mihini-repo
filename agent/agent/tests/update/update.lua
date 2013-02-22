@@ -155,13 +155,13 @@ function t:test_02_manifest_format()
     manifest.components={ { name = "titi", version = "1.2", location = ".", provides = { foo ="bar", d="1<" }, depends = { foo ="bar", d="1" } } }
     testfail("provides", "titi")
 
-    --force parameter must disable dependence checking and devicetype check
+    --force parameter must disable dependence checking
     manifest.force = true
-    manifest.devicetype = "plop"
+
     manifest.components={ { name = "titi", version = "1.2", location = ".", provides = { foo ="bar", d="1" }, depends = { foo ="bar", d="1" } } }
     u.assert(upkg.checkmanifest(manifest))
-    
-    --note cannot test component location field correclty in this test case where upkg.checkmanifest fct is called directly but no package 
+
+    --note cannot test component location field correclty in this test case where upkg.checkmanifest fct is called directly but no package
     -- have been extracted in appropriate folder.
     --it has to be done in a real pkg to check the location file/folder exists
 end
@@ -241,7 +241,6 @@ function t:test_04_manifest_deps_new_cmp()
 
     manifest = {
         -- Global information
-        devicetype = config.agent.devicetype,
         version = "1.1",
 
         -- Components information
@@ -320,7 +319,6 @@ function t:test_05_manifest_deps_cmp_remove()
 
     manifest = {
         -- Global information
-        devicetype = config.agent.devicetype,
         version = "1.1",
 
         -- Components information
@@ -377,7 +375,6 @@ function t:test_06_manifest_deps_cmp_update()
 
     manifest = {
         -- Global information
-        devicetype = config.agent.devicetype,
         version = "1.1",
 
         -- Components information
@@ -487,7 +484,6 @@ function t:test_07_manifest_deps_mixed_update_remove()
 
     manifest = {
         -- Global information
-        devicetype = config.agent.devicetype,
         version = "1.1",
 
         -- Components information
@@ -520,7 +516,6 @@ function t:test_07_manifest_deps_mixed_update_remove()
 
     manifest = {
         -- Global information
-        devicetype = config.agent.devicetype,
         version = "1.1",
 
         -- Components information
@@ -633,9 +628,9 @@ local function loadtest(name, test)
     testdata.load = assetdata.load
     testdata.unload = assetdata.unload
     testdata.status = assetdata.status
-    --async or sync, default on async    
+    --async or sync, default on async
     testdata.type = ( assetdata.type=="sync" or assetdata.type=="async") and assetdata.type or "async"
-    
+
 
     u.assert(setswlist(testdata.testswlist))
     u.assert(testdata.testswlist)
@@ -699,7 +694,6 @@ local function runlocaltest(name)
 
     local function setup()
         u.assert(update.init())
-        log.setlevel("ALL", "UPDATE")
         u.assert(config.set("update.localpkgname", "pkg_standalone_pkg.tar")) --set same value as file name (not path) as put in testdata.packagepath
         u.assert(loadtest(name, test))
     end
@@ -707,27 +701,27 @@ local function runlocaltest(name)
     local function test_test1()
         local cmd = "cp "..test.testdata.packagepath.." "..udrop
         u.assert_equal(0, os.execute(cmd))
-        if "async" == test.testdata.type then            
+        if "async" == test.testdata.type then
             --test failure/success is determined by signal reception
             local sigs = {}
             u.assert(test.testdata.status)
             table.insert(sigs, {em="updateresult", ev=test.testdata.status} )
-    
+
             if test.testdata.signalname then
                 table.insert(sigs, {em=test.testdata.signalname, ev="ok"} )
             end
-    
+
             if not next(sigs) then u.abort("bad test: no condition for success/failure") end
-    
+
             u.assert(waitmultisig(sigs, test.testdata.timeout, update.localupdate))
         else
             --just call
             local res =  update.localupdate(nil, true)
             u.assert( (res and test.testdata.status == "success") or (not res and test.testdata.status == "failure"), "unattended sync result")
         end
-        
+
         test.res="ok"
-        
+
     end
 
     local function teardown()
@@ -740,7 +734,6 @@ local function runlocaltest(name)
         end
         u.assert(unloadtest(test.testdata))
         u.assert(config.set("update.localpkgname" , nil))
-        log.setlevel("INFO", "UPDATE")
     end
 
     t.setup=setup

@@ -10,7 +10,6 @@
 --     Fabien Fleutot     for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-require 'print'
 require 'pack'
 require 'log'
 

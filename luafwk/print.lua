@@ -17,12 +17,12 @@ if io and io.stdout then
 end
 
 local function quotestring(x)
-    local function q(k) return
-        k=='"'  and '\\"'  or 
-        k=='\\' and '\\\\' or 
-        string.format('\\%03d', k :byte()) 
+    local function q(k)
+        return k=='"'  and '\\"'  or string.format('\\%03d', k :byte())
     end
-    return '"' .. x :gsub ('[%z\1-\9\11\12\14-\31\128-\255"\\]', q) .. '"'
+    -- characters between 'space' and '~' are printable;
+    -- all others plus the double quote (between '!' and '#') must be escaped
+    return '"' .. x :gsub ('[^ !#-~]', q) .. '"'
 end
 
 ------------------------------------------------------------------------------
@@ -43,7 +43,8 @@ function vprint (write, print_indent, ...)
       elseif t=="number"  then write(tostring(x))
       elseif t=="nil"     then write("nil")
       elseif t=="table"   then
-         if in_progress[x] then write(tostring(table)) else
+         if x == _G then write("cannot print global environement")
+         elseif in_progress[x] then write(tostring(t)) else
             in_progress[x] = true
             indent_level = indent_level+1
 
@@ -96,6 +97,7 @@ function vprint (write, print_indent, ...)
          end
       else write(tostring(x)) end
    end
+
    local args = table.pack(...)
    local nb = args.n
    for k = 1, nb do aux(args[k]); if k<nb then write "\t" end end

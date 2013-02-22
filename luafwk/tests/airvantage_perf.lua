@@ -67,7 +67,7 @@ local racon = require "racon"
 local t = u.newtestsuite("racon_perf")
 
 function t :setup()
-	u.assert(racon.init())
+    u.assert(racon.init())
 end
 
 local function senddata(asset)

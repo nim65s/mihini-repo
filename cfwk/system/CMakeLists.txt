@@ -9,23 +9,10 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project (sms)
+PROJECT(sms)
 
+ADD_LIBRARY(Swi_System SHARED swi_system.c)
+ADD_PUBLIC_HEADER(Swi_System swi_system.h)
+TARGET_LINK_LIBRARIES(Swi_System Emp lib_yajl)
+ADD_UNIT_TEST(sys_test sys_test.c TEST_DEPENDENCY system_stubs RUNTIME_DEPENDENCIES Swi_System lib_swi_log)
 
-include_directories(${YAJL_SOURCE_DIR})
-include_directories(${YAJL_SOURCE_DIR}/include)
-include_directories(${YAJL_SOURCE_DIR}/api)
-include_directories(${COMMON_SOURCE_DIR})
-include_directories(${racon_SOURCE_DIR})
-
-set(SRC_SWISYSTEM swi_system.c)
-
-add_library(Swi_System SHARED ${SRC_SWISYSTEM})
-add_public_header(Swi_System swi_system.h)
-target_link_libraries(Swi_System Emp yajl)
-
-if(SHARKS_DEV_BUILD)
-  add_unit_test(sys_test sys_test.c TEST_DEPENDENCY system_stubs RUNTIME_DEPENDENCIES Swi_System Swi_Log)
-else()
-  add_unit_test(sys_test sys_test.c RUNTIME_DEPENDENCIES Swi_System Swi_Log)
-endif()

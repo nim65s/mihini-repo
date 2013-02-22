@@ -15,6 +15,8 @@
 
 local require = require
 
+require 'print'
+
 local sched = require "sched"
 require "pack"
 local string = require "string"

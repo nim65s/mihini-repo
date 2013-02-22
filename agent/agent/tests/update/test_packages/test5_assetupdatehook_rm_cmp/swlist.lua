@@ -9,4 +9,4 @@
 --     Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-return { components={} } 
+return { components={} }

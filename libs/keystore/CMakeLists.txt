@@ -8,18 +8,18 @@
 # Contributors:
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
-project (KEYSTORE)
+PROJECT(LIB_MIHINI_KEYSTORE)
 
-include_directories(${COMMON_SOURCE_DIR})
-include_directories(${LIBTOMCRYPT_SOURCE_DIR}/headers)
-include_directories(${LIBTOMMATH_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_TOMCRYPT_SOURCE_DIR}/headers)
+INCLUDE_DIRECTORIES(${LIB_TOMMATH_SOURCE_DIR})
 
-set(KEYSTORE_SRC keystore.c)
+SET(KEYSTORE_SRC keystore.c)
 
-add_library(keystore SHARED ${KEYSTORE_SRC})
-# target_link_libraries(keystore_lib m)
-SET_TARGET_PROPERTIES(keystore PROPERTIES COMPILE_FLAGS -fPIC)
+ADD_LIBRARY(lib_keystore SHARED ${KEYSTORE_SRC})
+# TARGET_LINK_LIBRARIES(lib_keystore m)
+SET_TARGET_PROPERTIES(lib_keystore PROPERTIES COMPILE_FLAGS -fPIC OUTPUT_NAME keystore)
 
-add_library(keystore-static EXCLUDE_FROM_ALL STATIC ${KEYSTORE_SRC})
-# target_link_libraries(keystore-static m)
-SET_TARGET_PROPERTIES(keystore-static PROPERTIES COMPILE_FLAGS -fPIC)
+ADD_LIBRARY(lib_keystore_static EXCLUDE_FROM_ALL STATIC ${KEYSTORE_SRC})
+# TARGET_LINK_LIBRARIES(lib_keystore_static m)
+SET_TARGET_PROPERTIES(lib_keystore_static PROPERTIES COMPILE_FLAGS -fPIC OUTPUT_NAME keystore_static)

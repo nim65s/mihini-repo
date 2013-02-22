@@ -29,7 +29,7 @@
 -- However, in some contexts, Lua tables are used to represent data structures
 -- which might contain a `NULL`/`nil` value. For instance, if the server wants
 -- to indicate that it erased the variable `foo`, it cannot simply send the
--- record `{ foo=nil }`: it would be undistinguishable from the empty record 
+-- record `{ foo=nil }`: it would be undistinguishable from the empty record
 -- `{ }`. Similarly, Hessian has a `Null` value which almost naturally maps to
 -- Lua's `nil`; but Hessian's `Null` can be used as a record value, and even as
 -- a record key, whereas Lua's `nil` can't.
@@ -60,9 +60,9 @@
 -- Equality tests are performed by the usual `==` Lua operator. Conversions
 -- are performed by `niltoken` itself, which is a function:
 --
--- * It converts `niltoken` references into `nil`: 
+-- * It converts `niltoken` references into `nil`:
 --   `assert(niltoken(niltoken)==nil)`;
--- * It converts `nil` values into `niltoken` references: 
+-- * It converts `nil` values into `niltoken` references:
 --   `assert(niltoken(nil)==niltoken)`.
 -- * It leaves everything else alone:
 --   `if a~=nil and a~=niltoken` then assert(niltoken(a)==a) end`.

@@ -25,11 +25,11 @@ function loadconfigfile(configfile)
   if type(configfile) ~= "string" then
     return nil, "need a valid config file path as argument"
   end
-  
+
   -- open the specified file
   local fd, err = io.open(configfile)
   if not fd then return nil, err end
-    
+
   local configstring = fd:read("*a")
   if not configstring then return nil, "Cannot read file content" end
   fd:close()
@@ -71,7 +71,7 @@ end
 local function buildTarget(options)
 local res, path = system.execute("pwd")
 --print(res:read())
---  system.pexec("./buildSpecificAgent.sh "..options.attr.destination.." ../.. "..options.attr.options )  
+--  system.pexec("./buildSpecificAgent.sh "..options.attr.destination.." ../.. "..options.attr.options )
 end
 
 
@@ -90,12 +90,12 @@ end
 
 
 -- Function: maketargets
--- Description: 
+-- Description:
 --   This function take into parameter a config file that specify the list of targets to generate
 --   This file shall specify the used name, the destination
 function maketargets(configfile, destination)
   local res, err = loadconfigfile(configfile)
-    
+
   if res then
     local targets = getSubTable(res, "TARGETS")
 
@@ -110,7 +110,7 @@ function maketargets(configfile, destination)
   else
     print("Error: " .. err)
   end
-  
+
 end
 -- p(loadconfigfile("./config_all.xml")[2])
 

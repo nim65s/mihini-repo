@@ -16,6 +16,6 @@ SET(CMAKE_SYSTEM_VERSION 1)
 
 
 # add define for loader module
-SET(LOADER_PATH_BASE "/usr/ReadyAgent/apps")        
+SET(LOADER_PATH_BASE "/usr/ReadyAgent/apps")
 
 SET(VIRTUAL_DEVICE_BUILD true)

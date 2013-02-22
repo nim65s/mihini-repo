@@ -13,7 +13,7 @@ local param = ...
 local sched = require("sched")
 
 --check param of component
-if not param or param.name~="update.test1" or param.version~="1" or not param.parameters.autostart 
+if not param or param.name~="update.test1" or param.version~="1" or not param.parameters.autostart
 or param.parameters.bar ~=42 or param.parameters.foo~='test' then
     log(testname, "ERROR", "%s : param in package are not valid or nil", testname)
 else

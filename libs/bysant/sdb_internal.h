@@ -49,7 +49,7 @@ typedef struct sdb_cons_ctx_t {
   } state;
   sdb_nrow_t iteration;       // # of the cell currently parsed (0 ... nrows-1).
   int broken, stopped;                          // true if something went wrong.
-  sdb_nrow_t nrows; // # of rows in the column being consolidated.
+  sdb_nrow_t nrows;               // # of rows in the column being consolidated.
   union sdb_cons_ctx_content_t {              // method-specific temporary data.
     double max, min, sum;               // sum also serves for mean computation.
     double *median;      // array of nrow doubles, to be sorted at finalization.
@@ -94,8 +94,8 @@ typedef struct sdb_chunk_t {
 typedef struct sdb_read_ctx_t {
   enum sdb_storage_kind_t storage_kind;
   union {
-	struct sdb_chunk_t *chunk;                         // chunk currently read.
-	FILE *file;                                         // file currently read.
+    struct sdb_chunk_t *chunk;                         // chunk currently read.
+    FILE *file;                                         // file currently read.
   } source;
   unsigned char *tmpbuff;// If a temporary buffer is ever needed, it goes here.
   unsigned nbytes;                       // # of bytes in the last read object.
@@ -110,28 +110,28 @@ typedef struct sdb_read_ctx_t {
 
 typedef struct sdb_serialization_ctx_t {
     /* Serialization state, some state are used only with particular containers */
-	enum sdb_serialization_stage_t {
-		SDB_SS_INITIALIZED,
-		SDB_SS_MAP_OPENED,
-		SDB_SS_MAP_LABEL_SENT,
-		SDB_SS_COLUMN_OBJECT_DEFINED,
-		SDB_SS_COLUMN_FACTOR_SENT,
-		SDB_SS_COLUMN_START_VALUE_SENT,
-		SDB_SS_COLUMN_SENDING_CELLS,
-		SDB_SS_COLUMN_SHIFT_SENT,
-		SDB_SS_COLUMN_CONTENT_SENT,
-		SDB_SS_COLUMN_LAST_SHIFT_SENT,
-		SDB_SS_COLUMN_INNER_LIST_CLOSED,
-		SDB_SS_COLUMN_CLOSED,
-		SDB_SS_ALL_COLUMNS_SENT,
-		SDB_SS_MAP_CLOSED
-	} stage;
-	sdb_ncolumn_t current_column;
-	struct sdb_read_ctx_t read_ctx;
-	struct bss_ctx_t *bss_ctx;
-	// FIXME: make a separate structure ? (not always used)
-	double previous; // for DV/QPV serialization.
-	sdb_nrow_t current_shift; // for QPV serialization.
+    enum sdb_serialization_stage_t {
+        SDB_SS_INITIALIZED,
+        SDB_SS_MAP_OPENED,
+        SDB_SS_MAP_LABEL_SENT,
+        SDB_SS_COLUMN_OBJECT_DEFINED,
+        SDB_SS_COLUMN_FACTOR_SENT,
+        SDB_SS_COLUMN_START_VALUE_SENT,
+        SDB_SS_COLUMN_SENDING_CELLS,
+        SDB_SS_COLUMN_SHIFT_SENT,
+        SDB_SS_COLUMN_CONTENT_SENT,
+        SDB_SS_COLUMN_LAST_SHIFT_SENT,
+        SDB_SS_COLUMN_INNER_LIST_CLOSED,
+        SDB_SS_COLUMN_CLOSED,
+        SDB_SS_ALL_COLUMNS_SENT,
+        SDB_SS_MAP_CLOSED
+    } stage;
+    sdb_ncolumn_t current_column;
+    struct sdb_read_ctx_t read_ctx;
+    struct bss_ctx_t *bss_ctx;
+    // FIXME: make a separate structure ? (not always used)
+    double previous; // for DV/QPV serialization.
+    sdb_nrow_t current_shift; // for QPV serialization.
 } sdb_serialization_ctx_t;
 
 /* Configure a reading context. */

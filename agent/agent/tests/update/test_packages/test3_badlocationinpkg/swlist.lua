@@ -9,4 +9,4 @@
 --     Laurent Barthelement for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-return { components={} } 
+return { components={} }

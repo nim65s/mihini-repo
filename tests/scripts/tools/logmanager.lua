@@ -12,17 +12,17 @@
 local log   = require 'log'
 
 -- local logchecker = {}
--- 
+--
 -- -- set the filter the to specified value
 -- function logchecker:setFilter(filter)
 --   self.filter = filter
 -- end
--- 
--- -- check if the entered value is 
+--
+-- -- check if the entered value is
 -- function logchecker:isMatchingFilter(text)
 --   return string.gmatch (text, self.filter)
 -- end
--- 
+--
 -- -- check if the log appears in the log table within "delay" time
 -- function logchecker:checklog(filter, delay)
 --   self:setFilter(filter)
@@ -31,14 +31,14 @@ local log   = require 'log'
 --   sched.wait(delay)
 --   return self.found
 -- end
--- 
+--
 -- -- Register the current logger
 -- function logchecker:registerLogger()
 --   -- the loggers are called with following params (module, severity, logvalue)
 --   log.storelogger = function(module, severity, logvalue) if (self:isMatchingFilter(logvalue)) then self.found = true end; end
 -- end
--- 
--- 
+--
+--
 -- -- create a logmanager
 -- function new()
 --   return {filter = nil, found = false}

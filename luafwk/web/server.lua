@@ -27,9 +27,9 @@ WEBSITE = web.site
 -- to it, and close the client socket when the peer closes or crashes.
 -------------------------------------------------------------------------------
 function web.start(port)
-   if web.server_socket then 
+   if web.server_socket then
       log ('WEB', 'INFO', "Shutting down previous web server")
-      web.server_socket :close() 
+      web.server_socket :close()
    end
    log ('WEB', 'INFO', "Starting web server on port %d", port or 80)
    -- WARNING: oatlua-specific. Adapt it to run with Copas under regular OSes
@@ -58,9 +58,9 @@ end
 function web.handle_connection (cx)
    while true do
       log('WEB', 'DEBUG', "Connection waiting for another request on %s", tostring(cx))
-      
+
       -- Set environment variables from the request
-      
+
       local url, url_params, version, ext
       local line, msg = cx :receive '*l'
       if not line then
@@ -82,7 +82,7 @@ function web.handle_connection (cx)
          if line then key, value = line :match "^([^:]+): (.*)\r?\n?$" end
          if key  then env.request_headers[key:lower()] = value end
       until not key
-      
+
       web.handle_request(cx, env)
    end
 end
@@ -105,7 +105,7 @@ function web.handle_request (cx, env)
    local page = web.site[env.url]
    if not page then web.send_error (env, 404, "Not found"); return end
    if type(page) ~= 'table' then page={content=page} end
-   
+
    env.page = page
 
    local content = page.content or page[1] or ''
@@ -114,7 +114,7 @@ function web.handle_request (cx, env)
    -- Setup default response and headers
    h["Content-Type"] = page.mime_type or env.mime_type
    h["Connection"]   = env.request_headers.Connection or "keep-alive"
-   if   static_page 
+   if   static_page
    then h["Content-Length"] = #content
    else h["Transfer-Encoding"] = "chunked" end
    env.response = "HTTP/1.1 200 OK"
@@ -125,11 +125,11 @@ function web.handle_request (cx, env)
 
    -- Send the response and headers
    cx :send (env.response.."\r\n")
-   for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end   
+   for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
    cx :send '\r\n' -- end of headers
 
-   if static_page then 
-       cx :send (content) 
+   if static_page then
+       cx :send (content)
    else
       local err = env.error_msg
       if err then
@@ -159,7 +159,7 @@ web.url = { }
 -- Decode URL-encoded data: fields are separated with "&", names are separated
 -- from their value with "=", all characters requiring an escaping are encoded
 -- as "%xx", with "xx" being two hexadecimal digits representing the char's
--- ASCII code. 
+-- ASCII code.
 -- Returns a name->value dictionary.
 -------------------------------------------------------------------------------
 function web.url.decode(txt)
@@ -184,7 +184,7 @@ function web.url.encode(x)
    if type(x) == 'string' then return x:gsub("%W", esc)
    else
       local r = { }
-      for k, v in ipairs(x) do 
+      for k, v in ipairs(x) do
          table.insert (r, k:gsub("%W", esc) .. "=" .. v:gsub("%W", esc))
       end
       return table.concat(r,'&')
@@ -225,22 +225,22 @@ end
 -- TODO: woudln't it be more consistent to pass a complete env?
 -------------------------------------------------------------------------------
 function web.read_chunks(skt)
-	local chunks = { }
-	repeat
-		local length, chunk, msg
-		length, msg = skt :receive '*l'
-		if not length then return nil, msg end
-		length = tonumber(length, 16)
-		if not length then return nil, "bad chunk lenght" end
-		if length > 0 then
-			chunk, msg = skt :receive(length)
-			if not chunk then return nil, msg end
-			table.insert (chunks, chunk)
-		end
-		chunk, msg = skt :receive(2)
-		if chunk ~= "\r\n" then return nil, "bad chunk ending" end
-	until length == 0
-	return table.concat (chunks)
+    local chunks = { }
+    repeat
+        local length, chunk, msg
+        length, msg = skt :receive '*l'
+        if not length then return nil, msg end
+        length = tonumber(length, 16)
+        if not length then return nil, "bad chunk lenght" end
+        if length > 0 then
+            chunk, msg = skt :receive(length)
+            if not chunk then return nil, msg end
+            table.insert (chunks, chunk)
+        end
+        chunk, msg = skt :receive(2)
+        if chunk ~= "\r\n" then return nil, "bad chunk ending" end
+    until length == 0
+    return table.concat (chunks)
 end
 
 -------------------------------------------------------------------------------
@@ -265,12 +265,12 @@ function web.handle_post_body(env)
         data, msg = web.read_chunks (env.channel)
     else
         log('WEB','ERROR', "Body encoding not supported in POST handler: env=%s", siprint(2,env))
-        return { }       
+        return { }
     end
-    if not data then 
+    if not data then
         log('WEB','ERROR', "Can't retrieve POST parameters: %q", msg)
         return { }
-    else 
+    else
         env.body = data
         local ct = rh['content-type']
         if ct and ct :match 'urlencoded' then env.params = web.url.decode(data) end
@@ -318,7 +318,7 @@ web.mime_types = {
 web.site["ajax-rmi.js"] = [[
    function new_request() {
       var A;
-      try { A = new ActiveXObject("Msxml2.XMLHTTP"); } catch (e) { 
+      try { A = new ActiveXObject("Msxml2.XMLHTTP"); } catch (e) {
         try { A = new ActiveXObject("Microsoft.XMLHTTP"); } catch (oc) {
           A = null; } }
       if (!A && typeof XMLHttpRequest != "undefined") A = new XMLHttpRequest();
@@ -355,7 +355,7 @@ web.site['ajax'] = function (echo, env)
    local func_name = env.params.f
    local f = web.ajax.exported_functions[func_name]
    if not f then
-      error("Remote invocation of non-exported function "..(func_name or "nil")) 
+      error("Remote invocation of non-exported function "..(func_name or "nil"))
    end
 
    local args = { }
@@ -400,7 +400,7 @@ function web.ajax.import (env, ...)
    for _, name in ipairs{...} do
       local f = web.ajax.exported_functions[name]
       if not f then error ("Can't import this function: "..name) end
-      local txt = string.format('function %s(){ajax_rmi("%s", %s.arguments);}\n', 
+      local txt = string.format('function %s(){ajax_rmi("%s", %s.arguments);}\n',
                                 name, name, name)
       env.echo (txt)
    end
@@ -430,9 +430,9 @@ web.site['map.html'] = function (echo, env)
 end
 
 -- relaunch the server if it was allready running:
-if web.server_socket then 
+if web.server_socket then
     local _, port = web.server_socket :getsockname()
-    web.start(port) 
+    web.start(port)
 end
 
 return web

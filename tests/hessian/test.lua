@@ -32,7 +32,7 @@ function d(src)
     if iscallable(src) then
         local sink, t = ltn12.sink.table()
         ltn12.pump.all(src, sink)
-        src = table.concat(t)        
+        src = table.concat(t)
     end
     local t = type(src)
     if t ~= 'string' then print ('<'..t..'>'); return src end
@@ -40,7 +40,7 @@ function d(src)
     local function esc16(k) return string.format('\\0x%02x', string.byte(k)) end
     local r10 = src :gsub('\\', '\\\\') :gsub('[%z\1-\31\127-\255]', esc10)
     local r16 = src :gsub('\\', '\\\\') :gsub('[%z\1-\31\127-\255]', esc16)
-    print('['..r10..']\n['..r16..']') 
+    print('['..r10..']\n['..r16..']')
    return src
 end
 
@@ -98,8 +98,8 @@ sdb = simpledb.newsdb({'latitude', 'longitude', 'timestamp', 'temperature'}, DBS
 function fdb(n)
     local lat, long, t = 43.53620, 1.5131, 25
     for i = 1, (n or DBSIZE) do
-        sdb :addrecord (lat, long, os.time(), t)  
-        lat, long, t = lat+math.random()/1000, long+math.random()/1000, t + math.random(10)/10        
+        sdb :addrecord (lat, long, os.time(), t)
+        lat, long, t = lat+math.random()/1000, long+math.random()/1000, t + math.random(10)/10
     end
 end
 

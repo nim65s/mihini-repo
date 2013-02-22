@@ -9,6 +9,10 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-ADD_CUSTOM_TARGET(ldoc_gen    
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ldoc.sh         
-    )
+ADD_CUSTOM_TARGET(luaExecEnv
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ldoc.sh
+    COMMAND rm -f ${CMAKE_CURRENT_BINARY_DIR}/*.zip
+    COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/Lua_User_API_doc
+    COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/mihini-*.zip ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/Lua_User_API_doc ${CMAKE_CURRENT_BINARY_DIR}
+)

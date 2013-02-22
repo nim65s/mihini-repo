@@ -9,5 +9,9 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_subdirectory(telnet)
-add_lua_library(shell_telnet DESTINATION shell shell/telnet.lua)
+PROJECT(MIHINI_SHELL)
+
+ADD_SUBDIRECTORY(telnet)
+
+ADD_LUA_LIBRARY(shell_telnet DESTINATION shell shell/telnet.lua)
+ADD_DEPENDENCIES(shell_telnet sched socket_sched telnet)

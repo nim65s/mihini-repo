@@ -10,7 +10,7 @@
  *     Romain Perier      for Sierra Wireless - initial API and implementation
  *******************************************************************************/
 
-#define _GNU_SOURCE
+#define _GNU_SOURCE // this is required for strndup, which might cause warnings depending on the used toolchains
 #include <stdint.h>
 #include <arpa/inet.h>
 #include <pthread.h>
@@ -49,7 +49,7 @@ static swi_status_t newSmsHdlr(uint32_t payloadsize, char* payload)
   jsonPayload = malloc(payloadsize + 1);
   memcpy(jsonPayload, payload, payloadsize);
   jsonPayload[payloadsize] = '\0';
-  
+
   YAJL_TREE_PARSE(yval, jsonPayload);
   if (yval->u.array.values[0]->type != yajl_t_string)
   {
@@ -143,7 +143,7 @@ static void empReregisterServices()
 swi_status_t swi_sms_Init()
 {
   swi_status_t res;
-  
+
   if (module_initialized)
     return SWI_STATUS_OK;
 
@@ -196,7 +196,7 @@ swi_status_t swi_sms_Send(const char *recipientPtr, const char* messagePtr, swi_
     default:
       break;
   }
-  
+
   YAJL_GEN_ALLOC(gen);
 
   yajl_gen_array_open(gen);
@@ -300,7 +300,7 @@ swi_status_t swi_sms_Unregister(swi_sms_regId_t regId)
   YAJL_GEN_INTEGER(entry->regId, "regId");
 
   YAJL_GEN_GET_BUF(payload, payloadLen);
-  
+
   res = emp_send_and_wait_response(EMP_UNREGISTERSMSLISTENER, 0, payload, payloadLen, &respPayload, &respPayloadLen);
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
@@ -324,7 +324,7 @@ swi_status_t swi_sms_Unregister(swi_sms_regId_t regId)
     {
       if (entry->next == regId)
       {
-	break;
+    break;
       }
     }
     tmp = entry->next;

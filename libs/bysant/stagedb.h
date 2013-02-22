@@ -9,7 +9,7 @@
  *     Fabien Fleutot for Sierra Wireless - initial API and implementation
  *******************************************************************************/
 
-/* AWTDA Staging databases. 
+/* AWTDA Staging databases.
  *
  * Allows to declare, fill and serialize data tables with a fixed number
  * of named columns.
@@ -47,71 +47,71 @@ typedef unsigned short sdb_data_size_t; // max = 64KB per serialized data
 #define SDB_NCOLUMN_INVALID 0xff
 
 typedef enum sdb_classid_t {
-	SDB_CLSID_DELTAS_VECTOR = 3,
-	SDB_CLSID_QUASI_PERIODIC_VECTOR = 4
+    SDB_CLSID_DELTAS_VECTOR = 3,
+    SDB_CLSID_QUASI_PERIODIC_VECTOR = 4
 } sdb_classid_t;
 
 typedef enum sdb_error_t {
-	SDB_EOK           =   0,
-	SDB_EBADSTATE     =  (-1),
-	SDB_ETOOBIG       =  (-2),
-	SDB_EINVALID      =  (-3),
-	SDB_EMEM          =  (-4),
-	SDB_ENOCONS       =  (-5),
-	SDB_EBADFILE      =  (-6),
-	SDB_ENILFORBIDDEN =  (-7),
-	SDB_EFULL         =  (-8),
-	SDB_EEMPTY        =  (-9),
-	SDB_EINTERNAL     =  (-101),
+    SDB_EOK           =   0,
+    SDB_EBADSTATE     =  (-1),
+    SDB_ETOOBIG       =  (-2),
+    SDB_EINVALID      =  (-3),
+    SDB_EMEM          =  (-4),
+    SDB_ENOCONS       =  (-5),
+    SDB_EBADFILE      =  (-6),
+    SDB_ENILFORBIDDEN =  (-7),
+    SDB_EFULL         =  (-8),
+    SDB_EEMPTY        =  (-9),
+    SDB_EINTERNAL     =  (-101),
 } sdb_error_t;
 
 /* Describe a table, in which data can be added, and which can flush itself
  * through consolidation and/or serialization whenever appropriate. */
 typedef struct sdb_table_t {
-	enum sdb_table_state_t {
-		SDB_ST_UNCONFIGURED,        // Not all columns have been configured yet.
-		SDB_ST_READING,                                 // Accepting data input.
-		SDB_ST_SERIALIZING,   // Waiting for flush output stream to be consumed.
-		SDB_ST_BROKEN                              // Experienced a fatal error.
-	} state;                                           // Table's current state.
-	sdb_ncolumn_t ncolumns;                          // # of columns (constant).
-	struct sdb_column_t *columns;           // array of 'ncolumns' column descr.
-	struct sdb_consolidation_t  *consolidation; // optional consolidation descr.
-	enum sdb_storage_kind_t {
-		SDB_SK_RAM,
+    enum sdb_table_state_t {
+        SDB_ST_UNCONFIGURED,        // Not all columns have been configured yet.
+        SDB_ST_READING,                                 // Accepting data input.
+        SDB_ST_SERIALIZING,   // Waiting for flush output stream to be consumed.
+        SDB_ST_BROKEN                              // Experienced a fatal error.
+    } state;                                           // Table's current state.
+    sdb_ncolumn_t ncolumns;                          // # of columns (constant).
+    struct sdb_column_t *columns;           // array of 'ncolumns' column descr.
+    struct sdb_consolidation_t  *consolidation; // optional consolidation descr.
+    enum sdb_storage_kind_t {
+        SDB_SK_RAM,
 #ifdef SDB_FLASH_SUPPORT
-		SDB_SK_FLASH,
+        SDB_SK_FLASH,
 #endif
 #ifdef SDB_FILE_SUPPORT
-		SDB_SK_FILE,
+        SDB_SK_FILE,
 #endif
-	} storage_kind;
-	union sdb_storage_t {
-		struct sdb_ram_storage_t {
-			// First and last data chunks:
-			struct sdb_chunk_t *first_chunk, *last_chunk, **last_chunk_ptr;
-			// Size of the last data chunk:
-			// always a power of 2, and at least SDB_MIN_CHUNK_SIZE
-			// WARNING: 0 in this field actually means 0x10000!
-			sdb_data_size_t last_chunk_size;
-		} ram;
+    } storage_kind;
+    union sdb_storage_t {
+        struct sdb_ram_storage_t {
+            // First and last data chunks:
+            struct sdb_chunk_t *first_chunk, *last_chunk, **last_chunk_ptr;
+            // Size of the last data chunk:
+            // always a power of 2, and at least SDB_MIN_CHUNK_SIZE
+            // WARNING: 0 in this field actually means 0x10000!
+            sdb_data_size_t last_chunk_size;
+        } ram;
 #ifdef SDB_FLASH_SUPPORT
 #error "flash storage not implemented"
 #endif
 #ifdef SDB_FILE_SUPPORT
-		FILE *file;
+        FILE *file;
 #endif
-	} storage;
-	int nwrittenbytes;                 // # of bytes currently stored in chunks.
-	int nwrittenobjects;             // # of objects currently stored in chunks.
-	int maxwrittenobjects;         // max # of objects allowed. If 0, unlimited.
-	sdb_ncolumn_t conf_col;              // tmp counter for table configuration.
-	char  *conf_strings;                        // store column and table names.
-	struct bss_ctx_t *bss_ctx;          // serialization to the staging storage.
-	struct sdb_serialization_ctx_t *serialization_ctx; // only when serializing.
-	short  conf_string_idx;             // where id and column names are stored.
-	unsigned nilforbidden: 1;  // if true, trying to push a nil causes an error.
-	unsigned checkxtrakeys: 1;                     // (used by Lua exportation).
+    } storage;
+    int nwrittenbytes;                 // # of bytes currently stored in chunks.
+    int nwrittenobjects;             // # of objects currently stored in chunks.
+    int maxwrittenobjects;         // max # of objects allowed. If 0, unlimited.
+    sdb_ncolumn_t conf_col;              // tmp counter for table configuration.
+    char  *conf_strings;                        // store column and table names.
+    struct bss_ctx_t *bss_ctx;          // serialization to the staging storage.
+    struct sdb_serialization_ctx_t *serialization_ctx; // only when serializing.
+    short  conf_string_idx;             // where id and column names are stored.
+    unsigned nilforbidden: 1;  // if true, trying to push a nil causes an error.
+    unsigned checkxtrakeys: 1;                     // (used by Lua exportation).
 } sdb_table_t;
 
 // TODO could be converted to: union {
@@ -120,14 +120,14 @@ typedef struct sdb_table_t {
 
 /* Different ways to consolidate a column into a single value: */
 typedef enum sdb_consolidation_method_t {
-	SDB_CM_FIRST,
-	SDB_CM_LAST,
-	SDB_CM_MAX,
-	SDB_CM_MEAN,
-	SDB_CM_MEDIAN,
-	SDB_CM_MIDDLE,
-	SDB_CM_MIN,
-	SDB_CM_SUM
+    SDB_CM_FIRST,
+    SDB_CM_LAST,
+    SDB_CM_MAX,
+    SDB_CM_MEAN,
+    SDB_CM_MEDIAN,
+    SDB_CM_MIDDLE,
+    SDB_CM_MIN,
+    SDB_CM_SUM
 } sdb_consolidation_method_t;
 
 /* How a column must be serialized into the streamed AWTDA message.
@@ -135,24 +135,24 @@ typedef enum sdb_consolidation_method_t {
  * specify a lossy serialization (e.g. SDB_SM_SHORTEST|SDB_SM_4_BYTES_FLOATS).
  */
 enum sdb_serialization_method_t {
-	// Container: automatic selection
-	SDB_SM_FASTEST = 0,                            // Low CPU usage, big result.
-	SDB_SM_SMALLEST = 1,                        // High CPU usage, small result.
-	// Container: manual selection
-	SDB_SM_LIST = 2,                                            // Hessian List.
-	SDB_SM_DELTAS_VECTOR = 3,                            // AWTDA Deltas vector.
-	SDB_SM_QUASIPERIODIC_VECTOR = 4,             // AWTDA Quasi-periodic vector.
+    // Container: automatic selection
+    SDB_SM_FASTEST = 0,                            // Low CPU usage, big result.
+    SDB_SM_SMALLEST = 1,                        // High CPU usage, small result.
+    // Container: manual selection
+    SDB_SM_LIST = 2,                                            // Hessian List.
+    SDB_SM_DELTAS_VECTOR = 3,                            // AWTDA Deltas vector.
+    SDB_SM_QUASIPERIODIC_VECTOR = 4,             // AWTDA Quasi-periodic vector.
 
-	// Optional lossy flags
-	SDB_SM_4_BYTES_FLOATS = 1<<4,                     // Limits float precision.
-	SDB_SM_FIXED_PRECISION = 1<<5,           // User-defined precision/compacity
-	                                 // compromise, only for SHORTEST container.
+    // Optional lossy flags
+    SDB_SM_4_BYTES_FLOATS = 1<<4,                     // Limits float precision.
+    SDB_SM_FIXED_PRECISION = 1<<5,           // User-defined precision/compacity
+                                     // compromise, only for SHORTEST container.
 } sdb_serialization_method_t;
-#define SDB_SM_CONTANER(sm) (sm & 0x0F)
+#define SDB_SM_CONTAINER(sm) (sm & 0x0F)
 
 #define SDB_DEFAULT_SERIALIZATION_METHOD SDB_SM_SMALLEST
 
-/* Initialize a table structure, return SDB_EOK or SDB_EMEM. 
+/* Initialize a table structure, return SDB_EOK or SDB_EMEM.
  * The result table must still have its columns configured with
  * calls to sdb_column() before it can accept data.
  *
@@ -160,7 +160,7 @@ enum sdb_serialization_method_t {
  * names and serialization methods are not known at compile-time.
  * In simple cases, the sdb_init() interface is lighter and more readable. */
 int sdb_initwithoutcolumns( sdb_table_t *tbl, const char *id, sdb_ncolumn_t ncolumns,
-		enum sdb_storage_kind_t storage_kind);
+        enum sdb_storage_kind_t storage_kind);
 
 /* Initialize a table structure, return SDB_EOK or SDB_EMEM.
  * The columns are passed as '...' parameters:
@@ -170,7 +170,7 @@ int sdb_initwithoutcolumns( sdb_table_t *tbl, const char *id, sdb_ncolumn_t ncol
  *    applicable cases).
  * The columns description ends with NULL. */
 int sdb_init( sdb_table_t *tbl, const char *id,
-		enum sdb_storage_kind_t storage_kind, ...);
+        enum sdb_storage_kind_t storage_kind, ...);
 
 /* Release resources reserved by the table.
  * It is an error, with unspecified result, to close a table
@@ -197,17 +197,17 @@ int sdb_trim( sdb_table_t *tbl);
  *   * for SDB_SM_QUASIPERIODIC_VECTOR, it is the period.
  */
 int sdb_setcolumn(     sdb_table_t *tbl, const char *label,
-		enum sdb_serialization_method_t sm, double precision);
+        enum sdb_serialization_method_t sm, double precision);
 
 /* Declare 'dst' as the target consolidation table for 'src'.
- * A table can only be the source of one consolidation. 
+ * A table can only be the source of one consolidation.
  * For the consolidation to be configured, sdb_setconscolumn() must be called
  * once per destination column, to describe how it is generated.
  */
 int sdb_setconstable(  sdb_table_t *src,  sdb_table_t *dst);
 int sdb_setconscolumn( sdb_table_t *src,
-		sdb_nrow_t src_col,
-		sdb_consolidation_method_t method);
+        sdb_nrow_t src_col,
+        sdb_consolidation_method_t method);
 
 /* Set a maximum # of rows accepted by the table.
  * If a table has a max # of rows, and adding new elements in it would create

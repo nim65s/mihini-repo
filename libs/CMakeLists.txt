@@ -9,14 +9,14 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project (CLIBS)
-add_subdirectory (common)
-add_subdirectory (luasignal)
-add_subdirectory (bysant)
-add_subdirectory (SerialFramework)
-add_subdirectory (libtommath)
-add_subdirectory (libtomcrypt)
-add_subdirectory (keystore)
-add_subdirectory (cdb)
-add_subdirectory (yajl)
+PROJECT(CLIBS)
+ADD_SUBDIRECTORY (common)
+ADD_SUBDIRECTORY (luasignal)
+ADD_SUBDIRECTORY (bysant)
+ADD_SUBDIRECTORY (SerialFramework)
+ADD_SUBDIRECTORY (libtommath)
+ADD_SUBDIRECTORY (libtomcrypt)
+ADD_SUBDIRECTORY (keystore)
+ADD_SUBDIRECTORY (cdb)
+ADD_SUBDIRECTORY (yajl)
 

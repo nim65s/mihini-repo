@@ -8,10 +8,17 @@
 -- Contributors:
 --     Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
+local system = require 'agent.system'
 
 function Reboot(asset, data, path, ticket)
-   require 'agent.system'.reboot(nil, "request from server")
-   return 0
+    local status
+    if ticket and ticket ~= 0 then
+        require'airvantage'.acknowledge(ticket, 0, "Reboot command succeeded", "on_boot", true) --ack to server after rebooting device
+        status = "async"
+    else status = "ok" end
+
+    system.reboot(nil, "request from server")
+    return status
 end
 
 return Reboot

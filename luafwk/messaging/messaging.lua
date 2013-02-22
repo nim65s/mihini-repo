@@ -92,9 +92,9 @@ end
 
 function sendSMS(recepient, message, format)
     assert(type(recepient) == "string" and type(message) == "string" and type(format) == "string")
-    
+
     if format ~="8bits" then return nil, "Invalid format, only 8 bits PDU encoding format is supported for SMS sending" end
-    
+
     local t, err = smspdu.encodePdu(recepient, message)
     if not t then return nil, err end
 

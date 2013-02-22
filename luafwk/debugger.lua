@@ -17,7 +17,7 @@
 -- if HOST is nil, the DBGP_IDEHOST env var is used.
 -- if the env var is nil, the default value '127.0.0.1' is used.
 
--- PORT: the port of the DBGP server (must be configure in the IDE) 
+-- PORT: the port of the DBGP server (must be configure in the IDE)
 -- if PORT is nil, the DBGP_IDEPORT env var is used.
 -- if the env var is nil, the default value '10000' is used.
 
@@ -33,7 +33,7 @@
 --     fullname attribute of each property and is used likewise in property_get commands. The syntax is "<context ID>|<full name>"
 --   * Dynamic code (compiled with load or loadstring) is not handled (the debugger will step over it, like C code)
 -- Design notes:
---   * The whole debugger state is kept in a (currently) unique session table in order to ease eventual adaptation to a multi-threaded 
+--   * The whole debugger state is kept in a (currently) unique session table in order to ease eventual adaptation to a multi-threaded
 --     model, as DBGp needs one connection per thread.
 --   * Full names of properties are base64 encoded because they can contain arbitrary data (spaces, escape characters, ...), this makes
 --     command parsing munch easier and faster
@@ -41,7 +41,7 @@
 --     inconsistent states. In addition, this have a quite big overhead (~66%), if performance is an issue, a custom command to disable
 --     async mode could be done.
 --   * All commands are implemented in table commands, see this comments on this table to additional details about commands implementation
---   * The environments in which are evaluated user code (property_* and eval commands, conditional breakpoints, ...) is a read/write 
+--   * The environments in which are evaluated user code (property_* and eval commands, conditional breakpoints, ...) is a read/write
 --     mapping of the local environment of a given stack level (can be accessed with variable names). See Context for additional details.
 --     Context instantiation is pooled inside a debugging loop with ContextManager (each stack level is instantiated only once).
 --   * Output redirection is done by redefining print and some values inside the io table. See "Output redirection handling" for details.
@@ -97,10 +97,10 @@ end
 -- Get the execution plaform os (could be win or unix)
 -- Used to manage file path difference between the 2 platform
 local platform = "unix"
-do 
+do
     local function iswindows()
         local p = io.popen("echo %os%")
-        if p then 
+        if p then
             local result =p:read("*l")
             p:close()
             return result == "Windows_NT"
@@ -110,11 +110,11 @@ do
     local function setplatform()
         if iswindows() then
             platform = "win"
-        end 
+        end
     end
     pcall(setplatform)
 end
- 
+
 -- The Path separator character
 local path_sep = (platform == "unix" and "/" or "\\")
 
@@ -123,15 +123,15 @@ local path_sep = (platform == "unix" and "/" or "\\")
 -- the path must be normalized
 -- test if it begin by / for unix and X:/ for windows
 local is_path_absolute
-if platform == "unix" then  
+if platform == "unix" then
    is_path_absolute = function (path) return path:sub(1,1) == "/" end
 else
    is_path_absolute = function (path) return path:match("^%a:/") end
 end
 
--- return a clean path with / as separator (without double path separator) 
+-- return a clean path with / as separator (without double path separator)
 local normalize
-if platform == "unix" then  
+if platform == "unix" then
    normalize = function (path) return path:gsub("//","/") end
 else
    normalize = function (path)
@@ -142,12 +142,12 @@ end
 -- TODO the way to get the absolute path can be wrong if the program loads new source files by relative path after a cd.
 -- currently, the directory is registered on start, this allows program to load any source file and then change working dir,
 -- which is the most common use case.
-local base_dir  
-if platform == "unix" then 
+local base_dir
+if platform == "unix" then
    base_dir = os.getenv("PWD")
 else
    local p = io.popen("echo %cd%")
-   if p then 
+   if p then
        base_dir = p:read("*l")
        base_dir = normalize(base_dir)
        p:close()
@@ -179,13 +179,13 @@ local function merge_paths(absolutepath, relativepath,separator)
       table.insert(absolutetable, path)
     end
   end
-  return sep .. table.concat(absolutetable, sep) 
+  return sep .. table.concat(absolutetable, sep)
 end
 
 
--- convert absolute normalized path file to uri 
+-- convert absolute normalized path file to uri
 local to_file_uri
-if platform == "unix" then  
+if platform == "unix" then
    to_file_uri = function (path) return url.build{scheme="file",authority="", path=path} end
 else
    to_file_uri = function (path) return url.build{scheme="file",authority="", path="/"..path} end
@@ -193,7 +193,7 @@ end
 
 -- convert parsed URL table to file path  for the current OS (see url.parse from luasocket)
 local to_path
-if platform == "unix" then  
+if platform == "unix" then
    to_path = function (url) return url.path end
 else
    to_path = function (url) return url.path:gsub("^/", "") end
@@ -330,7 +330,7 @@ do
       if source:sub(1,1) == "@" then -- real source file
         local sourcepath = source:sub(2)
         local normalizedpath = normalize(sourcepath)
-        if not is_path_absolute(normalizedpath) then 
+        if not is_path_absolute(normalizedpath) then
           normalizedpath = merge_paths(base_dir, normalizedpath)
         end
         return to_file_uri(normalizedpath)
@@ -338,7 +338,7 @@ do
         return false
       end
     end
-    
+
     local function get_module_uri (source)
       local uri
       if source:sub(1,1) == "@" then -- real source file
@@ -350,13 +350,13 @@ do
         -- the case where file was loaded by : "lua myfile.lua"
         table.insert(luapathtable,"?.lua")
         for i,var in ipairs(luapathtable) do
-          local escaped = string.gsub(var,"[%^%$%(%)%%%.%[%]%*%+%-%?]",function(c) return "%"..c end)        
+          local escaped = string.gsub(var,"[%^%$%(%)%%%.%[%]%*%+%-%?]",function(c) return "%"..c end)
           local pattern = string.gsub(escaped,"%%%?","(.+)")
           local modulename = string.match(normalizedpath,pattern);
           if modulename then
             modulename = string.gsub(modulename,"/",".");
             -- if we find more than 1 possible modulename return the shorter
-            if not uri or string.len(uri)>string.len(modulename) then 
+            if not uri or string.len(uri)>string.len(modulename) then
               uri = modulename
             end
           end
@@ -365,12 +365,12 @@ do
       end
       return false
     end
-    
+
     get_uri = function (source)
       -- search in cache
       local uri = cache[source]
       if uri ~= nil then return uri end
-      
+
       -- not found, create uri
       if variable_features.uri == "module" then
          uri = get_module_uri(source)
@@ -378,25 +378,25 @@ do
       else
          uri =  get_abs_file_uri (source)
       end
-      
+
       cache[source] = uri
       return uri
     end
-    
-  -- get path file from uri 
+
+  -- get path file from uri
   get_path=  function (uri)
       local parsed_path = assert(url.parse(uri))
       if parsed_path.scheme == "file" then
          return to_path(parsed_path)
       else
-         -- search in cache 
+         -- search in cache
          -- we should surely calculate it instead of find in cache
          for k,v in pairs(cache)do
            if v == uri then
            assert(k:sub(1,1) == "@")
            return k:sub(2)
            end
-         end   
+         end
       end
    end
 end
@@ -451,7 +451,7 @@ local Multival = { __tostring = function() return "" end } -- used as metatable 
 --- Packs a pcall results into a table with a correct nil handling
 -- @param ... what pcall returned
 -- @return (boolean) success state
--- @return (Multival or any) In case of success, table containing results and the "n" field for size (trailing nil handling) 
+-- @return (Multival or any) In case of success, table containing results and the "n" field for size (trailing nil handling)
 --                           and having Multival as metatable. In case of failure, a the error object
 local function packpcall(...)
     local success = (...)
@@ -480,7 +480,7 @@ local function generateXML(xml)
             pieces[#pieces + 1] = " "
         end
         pieces[#pieces] = nil -- remove the last separator (useless)
-        
+
         if node.children then
             pieces[#pieces + 1] = ">"
             for _, child in ipairs(node.children) do
@@ -492,7 +492,7 @@ local function generateXML(xml)
             pieces[#pieces + 1] = "/>"
         end
     end
-    
+
     generate(xml)
     return table.concat(pieces)
 end
@@ -500,7 +500,7 @@ end
 local function send_xml(skt, resp)
     if not resp.attrs then resp.attrs = {} end
     resp.attrs.xmlns = "urn:debugger_protocol_v1"
-    
+
     local data = '<?xml version="1.0" encoding="UTF-8" ?>\n'..generateXML(resp)
     log("DEBUGGER", "DEBUG", "Send " .. data)
     blockingtcp.send(skt, tostring(#data).."\000"..data.."\000")
@@ -545,15 +545,15 @@ end
 local function make_property(context, value, name, fullname, depth, pagesize, page, size_limit, safe_name)
     local dump = debugintrospection:new(false, false, true, false, true, true)
     dump["function"] = new_function_introspection -- override standard definition
-    
+
     -- build XML
     local function build_xml(node, name, fullname, page, depth)
         local data = tostring(node.repr)
-        
+
         local specials = { }
         if node.metatable then specials[#specials + 1] = "metatable" end
         if node.environment then specials[#specials + 1] = "environment" end
-        
+
         local numchildren = #node + #specials
         local attrs = { type = node.array and "sequence" or node.type, name=name, fullname=rawb64(tostring(context).."|"..fullname),
                         encoding="base64", children = 0, size=#data }
@@ -564,7 +564,7 @@ local function make_property(context, value, name, fullname, depth, pagesize, pa
             attrs.page = page
         end
         local children = { b64(size_limit and data:sub(1, size_limit) or data) }
-        
+
         if depth > 0 then
             local from, to = page * pagesize + 1, (page + 1) * (pagesize)
             for i = from, math.min(#node, to) do
@@ -580,30 +580,30 @@ local function make_property(context, value, name, fullname, depth, pagesize, pa
                 children[#children + 1] = prop
             end
         end
-        
+
         return { name = "property", attrs = attrs, children = children }
     end
-    
+
     fullname = fullname or ("(...)[" .. generate_key(name) .. "]")
     if not safe_name then name = generate_printable_key(name) end
-    
+
     if getmetatable(value) == Multival then
         local children = { }
-        for i=1, value.n do 
+        for i=1, value.n do
             local val = dump[type(value[i])](dump, value[i], depth)
             val = type(val) == "number" and dump.dump[val] or val
-            -- Since fullname is impossible to build for multivals and they are read only, 
+            -- Since fullname is impossible to build for multivals and they are read only,
             -- generate_key is used to retireve reference to the object
             children[#children + 1] = build_xml(val, "["..i.."]", generate_key(val.ref), 0, depth - 1)
         end
-        
+
         -- return just the value in case of single result
         if #children == 1 then
             return children[1]
         end
-        
+
         -- when there are multiple results, they a wrapped into a multival
-        return { attrs = { type="multival", name=name, fullname=tostring(context).."|"..fullname, encoding="base64", 
+        return { attrs = { type="multival", name=name, fullname=tostring(context).."|"..fullname, encoding="base64",
                            numchildren=value.n, children=value.n > 0 and 1 or 0, size=0, pagesize=pagesize },
                  children = children,
                  name = "property" }
@@ -617,7 +617,7 @@ end
 -------------------------------------------------------------------------------
 --  Output redirection handling
 -------------------------------------------------------------------------------
--- Override standard output functions & constants to redirect data written to these files to IDE too. 
+-- Override standard output functions & constants to redirect data written to these files to IDE too.
 -- This works only for output done in Lua, output written by C extensions is still go to system output file.
 
 -- references to native values
@@ -687,20 +687,20 @@ local Context
 do
     -- make unique object to access contexts
     local LOCAL, UPVAL, GLOBAL, STORE, HANDLE = {}, {}, {}, {}, {}
-    
+
     -- create debug functions depending on coroutine context
     local foreign_coro_debug = { -- bare Lua functions are fine here because all parameters will be provided
         getlocal = debug.getlocal,
         setlocal = debug.setlocal,
         getinfo  = debug.getinfo,
     }
-    
+
     local current_coro_debug = {
         getlocal = function(_, level, index)        return debug.getlocal(get_script_level(level), index) end,
         setlocal = function(_, level, index, value) return debug.setlocal(get_script_level(level), index, value) end,
         getinfo  = function(_, level, what)         return debug.getinfo(get_script_level(level), what) end,
     }
-    
+
     --- Captures variables for given stack level. The capture contains local, upvalues and global variables.
     -- The capture can be seen as a proxy table to the stack level: any value can be queried or set no matter
     -- it is a local or an upvalue.
@@ -711,7 +711,7 @@ do
         [0] = LOCAL,
         [1] = GLOBAL, -- DLTK internal ID for globals is 1
         [2] = UPVAL,
-        
+
         -- gets a variable by name with correct handling of Lua scope chain
         -- the or chain does not work here beacause __index metamethod would raise an error instead of returning nil
         __index = function(self, k)
@@ -724,7 +724,7 @@ do
             elseif self[UPVAL][STORE][k] then self[UPVAL][k] = v
             else self[GLOBAL][k] = v end
         end,
-        
+
         LocalContext = {
             __index = function(self, k)
                 local index = self[STORE][k]
@@ -746,7 +746,7 @@ do
                 if key then return key, self[key] else return nil end
             end
         },
-        
+
         UpvalContext = {
             __index = function(self, k)
                 local index = self[STORE][k]
@@ -765,7 +765,7 @@ do
                 if key then return key, self[key] else return nil end
             end
         },
-        
+
         --- Context constructor
         -- @param coro  (coroutine or nil) coroutine to map to (or nil for current coroutine)
         -- @param level (number) stack level do dump (script stack level)
@@ -773,7 +773,7 @@ do
             local locals, upvalues = {}, {}
             local debugcallbacks = coro and foreign_coro_debug or current_coro_debug
             local func = (debugcallbacks.getinfo(coro, level, "f") or dbgp_error(301, "No such stack level: "..tostring(level))).func
-            
+
             -- local variables
             for i=1, math.huge do
                 local name, val = debugcallbacks.getlocal(coro, level, i)
@@ -782,14 +782,14 @@ do
                     locals[name] = i
                 end
             end
-            
+
             -- upvalues
             for i=1, math.huge do
                 local name, val = debug.getupvalue(func, i)
                 if not name then break end
                 upvalues[name] = i
             end
-            
+
             locals = setmetatable({ [STORE] = locals, [HANDLE] = { callbacks = debugcallbacks, level = level, coro = coro } }, cls.LocalContext)
             upvalues = setmetatable({ [STORE] = upvalues, [HANDLE] = func }, cls.UpvalContext)
             return setmetatable({ [LOCAL] = locals, [UPVAL] = upvalues, [GLOBAL] = debug.getfenv(func) }, cls)
@@ -797,10 +797,10 @@ do
     }
 end
 
---- Handle caching of all instantiated context. 
--- Returns a function which takes 2 parameters: thread and stack level and returns the corresponding context. If this 
--- context has been already queried there is no new instantiation. A ContextManager is valid only during the debug loop 
--- on which it has been instantiated. References to a ContextManager must be lost after the end of debug loop (so 
+--- Handle caching of all instantiated context.
+-- Returns a function which takes 2 parameters: thread and stack level and returns the corresponding context. If this
+-- context has been already queried there is no new instantiation. A ContextManager is valid only during the debug loop
+-- on which it has been instantiated. References to a ContextManager must be lost after the end of debug loop (so
 -- threads can be collected).
 -- If a context cannot be instantiated, an 301 DBGP error is thrown.
 local function ContextManager()
@@ -811,13 +811,13 @@ local function ContextManager()
             thread_contexts = { }
             cache[thread or true] = thread_contexts
         end
-        
+
         local context = thread_contexts[level]
         if not context then
             context = Context:new(thread, level)
             thread_contexts[level] = context
         end
-        
+
         return context
     end
 end
@@ -830,11 +830,11 @@ end
 -- and the cache of complex keys.
 local property_evaluation_environment = {
     key_cache = key_cache,
-    metatable = setmetatable({ }, { 
+    metatable = setmetatable({ }, {
         __index = function(self, tbl) return getmetatable(tbl) end,
         __newindex = function(self, tbl, mt) return setmetatable(tbl, mt) end,
     }),
-    environment = setmetatable({ }, { 
+    environment = setmetatable({ }, {
         __index = function(self, func) return getfenv(func) end,
         __newindex = function(self, func, env) return setfenv(func, env) end,
     }),
@@ -882,21 +882,21 @@ do
         -- re-encode the URI to avoid any mismatch (with authority for example)
         local uri = url.parse(bp.filename)
         bp.filename = url.build{ scheme=uri.scheme, authority="", path=normalize(uri.path)}
-        
+
         local filereg = file_mapping[bp.filename]
         if not filereg then
             filereg = { }
             file_mapping[bp.filename] = filereg
         end
-        
+
         local linereg = filereg[bp.lineno]
         if not linereg then
             linereg = {}
             filereg[bp.lineno] = linereg
         end
-    
+
         table.insert(linereg, bp)
-        
+
         id_mapping[bpid] = bp
         return bpid
     end
@@ -906,7 +906,7 @@ do
     function breakpoints.at(file, line)
         local bps = file_mapping[file] and file_mapping[file][line]
         if not bps then return nil end
-        
+
         local do_break = false
         for _, bp in pairs(bps) do
             if bp.state == "enabled" then
@@ -934,7 +934,7 @@ do
     end
 
     function breakpoints.get(id)
-        if id then return id_mapping[id] 
+        if id then return id_mapping[id]
         else return id_mapping end
     end
 
@@ -949,7 +949,7 @@ do
                     break
                 end
             end
-                    
+
             -- cleanup file_mapping
             if not next(linereg) then file_mapping[bp.filename][bp.lineno] = nil end
             if not next(file_mapping[bp.filename]) then file_mapping[bp.filename] = nil end
@@ -957,33 +957,33 @@ do
         end
         return false
     end
-    
+
     --- Returns an XML data structure that describes given breakpoint
     -- @param id (number) breakpoint ID
     -- @return Table describing a <breakpooint> tag or nil followed by an error message
     function breakpoints.get_xml(id)
         local bp = id_mapping[id]
         if not bp then return nil, "No such breakpoint: "..tostring(id) end
-        
+
         local response = { name = "breakpoint", attrs = { } }
         for k,v in pairs(bp) do response.attrs[k] = v end
         if bp.expression then
             response.children = { { name = "expression", children = { bp.expression } } }
         end
-        
+
         -- internal use only
         response.attrs.expression = nil
         response.attrs.condition = nil
         response.attrs.temporary = nil -- TODO: the specification is not clear whether thsi should be provided, see other implementations
         return response
     end
-    
+
     --- Register an event to be triggered.
     -- @param event event name to register (must be "over", "out" or "into")
     function events.register(event)
         local thread = coroutine.running() or "main"
         log("DEBUGGER", "DEBUG", "Registered %s event for %s (%d)", event, tostring(thread), stack_levels[thread])
-        if event == "into" then 
+        if event == "into" then
             step_into = true
         else
             waiting_sessions[thread] = { event, stack_levels[thread] }
@@ -995,7 +995,7 @@ do
     -- @return true if an event has matched, false otherwise
     function events.does_match()
         if step_into then return true end
-        
+
         local thread = coroutine.running() or "main"
         local event = waiting_sessions[thread]
         if event then
@@ -1010,7 +1010,7 @@ do
         end
         return false
     end
-    
+
     --- Discards event for current thread (if any)
     function events.discard()
         waiting_sessions[coroutine.running() or "main"] = nil
@@ -1044,7 +1044,7 @@ local function get_coroutine(coro_id)
 end
 
 -- Debugger command functions. Each function handle a different command.
--- A command function is called with 3 arguments 
+-- A command function is called with 3 arguments
 --   1. the debug session instance
 --   2. the command arguments as table
 --   3. the command data, if any
@@ -1062,7 +1062,7 @@ commands = {
         send_xml(self.skt, { name="response", attrs = { command = "break", transaction_id = args.i, success = 1 } } )
         return false
     end,
-    
+
     status = function(self, args)
         send_xml(self.skt, { name="response", attrs = {
             command = "status",
@@ -1070,7 +1070,7 @@ commands = {
             status = self.state,
             transaction_id = args.i } } )
     end,
-    
+
     stop = function(self, args)
         send_xml(self.skt, { name="response", attrs = {
             command = "stop",
@@ -1080,7 +1080,7 @@ commands = {
         self.skt:close()
         os.exit(1)
     end,
-    
+
     feature_get = function(self, args)
         local name = args.n
         local response = constant_features[name] or variable_features[name] or (not not commands[name])
@@ -1091,7 +1091,7 @@ commands = {
               transaction_id = args.i },
             children = { tostring(response) } } )
     end,
-    
+
     feature_set = function(self, args)
         local name, value = args.n, args.v
         local success = 0
@@ -1106,12 +1106,12 @@ commands = {
             transaction_id = args.i
         } } )
     end,
-    
+
     typemap_get = function(self, args)
         local function gentype(name, type, xsdtype)
             return { name = "map", attrs = { name = name, type = type, ["xsi:type"] = xsdtype } }
         end
-        
+
         send_xml(self.skt, { name="response", attrs = {
                 command = "typemap_get",
                 transaction_id = args.i,
@@ -1130,42 +1130,42 @@ commands = {
                 gentype("multival", "array"), -- used to represent return values
             } } )
     end,
-    
+
     run = function(self) return true end,
-    
+
     step_over = function(self)
         events.register("over")
         return true
     end,
-    
+
     step_out = function(self)
         events.register("out")
         return true
     end,
-    
+
     step_into = function(self)
         events.register("into")
         return true
     end,
-    
+
     eval = function(self, args, data)
         log("DEBUGGER", "DEBUG", "Going to eval "..data)
         local result, err, success
         -- first, try to load as expression
         local func, err = loadstring("return "..data)
-        
+
         -- if it is not a, expression, try as statement (assignment, ...)
         if not func then
             func, err = loadstring(data)
         end
-        
+
         if func then
             -- DBGp does not support stack level here, see http://bugs.activestate.com/show_bug.cgi?id=81178
             setfenv(func, self.stack(nil, 0))
             success, result = packpcall(pcall(func))
             if not success then err = result end
         end
-        
+
         local response = { name = "response", attrs = { command = "eval", transaction_id = args.i } }
         if not err then
             response.attrs.success = 1
@@ -1177,13 +1177,13 @@ commands = {
         end
         send_xml(self.skt, response)
     end,
-    
+
     stdout = output_command_handler_factory("stdout"),
     stderr = output_command_handler_factory("stderr"),
-    
+
     breakpoint_set = function(self, args, data)
         if args.o and not breakpoints.hit_conditions[args.o] then dbgp_error(200, "Invalid hit_condition operator: "..args.o) end
-        
+
         local filename, lineno = args.f, tonumber(args.n)
         local bp = {
             type = args.t,
@@ -1195,36 +1195,36 @@ commands = {
             hit_value = tonumber(args.h or 0),
             hit_condition = args.o or ">=",
         }
-        
+
         if args.t == "conditional" then
             bp.expression = data
             -- the expression is compiled only once
             bp.condition = dbgp_assert(207, loadstring("return (" .. data .. ")"))
         elseif args.t ~= "line" then dbgp_error(201, "BP type " .. args.t .. " not yet supported") end
-        
+
         local bpid = breakpoints.insert(bp)
         send_xml(self.skt, { name = "response", attrs = { command = "breakpoint_set", transaction_id = args.i, state = bp.state, id = bpid } } )
     end,
-    
+
     breakpoint_get = function(self, args)
-        send_xml(self.skt, { name = "response", 
-                             attrs = { command = "breakpoint_get", transaction_id = args.i }, 
+        send_xml(self.skt, { name = "response",
+                             attrs = { command = "breakpoint_get", transaction_id = args.i },
                              children = { dbgp_assert(205, breakpoints.get_xml(tonumber(args.d))) } })
     end,
-    
+
     breakpoint_list = function(self, args)
         local bps = { }
         for id, bp in pairs(breakpoints.get()) do bps[#bps + 1] = breakpoints.get_xml(id) end
-        send_xml(self.skt, { name = "response", 
-                             attrs = { command = "breakpoint_list", transaction_id = args.i }, 
+        send_xml(self.skt, { name = "response",
+                             attrs = { command = "breakpoint_list", transaction_id = args.i },
                              children = bps })
     end,
-    
+
     breakpoint_update = function(self, args)
         local bp = breakpoints.get(tonumber(args.d))
         if not bp then dbgp_error(205, "No such breakpint "..args.d) end
         if args.o and not breakpoints.hit_conditions[args.o] then dbgp_error(200, "Invalid hit_condition operator: "..args.o) end
-        
+
         local response = { name = "response", attrs = { command = "breakpoint_update", transaction_id = args.i } }
         bp.state = args.s or bp.state
         bp.lineno = tonumber(args.n or bp.lineno)
@@ -1232,13 +1232,13 @@ commands = {
         bp.hit_condition = args.o or bp.hit_condition
         send_xml(self.skt, response)
     end,
-    
+
     breakpoint_remove = function(self, args)
         local response = { name = "response", attrs = { command = "breakpoint_remove", transaction_id = args.i } }
         if not breakpoints.remove(tonumber(args.d)) then dbgp_error(205, "No such breakpint "..args.d) end
         send_xml(self.skt, response)
     end,
-    
+
     stack_depth = function(self, args)
         local depth = 0
         local coro = get_coroutine(args.o)
@@ -1250,14 +1250,14 @@ commands = {
         end
         send_xml(self.skt, { name = "response", attrs = { command = "stack_depth", transaction_id = args.i, depth = depth} } )
     end,
-    
+
     stack_get = function(self, args) -- TODO: dynamic code
         -- special URIs to identify unreachable stack levels
         local what2uri = {
             tail = "tailreturn:/",
             C    = "ccode:/",
         }
-        
+
         local function make_level(info, level)
             local attrs = { level = level, where = info.name, type="file" }
             local uri = get_uri(info.source)
@@ -1270,11 +1270,11 @@ commands = {
             end
             return { name = "stack", attrs = attrs }
         end
-        
+
         local children = { }
         local coro = get_coroutine(args.o)
         local level = coro and 0 or get_script_level(0)
-        
+
         if args.d then
             local stack_level = tonumber(args.d)
             children[#children+1] = make_level(getinfo(coro, stack_level + level, "nSl"), stack_level)
@@ -1286,19 +1286,19 @@ commands = {
                 if info.what == "main" then break end -- levels below main chunk are not interesting
             end
         end
-        
+
         send_xml(self.skt, { name = "response", attrs = { command = "stack_get", transaction_id = args.i}, children = children } )
     end,
-    
+
     --- Lists all active coroutines.
-    -- Returns a list of active coroutines with their id (an arbitrary string) to query stack and properties. The id is 
+    -- Returns a list of active coroutines with their id (an arbitrary string) to query stack and properties. The id is
     -- guaranteed to be unique and stable for all coroutine life (they can be reused as long as coroutine exists).
     -- Others commands such as stack_get or property_* commands takes an additional -o switch to query a particular cOroutine.
     -- If the switch is not given, running coroutine will be used.
     -- In case of error on coroutines (most likely coroutine not found or dead), an error 399 is thrown.
     -- Note there is an important limitation due to Lua 5.1 coroutine implementation: you cannot query main "coroutine" from
     -- another one, so main coroutine is not in returned list (this will change with Lua 5.2).
-    -- 
+    --
     -- This is a non-standard command. The returned XML has the following strucuture:
     --     <response command="coroutine_list" transaction_id="0">
     --       <coroutine name="<some printtable name>" id="<coroutine id>" running="0|1" />
@@ -1316,29 +1316,29 @@ commands = {
         end
         send_xml(self.skt, { name = "response", attrs = { command = "coroutine_list", transaction_id = args.i}, children = coroutines } )
     end,
-    
+
     context_names = function(self, args)
         local coro = get_coroutine(args.o)
         local level = tonumber(args.d or 0)
         local info = getinfo(coro, coro and level or get_script_level(level), "f") or dbgp_error(301, "No such stack level "..tostring(level))
-        
+
         -- All contexts are always passed, even if empty. This is how DLTK expect context, what about others ?
         local contexts = {
             { name = "context", attrs = { name = "Local",   id = 0 } },
             { name = "context", attrs = { name = "Upvalue", id = 2 } },
             { name = "context", attrs = { name = "Global",  id = 1 } },
         }
-        
+
         send_xml(self.skt, { name = "response", attrs = { command = "context_names", transaction_id = args.i}, children = contexts } )
     end,
-    
+
     context_get = function(self, args)
         local context = tonumber(args.c or 0)
         local cxt_id = Context[context] or dbgp_error(302, "No such context: "..tostring(args.c))
         local level = tonumber(args.d or 0)
         local coro = get_coroutine(args.o)
         local cxt = self.stack(coro, level)
-        
+
         local properties = { }
         -- iteration over global is different (this could be unified in Lua 5.2 thanks to __pairs metamethod)
         for name, val in (context == 1 and next or getmetatable(cxt[cxt_id]).iterator), cxt[cxt_id], nil do
@@ -1346,12 +1346,12 @@ commands = {
             properties[#properties + 1] = make_property(context, val, name, nil, 0, variable_features.max_children, 0,
                                                         variable_features.max_data, context ~= 1)
         end
-        
-        send_xml(self.skt, { name = "response", 
+
+        send_xml(self.skt, { name = "response",
                              attrs = { command = "context_get", transaction_id = args.i, context = context},
                              children = properties } )
     end,
-    
+
     property_get = function(self, args)
         --TODO BUG ECLIPSE TOOLSLINUX-99 352316
         local context, name = assert(unb64(args.n):match("^(%d+)|(.*)$"))
@@ -1371,16 +1371,16 @@ commands = {
         -- special variables queries are in the form "<proxy name>[(...)[a][b]<...>]"
         -- TODO: such parsing is far from perfect
         if name:match("^[%w_]+%[.-%b[]%]$") == name then response.attrs.type = "special" end
-        send_xml(self.skt, { name = "response", 
+        send_xml(self.skt, { name = "response",
                              attrs = { command = "property_get", transaction_id = args.i, context = context},
                              children = { response } } )
     end,
-    
+
     property_value = function(self, args)
         args.m = -1
         commands.property_get(self, args)
     end,
-    
+
     property_set = function(self, args, data)
         local context, name = assert(unb64(args.n):match("^(%d+)|(.*)$"))
         context = tonumber(args.c or context)
@@ -1388,16 +1388,16 @@ commands = {
         local level = tonumber(args.d or 0)
         local coro = get_coroutine(args.o)
         local cxt = self.stack(coro, level)
-        
+
         -- evaluate the new value in the local context
         local value = select(2, dbgp_assert(206, pcall(setfenv(dbgp_assert(206, loadstring("return "..data)), cxt))))
-        
+
         local chunk = dbgp_assert(206, loadstring(name .. " = value"))
         setfenv(chunk, setmetatable({ value = value }, property_evaluation_environment))
         dbgp_assert(206, pcall(chunk, cxt[cxt_id]))
         send_xml(self.skt, { name = "response", attrs = { success = 1, transaction_id = args.i } } )
     end,
-    
+
     --TODO dynamic code handling
     -- The DBGp specification is not clear about the line number meaning, this implementation is 1-based and numbers are inclusive
     source = function(self, args)
@@ -1414,7 +1414,7 @@ commands = {
         -- Try to identify compiled files
         if file:read(1) == "\033" then dbgp_error(100, args.f.." is bytecode", { success = 0 }) end
         file:seek("set", 0)
-        
+
         local source = cowrap(function()
             local beginline, endline, currentline = tonumber(args.b or 0), tonumber(args.e or math.huge), 0
             for line in file:lines() do
@@ -1430,9 +1430,9 @@ commands = {
         local output = { }
         local sink = ltn12.sink.chain(filter, ltn12.sink.table(output))
         assert(ltn12.pump.all(source, sink))
-        
-        send_xml(self.skt, { name = "response", 
-                             attrs = { command = "source", transaction_id = args.i, success = 1}, 
+
+        send_xml(self.skt, { name = "response",
+                             attrs = { command = "source", transaction_id = args.i, success = 1},
                              children = { table.concat(output) } })
     end,
 }
@@ -1441,23 +1441,23 @@ commands = {
 -- way to get main coro in Lua 5.1 (only in 5.2)
 local function debugger_loop(self, async_packet)
     blockingtcp.settimeout(self.skt, nil) -- set socket blocking
-    
+
     -- in async mode, the debugger does not wait for another command before continuing and does not modify previous_context
     local async_mode = async_packet ~= nil
-    
+
     if self.previous_context and not async_mode then
         self.state = "break"
         previous_context_response(self)
     end
     self.stack = ContextManager() -- will be used to mutualize context allocation for each loop
-    
+
     while true do
         -- reads packet
         local packet = async_packet or assert(read_packet(self.skt))
         async_packet = nil
         log("DEBUGGER", "DEBUG", packet)
         local cmd, args, data = cmd_parse(packet)
-        
+
         -- FIXME: command such as continuations sent in async mode could lead both engine and IDE in inconsistent state :
         --        make a blacklist/whitelist of forbidden or allowed commands in async ?
         -- invoke function
@@ -1488,7 +1488,7 @@ local function debugger_loop(self, async_packet)
                 children = { make_error(4) } } )
         end
     end
-    
+
     self.stack = nil -- free allocated contexts
     self.state = "running"
     blockingtcp.settimeout(self.skt, 0) -- reset socket to async
@@ -1496,7 +1496,7 @@ end
 
 local function debugger_hook(event, line)
     local thread = corunning() or "main"
-    
+
     if event == "call" then
         stack_levels[thread] = stack_levels[thread] + 1
     elseif event == "return" or event == "tail return" then
@@ -1517,7 +1517,7 @@ local function debugger_hook(event, line)
                 if packet then do_break = true end
             end
         end
-    
+
         if do_break then
             local success, err = pcall(debugger_loop, active_session, packet)
             if not success then log("DEBUGGER", "ERROR", "Error while debug loop: "..err) end
@@ -1529,10 +1529,10 @@ local function init(host, port,idekey)
     host = host or os.getenv "DBGP_IDEHOST" or "127.0.0.1"
     port = port or os.getenv "DBGP_IDEPORT" or "10000"
     idekey = idekey or os.getenv("DBGP_IDEKEY") or "luaidekey"
-    
+
     local skt = assert(socket.tcp())
     blockingtcp.settimeout(skt, nil)
-    
+
     -- try to connect several times: if IDE launches both process and server at same time, first connect attempts may fail
     local ok, err
     for i=1, 5 do
@@ -1541,10 +1541,10 @@ local function init(host, port,idekey)
         blockingtcp.sleep(0.5)
     end
     if err then error(string.format("Cannot connect to %s:%d : %s", host, port, err)) end
-    
+
     -- get the debugger URI
     debugger_uri = get_uri(debug.getinfo(1).source)
-    
+
     -- get the root script path (the highest possible stack index)
     local source
     for i=2, math.huge do
@@ -1553,14 +1553,14 @@ local function init(host, port,idekey)
         source = get_uri(info.source) or source
     end
     if not source then source = "unknown:/" end -- when loaded before actual script (with a command line switch)
-    
+
     -- generate some kind of thread identifier
     local thread = coroutine.running() or "main"
     stack_levels[thread] = 1 -- the return event will set the counter to 0
     local sessionid = tostring(os.time()) .. "_" .. tostring(thread)
-    
+
     send_xml(skt, { name="init", attrs = {
-        appid = "Lua DBGp", 
+        appid = "Lua DBGp",
         idekey = idekey,
         session = sessionid,
         thread = tostring(thread),
@@ -1569,14 +1569,14 @@ local function init(host, port,idekey)
         protocol_version = "1.0",
         fileuri = source
         } })
-    
+
     local sess = { skt = skt, state = "starting", id = sessionid }
     active_session = sess
     debugger_loop(sess)
-    
+
     -- set debug hooks
     debug.sethook(debugger_hook, "rlc")
-    
+
     -- install coroutine collecting functions.
     -- TODO: maintain a list of *all* coroutines can be overkill (for example, the ones created by copcall), make a extension point to
     -- customize debugged coroutines
@@ -1590,7 +1590,7 @@ local function init(host, port,idekey)
         end
         return ...
     end
-    
+
     function coroutine.resume(coro, ...)
         if not stack_levels[coro] then
             -- first time referenced
@@ -1602,7 +1602,7 @@ local function init(host, port,idekey)
         end
         return resume_handler(coro, coresume(coro, ...))
     end
-    
+
     -- coroutine.wrap uses directly C API for coroutines and does not trigger our overridden coroutine.resume
     -- so this is an implementation of wrap in pure Lua
     local function wrap_handler(status, ...)

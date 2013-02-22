@@ -19,16 +19,16 @@
 #include "yajl_tree.h"
 #include "yajl_helpers.h"
 
-#define UNREGISTERUPDATELISTENER()		\
-do						\
-{						\
-  swi_status_t res;							\
+#define UNREGISTERUPDATELISTENER()        \
+do                        \
+{                        \
+  swi_status_t res;                            \
   res = emp_send_and_wait_response(EMP_UNREGISTERUPDATELISTENER, 0, NULL, 0, NULL, NULL); \
-  if (res != SWI_STATUS_OK)						\
-  {									\
+  if (res != SWI_STATUS_OK)                        \
+  {                                    \
     SWI_LOG("UPDATE", ERROR, "%s: failed to send EMP cmd, res = %d\n", __FUNCTION__, res); \
-    return SWI_STATUS_SERVICE_UNAVAILABLE;				\
-  }									\
+    return SWI_STATUS_SERVICE_UNAVAILABLE;                \
+  }                                    \
 } while(0)
 
 static swi_status_t newStatusNotification(uint32_t payloadsize, char *payload);
@@ -63,7 +63,7 @@ quit:
 static void empReregisterServices()
 {
   swi_status_t res;
-  
+
   res = emp_send_and_wait_response(EMP_REGISTERUPDATELISTENER, 0, NULL, 0, NULL, NULL);
   if (res != SWI_STATUS_OK)
     SWI_LOG("UPDATE", WARNING, "Failed to register back callback for status notifications\n");
@@ -72,7 +72,7 @@ static void empReregisterServices()
 swi_status_t swi_update_Init()
 {
   swi_status_t res;
-  
+
   if (module_initialized)
     return SWI_STATUS_OK;
 

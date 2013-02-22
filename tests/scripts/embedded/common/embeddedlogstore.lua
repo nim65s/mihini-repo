@@ -24,13 +24,13 @@ end
 
 local function findString(str)
   local source = logstore.logflashgetsource()
-    
-  
+
+
 end
 
 function setlogpolicy(logpolicy)
   Config.set("log.policy.name", logpolicy)
-  
+
   -- empty the flash log
 end
 
@@ -48,7 +48,7 @@ function testlog_context()
   log("TESTS", "INFO", "log2")
   log("TESTS", "WARNING", "log3")
   log("TESTS", "INFO", "log4")
-    
+
   -- check that only the logs log1, log2, log3 are stored in flash
 end
 
@@ -59,33 +59,33 @@ function testlog_sole()
   log("TESTS", "INFO", "log2")
   log("TESTS", "WARNING", "log3")
   log("TESTS", "INFO", "log4")
-  
+
   -- check that only the log3 value is stored in flash
 end
 
 -- Initialize the ReadyAgent in order to test the "sole" policy
 function testlog_bufferedall()
   --emptyLogs()
-  
+
   -- generate logs on the device
   log("TESTS", "INFO", "log1")
   log("TESTS", "INFO", "log2")
   log("TESTS", "WARNING", "log3")
   log("TESTS", "INFO", "log4")
-  
+
   -- check that all the logs are stored in RAM and nothing in flash
   --local source = logstore.logflashgetsource()
-  
+
 end
 
 -- Initialize the ReadyAgent in order to test the case of huge logs quantity
 function testlog_biglogs()
     -- generate logs on the device
     local cnt = 0
-    while (cnt < 1000) do 
+    while (cnt < 1000) do
         log("TESTS", "INFO", "Testing huge logs #"..cnt)
 	cnt = cnt + 1
-    end 
+    end
 end
 
 function testlog_teardown()

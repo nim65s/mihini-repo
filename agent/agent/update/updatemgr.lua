@@ -119,7 +119,7 @@ function alertcomponent()
         --TODO take care of possible update request here
         --changestatus("update_in_progress", component.name)
         local need_to_stop = state.stepprogress(component.name)
-        if need_to_stop then return end         
+        if need_to_stop then return end
         sendmsgasset(component)
     end
     return "ok"
@@ -135,13 +135,13 @@ local function alertnextcomponent()
     return alertcomponent()
 end
 
-local function nextdispatchstep()   
-    
+local function nextdispatchstep()
+
     local components = data.currentupdate.manifest.components
     local index = data.currentupdate.index
 
     if not index or ( components[index].result and components[index].result == 200 ) then
-        log("UPDATE", "DETAIL", "nextdispatchstep: alertnextcomponent");        
+        log("UPDATE", "DETAIL", "nextdispatchstep: alertnextcomponent");
         --update has not been dispatched yet or last component reported success
         --go to next component ( next one may be the first one, another one or none if the end the update is reached)
         local res,err = alertnextcomponent()
@@ -149,7 +149,7 @@ local function nextdispatchstep()
         if not res then return state.stepfinished("failure", 463, string.format("Alertnextcomponent error [%s]",err)); end
         -- if there is no more component group to alert, then the whole update job is succesful
         if "end" == res then return state.stepfinished("success") end
-        
+
     elseif not components[index].result then
         -- current component has not reported status, (re)send update notification
         log("UPDATE", "DETAIL", "nextdispatchstep: alertcomponent");
@@ -158,8 +158,8 @@ local function nextdispatchstep()
         log("UPDATE", "DETAIL", "nextdispatchstep: failure");
         --current component reported error but it was not used to report error yet
         return state.stepfinished("failure", components[index].result, "Component [%s] has reported an error update[%d]", components[index].name, components[index].result);
-    end    
-    
+    end
+
 end
 
 
@@ -231,11 +231,11 @@ local function start_dispatch()
         local res, err = os.execute("rm -rf "..common.escapepath(data.currentupdate.updatefile))
         if res ~= 0 then log("UPDATE", "WARNING", "Cannot remove update archive after extraction, err=%s",tostring(err)) end
     end
-    
+
     log("UPDATE", "DETAIL", "start_dispatch");
 
     --actually (re)start dispatch
-    nextdispatchstep()    
+    nextdispatchstep()
 end
 
 M.init = init

@@ -1,4 +1,4 @@
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Copyright (c) 2012 Sierra Wireless and others.
 -- All rights reserved. This program and the accompanying materials
 -- are made available under the terms of the Eclipse Public License v1.0
@@ -13,9 +13,11 @@
 
 --TODO: we currently use low level functions, modify it when the higher level API will be
 --implemented (accumulator)
-require 'bysant.core.serialize'
-require 'bysant.core.deserialize'
+require 'm3da.bysant.core'
+
 require 'pack' -- used only to get a specific value of NaN for floating point values
+
+local core = m3da.bysant.core
 
 -- Low level API helpers
 -- create a wrapper around bysant object and buffer to add some methods
@@ -24,7 +26,7 @@ function bysant_wrapper:serialize()  return table.concat(self.buffer) end
 function bysant_wrapper:value(value)
     local tvalue = type(value)
     if self.ctx[tvalue] then return self[tvalue](self, value)
-    elseif value == nil or value == bysant.niltoken then return self:null()
+    elseif value == nil or value == m3da.niltoken then return self:null()
     end
 end
 
@@ -40,7 +42,7 @@ function bysant_wrapper:__index(idx)
 end
 
 local function bysants(allow_errors)
-    local ctx, buffer = bysant.core.init{}
+    local ctx, buffer = core.init({})
     return setmetatable({ctx=ctx, buffer=buffer, allow_errors=allow_errors}, bysant_wrapper)
 end
 
@@ -75,16 +77,18 @@ local function bysants_assert(value, expected, msg)
     if type(value) ~= "table" then value = bysants():value(value) end
     value = value:serialize()
     expected = encode(expected)
-    u.assert_equal (expected, value, 
-                    string.format("Expected %s, got %s", hexdump(expected), hexdump(value)))
+    u.assert_equal (expected, value,
+                    string.format("Expected [%s], got [%s]", hexdump(expected), hexdump(value)))
 end
 
-local function bysantd(str, o) return bysant.core.deserializer():deserialize(encode(str), o) end
+local function bysantd(str, o) return core.deserializer():deserialize(encode(str), o) end
 local function bysantd_assert(value, expected, msg)
     local f = type(expected) == "table" and u.assert_clone_tables or u.assert_equal
     local payload, length = bysantd(value)
-    f(expected, payload, msg)
-    u.assert_equal(#encode(value), length) -- check that everything has been deserialized
+    f(expected, payload, msg or  string.format("input value: [%s], expected output: [%s], failed on equal test", sprint(value), sprint(expected)))
+    -- check that everything has been deserialized:
+    -- using #encode(value) +1: +1 because deserializer has been converted to return 1-based string length
+    u.assert_equal(#encode(value) +1, length,  string.format("input value: [%s], expected output: [%s], expected deserialized size %d, got %d", sprint(value), sprint(expected), #encode(value), length))
 end
 
 local function make_list_body(size, baseval, prefix, ctxid, ctx)
@@ -128,36 +132,36 @@ function globals :test_simpletypes()
     bysants_assert(false,           '02')
     --bysants_assert({ 1, 2, 3 },     '2da0a1a2')
     --bysants_assert({ x = 1 },       '4202"x"81')
-    bysants_assert(bysant.niltoken, '00')
-    
+    bysants_assert(m3da.niltoken, '00')
+
     --u.assert_equal (bysants(), encode'00')
     --u.assert_nil   (bysants(function() end))
-    
+
     -- try to serialize multiple values
     bysants_assert(bysants():number(0):number(0), '9f9f')
 end
 
 local GLOBAL_INTEGERS = {
     { -2147483649, 'fdffffffff7fffffff' },
-    { -2147483648, 'fc80000000' },
+    { -2147483648, 'fc80000000' }, -- global ctx: int32 min value
     { -  33818656, 'fcfdfbf7e0' },
-    { -  33818655, 'fbffffff' },
+    { -  33818655, 'fbffffff' }, --global ctx: large integer min value
     { -    264224, 'fa000000' },
-    { -    264223, 'f7ffff' },
+    { -    264223, 'f7ffff' }, --global ctx: medium integer min value
     { -      2080, 'f40000' },
-    { -      2079, 'efff' },
+    { -      2079, 'efff' }, --global ctx: small integer min value
     { -        32, 'e800' },
-    { -        31, '80' },
+    { -        31, '80' }, --global ctx: tiny integer min value
     {           0, '9f' },
-    {          64, 'df' },
+    {          64, 'df' }, --global ctx: tiny integer max value
     {          65, 'e000' },
-    {        2112, 'e7ff' },
+    {        2112, 'e7ff' }, --global ctx: small integer max value
     {        2113, 'f00000' },
-    {      264256, 'f3ffff' },
+    {      264256, 'f3ffff' }, --global ctx: medium integer max value
     {      264257, 'f8000000' },
-    {    33818688, 'f9ffffff' },
+    {    33818688, 'f9ffffff' }, --global ctx: large integer max value
     {    33818689, 'fc02040841' },
-    {  2147483647, 'fc7fffffff' },
+    {  2147483647, 'fc7fffffff' }, -- global ctx: int32 max value
     {  2147483648, 'fd0000000080000000' },
 }
 
@@ -188,7 +192,7 @@ end
 function globals :test_string()
     for _, t in ipairs(GLOBAL_STRINGS) do bysants_assert(t[1], t[2]) end
     bysants_assert(bysants():chunked():chunk("abc"):chunk("def"):close(), '290003"abc"0003"def"0000')
-    
+
     -- test error
     u.assert_nil(bysants(true):chunked():number(1), "Should not be allowed to define data inside chunked string")
 end
@@ -199,17 +203,17 @@ local GLOBAL_LIST = {
     { make_list_body( 1, 0x9f, '2b',   nil) },
     { make_list_body( 9, 0x9f, '33',   nil) },
     { make_list_body(10, 0x9f, '343b', nil) },
-    -- variable, untyped
+--    -- variable, untyped
     { bysants():list():close(),           '3500',   { } },
     { bysants():list():number(1):close(), '35a000', { 1 } },
-    -- fixed, typed
-    { make_list_body( 0, 0x66, '2a',   'number') },
-    { make_list_body( 1, 0x66, '3602',   'number') },
-    { make_list_body( 9, 0x66, '3e02',   'number') },
-    { make_list_body(10, 0x66, '3f3b02', 'number') },
-    -- variable, typed
+--    -- fixed, typed
+    { make_list_body( 0, 0x62, '2a',   'number') },
+    { make_list_body( 1, 0x62, '3602',   'number') },
+    { make_list_body( 9, 0x62, '3e02',   'number') },
+    { make_list_body(10, 0x62, '3f3b02', 'number') },
+--    -- variable, typed
     { bysants():list(nil, "number"):close(),           '400200',   { } },
-    { bysants():list(nil, "number"):number(1):close(), '40026700', { 1 } },
+    { bysants():list(nil, "number"):number(1):close(), '40026300', { 1 } },
 }
 
 local GLOBAL_MAP = {
@@ -222,13 +226,13 @@ local GLOBAL_MAP = {
     { bysants():map():close(), '4c00',  { } },
     { bysants():map():string("foo"):string("bar"):close(), '4c04"foo"06"bar"00', { foo="bar" }},
     -- fixed, typed
-    { make_map_body( 0, 0x66, '41',     'number') },
-    { make_map_body( 1, 0x66, '4d02',   'number') },
-    { make_map_body( 9, 0x66, '5502',   'number') },
-    { make_map_body(10, 0x66, '563b02', 'number') },
+    { make_map_body( 0, 0x62, '41',     'number') },
+    { make_map_body( 1, 0x62, '4d02',   'number') },
+    { make_map_body( 9, 0x62, '5502',   'number') },
+    { make_map_body(10, 0x62, '563b02', 'number') },
     -- variable, typed
     { bysants():map(nil, "number"):close(), '570200',  { } },
-    { bysants():map(nil, "number"):string("foo"):number(0):close(), '570204"foo"6600', { foo=0 }},
+    { bysants():map(nil, "number"):string("foo"):number(0):close(), '570204"foo"6200', { foo=0 }},
 }
 
 function globals :test_list()
@@ -236,11 +240,11 @@ function globals :test_list()
         local ctx, bysant, _ = unpack(case)
         bysants_assert(ctx, bysant)
     end
-    
+
     -- test errors
     u.assert_nil(bysants(true):list(1):close(), "Not enough elements at close.")
     u.assert_nil(bysants(true):list(1):number(0):number(0), "Too many elements inserted.")
-    
+
     -- null values
     bysants_assert(bysants():list(1):null():close(), '2b00')
     u.assert_nil(bysants(true):list():null())
@@ -251,13 +255,13 @@ function globals :test_map()
         local ctx, bysant, _ = unpack(case)
         bysants_assert(ctx, bysant)
     end
-    
+
     -- errors on fixed length
     u.assert_nil(bysants(true):map(1):close(), "Not enough elements at close.")
     u.assert_nil(bysants(true):map(0):number(0), "Too many elements inserted.")
     u.assert_nil(bysants(true):map(1):number(0):close(), "Closed with a odd number of elements")
     u.assert_nil(bysants(true):map():number(0):close(), "Closed with a odd number of elements")
-    
+
     -- null values
     bysants_assert(bysants():map(1):number(0):null():close(), '423b00')
     bysants_assert(bysants():map() :number(0):null():close(), '4c3b0000')
@@ -272,18 +276,18 @@ function globals :test_class()
     -- use short form
     bysants_assert(bysants():class({id=0, "global", "unsignedstring", "number"}), '723b3e000102')
     bysants_assert(bysants():class({
-                    id=1, name="myclass", 
+                    id=1, name="myclass",
                     {name="time", context="unsignedstring"},
-                    {name="value", context="number"} }), 
+                    {name="value", context="number"} }),
                   '713c08"myclass"3d05"time"0106"value"02')
-    
+
     -- define a class in the middle of a list: this should not be counted as object
     bysants_assert(bysants():list(2):number(0):class({id=0}):number(1):close(),
                   '2c9f723b3ba0')
     -- in a map, it should not mess with key/value order
     bysants_assert(bysants():map():string("k1"):class({id=0}):number(1):close(),
                   '4c03"k1"723b3ba000')
-    
+
     -- internal class
     bysants_assert(bysants():class({id=0}, true), '')
     -- internal classes can be declared anywhere
@@ -293,13 +297,27 @@ end
 
 function globals :test_instance()
     bysants_assert(bysants()
-        :class({ id=20, name="myclass", 
-            { name="time", context="unsignedstring"}, 
+        :class({ id=20, name="myclass",
+            { name="time", context="unsignedstring"},
             {name="value", context="number"}
         })
         :object(20):number(2000):number(-100):close()
         :number(0),
-        '714f08"myclass"3d05"time"0106"value"02703fce44d8029f')
+        '714f08"myclass"3d05"time"0106"value"02703fce44d4029f')
+        --71: Full class definition, 4F: class id: 20 (4F-3B), 08: class name: string length 08-01 = 7 -> "myclass"
+        --3D: length of field list (unsigned)  2 (3D - 3B),
+        --   - 05:  class field name: string length 05-01 = 4  -> "time"
+        --     01: contextid: Context 1: Unsigned Integers and Strings (UIS)
+        --   - 06:  class field name: string length 06-01 = 5  -> "value"
+        --     02: contextid: Context 2: Numbers
+        --70: object instance, 3f: class id, UIS value: 4 (3f-3b) -> class id = 4 +16 = 20
+        --ce: in context="unsignedstring" UIS:  Small unsigned integer from 140 to 8331.
+        --44: BYTE0 for Small unsigned integer
+        -- ->Value is 140 + (OPCODE - 0xC7) * 256 + BYTE0 : 140+(0xCE-0xC7)*256 + 0x44 : 2000
+        --d4: in context="number" small integer (13 bits) with MSB as sign bit.
+        --02  BYTE0 for:
+        -- ->value For opcodes from 0xD8 to 0xE7: -1*(((OPCODE - 0xD4) << 8) + BYTE0) - 98 : -1*( ( (d4-d4)<<8) + 0x02 ) - 98 : -100
+        --9F:  ctx global : 0
    bysants_assert(bysants()
         :class({id=0})
         :object(0):close()
@@ -307,13 +325,13 @@ function globals :test_instance()
         '723b3b609f')
    -- test with an internal class
    bysants_assert(bysants()
-        :class({ id=20, name="myclass", 
-            { name="time", context="unsignedstring"}, 
+        :class({ id=20, name="myclass",
+            { name="time", context="unsignedstring"},
             {name="value", context="number"}
         }, true)
         :object(20):number(2000):number(-100):close()
         :number(0),
-        '703fce44d8029f')
+        '703fce44d4029f')
 end
 
 local globald = u.newtestsuite 'Bysant Deserializer - Global context'
@@ -349,11 +367,11 @@ function globald :test_map()
         local _, bysant, result = unpack(case)
         bysantd_assert(bysant, result)
     end
-    
+
     -- null values
     bysantd_assert('423b00', {})   -- fixed
     bysantd_assert('4c3b0000', {}) -- variable
-    
+
     -- value overwrite
     bysantd_assert('4304"foo"06"bar"04"foo"06"baz"', {foo="baz"})
     bysantd_assert('4304"foo"06"bar"04"foo"00', {})
@@ -363,20 +381,20 @@ end
 function globald :test_instance()
     -- just a class declaration
     bysantd_assert('714f08"myclass"3d05"time"0106"value"0200', nil)
-    bysantd_assert('723b3e000102609fce44d802', { 0, 2000, -100, __class = 0 })
-    bysantd_assert('714f08"myclass"3d05"time"0106"value"02703fce44d802', { time = 2000, value = -100, __class = "myclass" })
+    bysantd_assert('723b3e000102609fce44d402', { 0, 2000, -100, __class = 0 })
+    bysantd_assert('714f08"myclass"3d05"time"0106"value"02703fce44d402', { time = 2000, value = -100, __class = "myclass" })
     -- class declaration in middle of other objects
     bysantd_assert('2c9f723b3ba0', { 0, 1 })
     bysantd_assert('4c03"k1"723b3ba000', { k1 = 1 })
     -- with internal class
-    local d = bysant.core.deserializer()
+    local d = core.deserializer()
     d:addClass{
         name = "MyInternalClass", id = 2,
         { name = "time",  context = "unsignedstring" },
         { name = "value", context = "number"         },
     }
-    u.assert_clone_tables({ time = 2000, value = -100, __class = "MyInternalClass" }, 
-                          d:deserialize(encode("62ce44d802")))
+    u.assert_clone_tables({ time = 2000, value = -100, __class = "MyInternalClass" },
+                          d:deserialize(encode("62ce44d402")))
 end
 
 function globald :test_nested_containers()
@@ -393,7 +411,7 @@ function globald :test_nested_containers()
                         :string("k2"):list(1):number(0):close()
                     :close():serialize()),
                     { k = { foo=0 }, [2]="v", k2={ 0 } } )
-    
+
     -- container inside instance
     bysantd_assert('723b3d00006035a0a1009f', { {1, 2}, 0, __class=0})
     bysantd_assert('723b3d0000602ca0a19f', { {1, 2}, 0, __class=0})
@@ -405,35 +423,37 @@ end
 local numbers = u.newtestsuite 'Bysant Serializer - Number context'
 
 local NUMBER_INTEGER = {
-    { -2147483649, '02ffffffff7fffffff' },
-    { -2147483648, '0180000000' },
-    { -  67637346, '01fbf7ef9e' },
-    { -  67637345, 'ffffffff' },
-    { -    528482, 'fc000000' },
-    { -    528481, 'f7ffff' },
-    { -      4194, 'f00000' },
-    { -      4193, 'e7ff' },
-    { -        98, 'd800' },
-    { -        97, '05' },
-    {           0, '66' },
-    {          97, 'c7' },
-    {          98, 'c800' },
-    {        4193, 'd7ff' },
-    {        4194, 'e80000' },
-    {      528481, 'efffff' },
-    {      528482, 'f8000000' },
-    {    67637345, 'fbffffff' },
-    {    67637346, '0104081062' },
-    {  2147483647, '017fffffff' },
-    {  2147483648, '020000000080000000' },
+    { -2147483649, 'fdffffffff7fffffff' },
+    { -2147483648, 'fc80000000' }, --number ctx: int32 min value
+    { -  67637346, 'fcfbf7ef9e' },
+    { -  67637345, 'fbffffff' }, --number ctx: large integer min value
+    { -    528482, 'f8000000' },
+    { -    528481, 'f3ffff' }, --number ctx: medium integer min value
+    { -      4194, 'ec0000' },
+    { -      4193, 'e3ff' }, --number ctx: small integer min value
+    { -        98, 'd400' },
+    { -        97, '01' }, --number ctx: tiny integer min value
+    {           0, '62' },
+    {          97, 'c3' }, --number ctx: tiny integer max value
+    {          98, 'c400' },
+    {        4193, 'd3ff' }, --number ctx: small integer max value
+    {        4194, 'e40000' },
+    {      528481, 'ebffff' }, --number ctx: medium integer max value
+    {      528482, 'f4000000' },
+    {    67637345, 'f7ffffff' }, --number ctx: large integer max value
+    {    67637346, 'fc04081062' },
+    {  2147483647, 'fc7fffffff' },   --number ctx: int32 max value
+    {  2147483648, 'fd0000000080000000' },
 }
 
 local NUMBER_FLOAT = {
-    { 0.25,    '033e800000' },
-    { 1e30/13, '0445ef11a8e476d4d1' },
+    { 0.25,    'fe3e800000' },
+    { 1e30/13, 'ff45ef11a8e476d4d1' },
 }
 
 -- test a value in number context
+--3602: 36 declare a list with specific context, list of size = 36-36+1 = 1
+--02 context number
 local function bysants_assert_number(v, exp) bysants_assert(bysants():list(1, "number"):value(v):close(), '3602'..exp) end
 local function bysantd_assert_number(v, exp) bysantd_assert('3602'..v, {exp}) end
 
@@ -504,7 +524,7 @@ end
 
 function uiss :test_string()
     for _, t in ipairs(UIS_STRING) do bysants_assert_uis(t[1], t[2]) end
-    bysants_assert(bysants():list(1, "unsignedstring"):chunked():chunk("abc"):chunk("def"):close():close(), 
+    bysants_assert(bysants():list(1, "unsignedstring"):chunked():chunk("abc"):chunk("def"):close():close(),
                   '36013a0003"abc"0003"def"0000')
 end
 
@@ -546,13 +566,13 @@ local LISTMAP_LIST = {
     { bysants():list(1, "listmap"):list():close():close(),           '3f00',   { } },
     { bysants():list(1, "listmap"):list():number(1):close():close(), '3fa000', { 1 } },
     -- fixed, typed
-    { make_list_body_lm( 0, 0x66, '01',     "number") },
-    { make_list_body_lm( 1, 0x66, '4002',   "number") },
-    { make_list_body_lm(60, 0x66, '7b02',   "number") },
-    { make_list_body_lm(61, 0x66, '7c3b02', "number") },
+    { make_list_body_lm( 0, 0x62, '01',     "number") },
+    { make_list_body_lm( 1, 0x62, '4002',   "number") },
+    { make_list_body_lm(60, 0x62, '7b02',   "number") },
+    { make_list_body_lm(61, 0x62, '7c3b02', "number") },
     -- variable, typed
     { bysants():list(1, "listmap"):list(nil, "number"):close():close(),           '7d0200',   { } },
-    { bysants():list(1, "listmap"):list(nil, "number"):number(1):close():close(), '7d026700', { 1 } },
+    { bysants():list(1, "listmap"):list(nil, "number"):number(1):close():close(), '7d026300', { 1 } },
 }
 
 local LISTMAP_MAP = {
@@ -565,13 +585,13 @@ local LISTMAP_MAP = {
     { bysants():list(1, "listmap"):map():close():close(), 'c100', { } },
     { bysants():list(1, "listmap"):map():number(1):number(1):close():close(), 'c13ca000', { 1 } },
     -- fixed, typed
-    { make_map_body_lm( 0, 0x66, '83', 'number') },
-    { make_map_body_lm( 1, 0x66, 'c202', 'number') },
-    { make_map_body_lm(60, 0x66, 'fd02', 'number') },
-    { make_map_body_lm(61, 0x66, 'fe3b02', 'number') },
+    { make_map_body_lm( 0, 0x62, '83', 'number') },
+    { make_map_body_lm( 1, 0x62, 'c202', 'number') },
+    { make_map_body_lm(60, 0x62, 'fd02', 'number') },
+    { make_map_body_lm(61, 0x62, 'fe3b02', 'number') },
     -- variable, typed
     { bysants():list(1, "listmap"):map(nil, 'number'):close():close(), 'ff0200', { } },
-    { bysants():list(1, "listmap"):map(nil, 'number'):number(1):number(1):close():close(), 'ff023c6700', { 1 } },
+    { bysants():list(1, "listmap"):map(nil, 'number'):number(1):number(1):close():close(), 'ff023c6300', { 1 } },
 }
 
 -- Lists and maps
@@ -587,6 +607,8 @@ function lms :test_map()
     for _, case in ipairs(LISTMAP_MAP) do
         local ctx, bysant, _ = unpack(case)
         bysants_assert(ctx, '3606'..bysant)
+        --3606: 36 declare a list with specific context, list of size = 36-36+1 = 1
+        --06 context number
     end
 end
 
@@ -686,7 +708,7 @@ function floatd :test()
     bysantd_assert_float('6f788d47', select(2, string.unpack(encode('478d786f'), 'f'))) -- 32bit representation of 1e30/13
     bysantd_assert_float('ffffffff00', nil)
     u.assert_true(isnan(bysantd('3604ffffffff01')[1]))
-    
+
     bysantd_assert_double('3fd0000000000000', 0.25)
     bysantd_assert_double('45ef11a8e476d4d1', 1e30/13)
     bysantd_assert_double('ffffffffffffffff00', nil)

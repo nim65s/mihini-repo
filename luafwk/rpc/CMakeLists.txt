@@ -9,4 +9,14 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(rpc DESTINATION rpc common.lua init.lua sched.lua nosched.lua proxy.lua builtinsignatures.lua)
+PROJECT(MIHINI_RPC)
+
+ADD_LUA_LIBRARY(rpc_common DESTINATION rpc common.lua init.lua proxy.lua builtinsignatures.lua)
+ADD_DEPENDENCIES(rpc_common utils pack coxcall checks luatobin)
+
+ADD_LUA_LIBRARY(rpc_sched DESTINATION rpc sched.lua)
+ADD_DEPENDENCIES(rpc_sched rpc_common socket_sched)
+
+ADD_LUA_LIBRARY(rpc_nosched DESTINATION rpc nosched.lua)
+ADD_DEPENDENCIES(rpc_nosched rpc_common  socket)
+

@@ -25,7 +25,7 @@ PPP_IFACE="$1"
 
 #delete default route
 /sbin/route del default
-#add interface ppp0 as default route 
+#add interface ppp0 as default route
 /sbin/route add default dev ${PPP_IFACE}
 
 if [ -f /etc/ppp/resolv.conf ]; then

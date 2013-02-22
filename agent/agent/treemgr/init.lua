@@ -20,7 +20,7 @@
 -- of variables, organized in a hierarchical tree, which can be
 -- read, written, and monitored for changes by user applications.
 --
--- The architecture consists of 3 parts: 
+-- The architecture consists of 3 parts:
 --
 -- * A logical tree, whose hierarchical organization is user-friendly
 --   and portable, is presented to user applications.
@@ -34,7 +34,7 @@
 --
 -- * a mapping definition, allowing the core tree engine to translate
 --   logical paths into handler paths and the other way around.
---   This mapping is compiled into CDB databases, so that large 
+--   This mapping is compiled into CDB databases, so that large
 --   mappings don't have to fit entirely in RAM.
 --
 -- Sub-modules
@@ -44,7 +44,7 @@
 --
 -- * `treemgr` is the core engine, which coordinates handlers with the
 --   logical view of the tree.
--- * `treemgr.db` interfaces with the CDB databases which describe 
+-- * `treemgr.db` interfaces with the CDB databases which describe
 --   the mapping.
 -- * `treemgr.build` compiles `"*.map"` files into a set of `"*.cdb"`
 --   database files, organized for quick access to translation info.
@@ -62,7 +62,7 @@
 -- In the example below, `a` and `a.b` are non-leaf nodes, with
 -- children `{"a.b", "a.d"}` and `{"a.b.c"}` respectively. Leaf nodes
 -- `"a.b.c"` and `"a.d"` have no children, but carry a value each.
--- 
+--
 --     -a
 --      +-b
 --      | +-c = 123
@@ -96,7 +96,7 @@
 --      +-GPS_LONGITUDE
 --      +-GPS_ELEVATION
 --      +-TIME
---      
+--
 --      config
 --      +- server
 --      +- agent
@@ -111,7 +111,7 @@
 -- * `agentconfig` with `config:<root>`
 --
 -- Each aleos variable above is mapped individually, but the whole
--- `config` tree is mapped recursively: by mapping 
+-- `config` tree is mapped recursively: by mapping
 -- `config:<root>=agentconfig`, one gets for instance
 -- `config:server.url=agentconfig.url`,
 -- `config:mediation.pollingperiod.GPRS=`agentconfig.mediation.pollingperiod.GPRS`,
@@ -219,7 +219,7 @@
 --
 -- A treemgr configuration consists of handlers and a mapping. Handlers are
 -- Lua objects which implement the `:get()`, `:set()`, `:register()` and
--- `:unregister()` methods. The mapping is a set of bidirectional 
+-- `:unregister()` methods. The mapping is a set of bidirectional
 -- correspondances between logical tree nodes and handler nodes.
 --
 -- The mapping is stored in a CDB (Constant DataBase): it ensures conversions
@@ -274,7 +274,7 @@
 --   operations are delegated.
 --
 -- * `handler_name:hpath -> lpath` allows `notify` to translate handler
---   notifications into logical ones, which will be presented to the 
+--   notifications into logical ones, which will be presented to the
 --   relevant apllicative hook. A given handler + path can be mounted
 --   in more than one place, and therefore have several values
 --   associated with it in the database.
@@ -365,20 +365,22 @@ local db          = require 'agent.treemgr.db'; M.db = db
 local utils_table = require 'utils.table'
 local niltoken    = require 'niltoken'
 
+require 'print'
+
 --- Helper which associates a handler name with the handler itself.
 --  It is currently just wrapping Lua's `require`, as handler names
 --  are the names of the Lua modules returning them.
-local function get_handler(name) 
-	local h = package.loaded[name]
-	if h then return h end
-	
-	-- Not loaded yet: require it and check that the module works as specified.
-	h = require(name)
-	if not pcall(function() return h.get end) then
-		error ("Module "..name.." returns "..sprint(h)..
-			" instead of a valid handler")
-	end
-	return h
+local function get_handler(name)
+    local h = package.loaded[name]
+    if h then return h end
+
+    -- Not loaded yet: require it and check that the module works as specified.
+    h = require(name)
+    if not pcall(function() return h.get end) then
+        error ("Module "..name.." returns "..sprint(h)..
+            " instead of a valid handler")
+    end
+    return h
 end
 
 --- Translates an handler_name + hpath into the list of all lpaths which map
@@ -387,19 +389,19 @@ end
 --  @param handler_name
 --  @param hpath
 --  @return a list lpaths
---local 
+--local
 function hpath2lpath(handler_name, hpath)
-	local results = { }
-	-- printf("h2l: translate  %s:%s", handler_name, hpath)
-	for hprefix, relpath in path.gsplit(hpath) do
-		-- printf("h2l: trying to retrieve lprefix %q from DB", hprefix)
-		for lprefix in db.h2l (handler_name, hprefix) do
-			local lpath = path.concat(lprefix, relpath)
-			-- printf("h2l: hit: lprefix = %s, relpath = %s , lpath = %s", lprefix, relpath, lpath)
-			table.insert(results, lpath)
-		end
-	end
-	return results
+    local results = { }
+    -- printf("h2l: translate  %s:%s", handler_name, hpath)
+    for hprefix, relpath in path.gsplit(hpath) do
+        -- printf("h2l: trying to retrieve lprefix %q from DB", hprefix)
+        for lprefix in db.h2l (handler_name, hprefix) do
+            local lpath = path.concat(lprefix, relpath)
+            -- printf("h2l: hit: lprefix = %s, relpath = %s , lpath = %s", lprefix, relpath, lpath)
+            table.insert(results, lpath)
+        end
+    end
+    return results
 end
 
 --- Retrieve the handler controlling a given logical node, and describe
@@ -410,22 +412,22 @@ end
 -- @return nil, error_msg
 --local
 function lpath2hpath(lpath)
-	for lprefix, relpath in  path.gsplit (lpath) do
-		local handler_name, hpath = db.l2h (lprefix)
-		if handler_name then 
-			local handler = get_handler(handler_name)
-			local l2h = {
-			handler_name = handler_name,
-			handler = handler,-- handler controlling the `lpath` arg node
-			lpath   = lprefix,-- logical node on which `handler` is mounted
-			hpath   = hpath,  -- handler path mounted on `l2h.lpath`
-			relpath = relpath -- path between `l2h.lpath` and the `lpath` arg
-			} 
-			--print ("Converting lpath "..lpath); p(l2h)
-			return l2h
-		end
-	end
-	return nil, "no handler found"
+    for lprefix, relpath in  path.gsplit (lpath) do
+        local handler_name, hpath = db.l2h (lprefix)
+        if handler_name then
+            local handler = get_handler(handler_name)
+            local l2h = {
+            handler_name = handler_name,
+            handler = handler,-- handler controlling the `lpath` arg node
+            lpath   = lprefix,-- logical node on which `handler` is mounted
+            hpath   = hpath,  -- handler path mounted on `l2h.lpath`
+            relpath = relpath -- path between `l2h.lpath` and the `lpath` arg
+            }
+            --print ("Converting lpath "..lpath); p(l2h)
+            return l2h
+        end
+    end
+    return nil, "no handler found"
 end
 
 --------------------------------------------------------------------------------
@@ -447,13 +449,13 @@ end
 --
 -- * `get("a.d")` will return `234, { }` (234 is the value, there are
 --   no children)
--- 
+--
 -- * `get{ "a.d" }` will return `{["a.d"] = 234} , { }` (in case of
 --   path lists, the values are indexed by path)
--- 
+--
 -- * `get{ "a.d", "a.b" }` will return `{["a.d"] = 234} , { "a.b.c" }`
 --   (the former path adds a value, the latter adds a child).
--- 
+--
 --
 -- @param lpath_list a logical path, or a list of logical paths
 --
@@ -465,94 +467,94 @@ end
 --         `children_paths` is a list of paths to children of non-leaf
 --         nodes.
 --
--- @return `value, empty_list` if `lpath_list` is a path string, and 
+-- @return `value, empty_list` if `lpath_list` is a path string, and
 --         the corresponding node is a leaf node.
 --
--- @return `nil, children_paths` if `lpath_list` is a path string, and 
+-- @return `nil, children_paths` if `lpath_list` is a path string, and
 --         the corresponding node is a non-leaf node;
 --         `children_paths` is a list of paths its children.
 --
 function M.get(lpath_list, result_lmap)
-	checks ('string|table', '?table')
+    checks ('string|table', '?table')
 
-	local children_set -- will be initialized by first intermediate node
+    local children_set -- will be initialized by first intermediate node
 
-	-- Perform a get for a single lpath.
-	-- If children paths are found, they're added in `children_set`
-	-- If a leaf value is found, it's returned
-	-- If no leaf value is found, `nil` is returned
-	-- If and only if an error occurs, an error string is returned as 2nd value
-	-- So, contrary to `handler:get`, this local function won't return a table;
-	-- it might only fill `children_set` 
-	local function get_lpath(lpath)
-		checks('string')
-		local handler_found = false
-		local l2h = lpath2hpath (lpath)
-		if l2h then
-			-- delegate to the handler above
-			handler_found = true
-			local hpath = path.concat(l2h.hpath, l2h.relpath) -- TODO: cache this, indexed by lpath
-			log('TREEMGR', 'DEBUG', "Get: trying to get lpath %q as hpath %q", lpath, hpath)
-			local a, b = l2h.handler :get (hpath)
-			if b==nil then return a
-			elseif type(b)=='table' then
-				log('TREEMGR', 'DEBUG', "Get: according to handler, %q is an intermediate node", l2h.lpath)
-				children_set = children_set or { }
-				-- convert relative hpaths into absolute lpaths
-				for relpath, _ in pairs(b) do
-					--printf("tm: get: add %q + %q = %q to children set", lpath, relpath, path.concat(lpath,relpath))
-					children_set[path.concat(lpath, relpath)] = true
-				end
-			elseif type(b)=='string' then return a, b
-			else error ("Invalid treemgr handler result: "..sprint(b)) end
-		else log('TREEMGR', 'DEBUG', "Get: no mapping above lpath %q", lpath) end
+    -- Perform a get for a single lpath.
+    -- If children paths are found, they're added in `children_set`
+    -- If a leaf value is found, it's returned
+    -- If no leaf value is found, `nil` is returned
+    -- If and only if an error occurs, an error string is returned as 2nd value
+    -- So, contrary to `handler:get`, this local function won't return a table;
+    -- it might only fill `children_set`
+    local function get_lpath(lpath)
+        checks('string')
+        local handler_found = false
+        local l2h = lpath2hpath (lpath)
+        if l2h then
+            -- delegate to the handler above
+            handler_found = true
+            local hpath = path.concat(l2h.hpath, l2h.relpath) -- TODO: cache this, indexed by lpath
+            log('TREEMGR', 'DEBUG', "Get: trying to get lpath %q as hpath %q", lpath, hpath)
+            local a, b = l2h.handler :get (hpath)
+            if b==nil then return a
+            elseif type(b)=='table' then
+                log('TREEMGR', 'DEBUG', "Get: according to handler, %q is an intermediate node", l2h.lpath)
+                children_set = children_set or { }
+                -- convert relative hpaths into absolute lpaths
+                for relpath, _ in pairs(b) do
+                    --printf("tm: get: add %q + %q = %q to children set", lpath, relpath, path.concat(lpath,relpath))
+                    children_set[path.concat(lpath, relpath)] = true
+                end
+            elseif type(b)=='string' then return a, b
+            else error ("Invalid treemgr handler result: "..sprint(b)) end
+        else log('TREEMGR', 'DEBUG', "Get: no mapping above lpath %q", lpath) end
 
-		-- either no handler above, or the handler didn't return a leaf value:
-		-- list children handlers, add their paths to children list
-		for child_lpath in db.l2c (lpath) do
-			children_set = children_set or { }
-			handler_found = true
-			log('TREEMGR', 'DEBUG', "Adding child leading to mapping point %q", child_lpath)
-			children_set [child_lpath] = true
-		end
-		if handler_found then return nil
-		else return nil, "handler not found" end
-	end
+        -- either no handler above, or the handler didn't return a leaf value:
+        -- list children handlers, add their paths to children list
+        for child_lpath in db.l2c (lpath) do
+            children_set = children_set or { }
+            handler_found = true
+            log('TREEMGR', 'DEBUG', "Adding child leading to mapping point %q", child_lpath)
+            children_set [child_lpath] = true
+        end
+        if handler_found then return nil
+        else return nil, "handler not found" end
+    end
 
-	-- use `get_lpath` to act on multiple paths, to fill the optional `result_lmap`,
-	-- to put children sets in form before returning it if applicable.
-	local result, err_msg
-	if type(lpath_list)=="string" then 
-		-- in case of single string, don't build and return an lmap, just the value
-		result, err_msg = get_lpath(lpath_list) 
-		if err_msg then
-			return nil, err_msg
-		end
-		if result_lmap then result_lmap[lpath_list] = result end
-	else -- actual lpath list, present the result(s) as an lmap.
-		result = result_lmap or { }
-		children_set = children_set or { } -- always return a list of children
-		for k, v in ipairs(lpath_list) do
-			local lpath = type(k)=='string' and k or v -- take sets as well as lists
-			local path_result
-			local path_result, err_msg = get_lpath(lpath)
-			if err_msg then return nil, lpath..": "..err_msg end
-			result[lpath] = path_result
-		end
-	end
-	if result==nil and children_set then
-		return nil, utils_table.keys(children_set)
-	elseif result==nil then -- no children, no error
-		return nil
-	elseif children_set then -- result (map) and children
+    -- use `get_lpath` to act on multiple paths, to fill the optional `result_lmap`,
+    -- to put children sets in form before returning it if applicable.
+    local result, err_msg
+    if type(lpath_list)=="string" then
+        -- in case of single string, don't build and return an lmap, just the value
+        result, err_msg = get_lpath(lpath_list)
+        if err_msg then
+            return nil, err_msg
+        end
+        if result_lmap then result_lmap[lpath_list] = result end
+    else -- actual lpath list, present the result(s) as an lmap.
+        result = result_lmap or { }
+        children_set = children_set or { } -- always return a list of children
+        for k, v in ipairs(lpath_list) do
+            local lpath = type(k)=='string' and k or v -- take sets as well as lists
+            local path_result
+            local path_result, err_msg = get_lpath(lpath)
+            if err_msg then return nil, lpath..": "..err_msg end
+            result[lpath] = path_result
+        end
+    end
+    if result==nil and children_set then
+        return nil, utils_table.keys(children_set)
+    elseif result==nil then -- no children, no error (would have been caught by now)
+        return nil, nil
+    elseif children_set then -- result (map) and children
         return result, utils_table.keys(children_set)
-	else -- result without children
-		return result
-	end
+    else -- result without children
+        return result
+    end
 end
 
 --------------------------------------------------------------------------------
--- Set values in logical tree leaf nodes.  
+-- Set values in logical tree leaf nodes.
 --
 -- The values are passed in `lmap`, a table mapping logical paths to
 -- values.  Optionally, a prefix logical path can be passed as first
@@ -578,41 +580,41 @@ end
 -- @return nil, error_message in case of failure
 --
 function M.set(prefix_lpath, lmap)
-	-- make first arg optional
-	if lmap==nil then
-		local t=type(prefix_lpath)
-		if t=='string' then lmap={['']=niltoken}
-		elseif t=='table' then prefix_lpath, lmap = '', prefix_lpath
-		else checks('string', 'table') end -- will cause a "bad arg" error msg
-	elseif type(lmap) ~= 'table' then
-		lmap = { [''] = lmap } -- allow single values out of maps.
-	end
+    -- make first arg optional
+    if lmap==nil then
+        local t=type(prefix_lpath)
+        if t=='string' then lmap={['']=niltoken}
+        elseif t=='table' then prefix_lpath, lmap = '', prefix_lpath
+        else checks('string', 'table') end -- will cause a "bad arg" error msg
+    elseif type(lmap) ~= 'table' then
+        lmap = { [''] = lmap } -- allow single values out of maps.
+    end
 
-	checks('string', 'table') -- prefix lpath, key_suffix/value pairs
+    checks('string', 'table') -- prefix lpath, key_suffix/value pairs
 
-	local handler_maps = { } -- argument maps for handlers, indexed by handler.
+    local handler_maps = { } -- argument maps for handlers, indexed by handler.
 
-	-- sort path/value pairs by handler
-	for k, v in utils_table.recursivepairs(lmap) do
-		local lpath = path.concat (prefix_lpath, k)
-		local l2h   = lpath2hpath (lpath)
-		if not l2h then return nil, lpath..": no mapping found" end
-		local hmap  = handler_maps[l2h.handler]
-		if not hmap then hmap={ }; handler_maps[l2h.handler]=hmap end
-		local hpath = path.concat(l2h.hpath, l2h.relpath)
-		hmap[hpath] = v
-	end
+    -- sort path/value pairs by handler
+    for k, v in utils_table.recursivepairs(lmap) do
+        local lpath = path.concat (prefix_lpath, k)
+        local l2h   = lpath2hpath (lpath)
+        if not l2h then return nil, lpath..": no mapping found" end
+        local hmap  = handler_maps[l2h.handler]
+        if not hmap then hmap={ }; handler_maps[l2h.handler]=hmap end
+        local hpath = path.concat(l2h.hpath, l2h.relpath)
+        hmap[hpath] = v
+    end
 
-	-- call each handler with its map
-	for handler, hmap in pairs(handler_maps) do
-		if log.musttrace('TREEMGR', 'DEBUG') then
-			log('TREEMGR', 'DEBUG', "Set: handler:set%s", sprint(hmap))
-		end
-		local r, msg = handler :set (hmap)
-		if not r then return r, msg or "unspecified handler error" end
-	end
+    -- call each handler with its map
+    for handler, hmap in pairs(handler_maps) do
+        if log.musttrace('TREEMGR', 'DEBUG') then
+            log('TREEMGR', 'DEBUG', "Set: handler:set%s", sprint(hmap))
+        end
+        local r, msg = handler :set (hmap)
+        if not r then return r, msg or "unspecified handler error" end
+    end
 
-	return M
+    return "ok"
 end
 
 
@@ -642,61 +644,66 @@ end
 --        even if they're not monitored.
 --
 function M.register(monitored_lpath_list, hook, associated_lpath_list)
-	checks('string|table', 'function', '?string|table')
+    checks('string|table', 'function', '?string|table')
 
-	if type(monitored_lpath_list)=='string'
-	then monitored_lpath_list = {monitored_lpath_list} end
-	if type(associated_lpath_list)=='string'
-	then associated_lpath_list = {associated_lpath_list} end
+    if type(monitored_lpath_list)=='string'
+    then monitored_lpath_list = {monitored_lpath_list} end
+    if type(associated_lpath_list)=='string'
+    then associated_lpath_list = {associated_lpath_list} end
+    associated_lpath_list = associated_lpath_list or { }
 
-	-- TODO: ought to belong to utils.table
-	local function list2set(list)
-		local s = { }
-		for _, x in pairs(list) do s[x] = true end
-		return s
-	end
+    -- TODO: ought to belong to utils.table
+    local function list2set(list)
+        local s = { }
+        for _, x in pairs(list) do s[x] = true end
+        return s
+    end
 
-	local hook = {
-		monitored_lpath_set = list2set(monitored_lpath_list),
-		f = hook,
-		associated_lpath_set = list2set(associated_lpath_list or { }) }
+    local function cleanpath(t) for i, p in ipairs(t) do t[i]=path.clean(p) end end
+    cleanpath(monitored_lpath_list)
+    cleanpath(associated_lpath_list)
 
-	-- Register the hook, so that we know when it must be triggered
-	for _, lpath in ipairs (monitored_lpath_list) do
-		local hooks_set = M.hooks[lpath] 
-		if hooks_set then hooks_set[hook] = true
-		else M.hooks[lpath] = { [hook] = true } end
-	end
+    local hook = {
+        monitored_lpath_set = list2set(monitored_lpath_list),
+        f = hook,
+        associated_lpath_set = list2set(associated_lpath_list or { }) }
 
-	-- Register on handlers, so that they actually call M.notify upon changes.
+    -- Register the hook, so that we know when it must be triggered
+    for _, lpath in ipairs (monitored_lpath_list) do
+        local hooks_set = M.hooks[lpath]
+        if hooks_set then hooks_set[hook] = true
+        else M.hooks[lpath] = { [hook] = true } end
+    end
 
-	for _, lpath in pairs(monitored_lpath_list) do
-		-- handlers above each lpath: only register the path toward this node
-		log("TREEMGR", "DEBUG", "Register: search handlers affecting lpath %q", lpath)
-		for lprefix, relpath in path.gsplit(lpath) do
-			local handler_name, hprefix = db.l2h (lprefix)
-			if handler_name then
-				local handler = get_handler(handler_name)
-				local hpath = path.concat(hprefix, relpath)
-				log("TREEMGR", "DEBUG", "Register: Handler %s mounted at "..
-					"lpath %q above lpath %q registers hpath %q", 
-					handler_name, lprefix, lpath, hpath) 				
-				handler :register (hpath)
-			end
-		end
-		-- handlers below each lpath: register for everything
-		for handler_name in db.l2m (lpath) do
-			log("TREEMGR", "DEBUG", "Register: Handler %s mounted below "..
-				"lpath %q registers every hpath", handler_name, lpath) 				
-			get_handler(handler_name) :register ''
-		end
-	end
-	return hook
+    -- Register on handlers, so that they actually call M.notify upon changes.
+
+    for _, lpath in pairs(monitored_lpath_list) do
+        -- handlers above each lpath: only register the path toward this node
+        log("TREEMGR", "DEBUG", "Register: search handlers affecting lpath %q", lpath)
+        for lprefix, relpath in path.gsplit(lpath) do
+            local handler_name, hprefix = db.l2h (lprefix)
+            if handler_name then
+                local handler = get_handler(handler_name)
+                local hpath = path.concat(hprefix, relpath)
+                log("TREEMGR", "DEBUG", "Register: Handler %s mounted at "..
+                    "lpath %q above lpath %q registers hpath %q",
+                    handler_name, lprefix, lpath, hpath)
+                handler :register (hpath)
+            end
+        end
+        -- handlers below each lpath: register for everything
+        for handler_name in db.l2m (lpath) do
+            log("TREEMGR", "DEBUG", "Register: Handler %s mounted below "..
+                "lpath %q registers every hpath", handler_name, lpath)
+            get_handler(handler_name) :register ''
+        end
+    end
+    return hook
 end
 
 --------------------------------------------------------------------------------
 -- Cancel the registration of a hook.
--- Following a call to this function, the hook won't be notified of anything 
+-- Following a call to this function, the hook won't be notified of anything
 -- anymore; if some handler registration can be cancelled as a result of this
 -- logical deregistration, those deregistrations will be performed.
 --
@@ -704,42 +711,42 @@ end
 --
 function M.unregister(hook)
 
-	checks('table') -- TODO: declare agent.treemgr.hook type?
+    checks('table') -- TODO: declare agent.treemgr.hook type?
 
-	-- 1/ remove the hook's lpaths from `M.hooks`
-	for lpath, _ in pairs(hook.monitored_lpath_set) do
-		local hooks_set = M.hooks[lpath]
-		hooks_set[hook] = nil
-		if not next(hooks_set) then M.hooks[lpath] = nil end
-	end
+    -- 1/ remove the hook's lpaths from `M.hooks`
+    for lpath, _ in pairs(hook.monitored_lpath_set) do
+        local hooks_set = M.hooks[lpath]
+        hooks_set[hook] = nil
+        if not next(hooks_set) then M.hooks[lpath] = nil end
+    end
 
-	-- 2/ look for other hooks registered to synonyms of the same lpath
-	local collectable_hpaths = { }
-	for lpath, _ in pairs(hook.monitored_lpath_set) do	
-		local l2h = lpath2hpath(lpath)
-		--print("unregister: checking lpath "..lpath.."\nh2l = "..siprint(2,l2h))
-		if l2h and l2h.handler.unregister then -- no use going further if we can't unregister
-			local hpath = path.concat(l2h.hpath, l2h.relpath) -- hpath associated to lpath
-			--print("unregister: checking if hpath is still monitored: "..hpath)
-			local still_monitored = false
-			for _, equiv_lpath in ipairs(hpath2lpath (l2h.handler_name, hpath)) do
-				--print("unregister: mounted as lpath "..equiv_lpath)
-				-- look whether lpath synonyms are monitored
-				if M.hooks[equiv_lpath] then still_monitored=true; break end
-			end
-			if not still_monitored then
-				collectable_hpaths[{ l2h.handler, hpath }] = true
-			end 
-		end
-	end
+    -- 2/ look for other hooks registered to synonyms of the same lpath
+    local collectable_hpaths = { }
+    for lpath, _ in pairs(hook.monitored_lpath_set) do
+        local l2h = lpath2hpath(lpath)
+        --print("unregister: checking lpath "..lpath.."\nh2l = "..siprint(2,l2h))
+        if l2h and l2h.handler.unregister then -- no use going further if we can't unregister
+            local hpath = path.concat(l2h.hpath, l2h.relpath) -- hpath associated to lpath
+            --print("unregister: checking if hpath is still monitored: "..hpath)
+            local still_monitored = false
+            for _, equiv_lpath in ipairs(hpath2lpath (l2h.handler_name, hpath)) do
+                --print("unregister: mounted as lpath "..equiv_lpath)
+                -- look whether lpath synonyms are monitored
+                if M.hooks[equiv_lpath] then still_monitored=true; break end
+            end
+            if not still_monitored then
+                collectable_hpaths[{ l2h.handler, hpath }] = true
+            end
+        end
+    end
 
-	-- 3/ perform the corresponding handler deregistrations
-	for handler_hpath, _ in pairs (collectable_hpaths) do
-		local handler, hpath = unpack (handler_hpath)
-		handler :unregister (hpath)
-	end
+    -- 3/ perform the corresponding handler deregistrations
+    for handler_hpath, _ in pairs (collectable_hpaths) do
+        local handler, hpath = unpack (handler_hpath)
+        handler :unregister (hpath)
+    end
 
-	return M
+    return "ok"
 end
 
 --------------------------------------------------------------------------------
@@ -750,7 +757,7 @@ end
 --  * `associated_lpath_set`: set of lpaths mandatory in the hook's argument;
 --  * `f`: function to run at each triggering.
 --
--- Hooks monitoring more than one lpath will be referenced more than once. 
+-- Hooks monitoring more than one lpath will be referenced more than once.
 --
 M.hooks = { }
 
@@ -763,84 +770,84 @@ M.hooks = { }
 --
 function M.notify (handler_name, hmap)
 
-	checks('string', 'table')
+    checks('string', 'table')
 
-	-- Convert the hmap into an lmap
-	local lmap = { }
-	for hpath, val in pairs (hmap) do
-		local lpath_list = hpath2lpath(handler_name, hpath) -- TODO: cache these
-		for _, lpath in ipairs(lpath_list) do lmap[lpath] = val end
-	end
+    -- Convert the hmap into an lmap
+    local lmap = { }
+    for hpath, val in pairs (hmap) do
+        local lpath_list = hpath2lpath(handler_name, hpath) -- TODO: cache these
+        for _, lpath in ipairs(lpath_list) do lmap[lpath] = val end
+    end
 
-	-- List every hook which must be notified
-	local notified_hooks = { } -- hook -> true
-	for lpath, value in pairs(lmap) do
-		for lprefix, _ in path.gsplit(lpath) do
-			local hooks_set = M.hooks [lprefix]
-			if hooks_set then
-				-- TODO: cache lpath->monitored_lprefixes 
-				for hook, _ in pairs(hooks_set) do notified_hooks[hook]=true end
-			end
-		end
-	end
+    -- List every hook which must be notified
+    local notified_hooks = { } -- hook -> true
+    for lpath, value in pairs(lmap) do
+        for lprefix, _ in path.gsplit(lpath) do
+            local hooks_set = M.hooks [lprefix]
+            if hooks_set then
+                -- TODO: cache lpath->monitored_lprefixes
+                for hook, _ in pairs(hooks_set) do notified_hooks[hook]=true end
+            end
+        end
+    end
 
-	if not next(notified_hooks) then -- Nobody watches these hpaths anymore, unregister them
-		local handler = get_handler(handler_name)
-		if not handler then log('TREEMGR', 'ERROR', "Unknown handler %s", handler_name)
-		elseif handler.unregister then
-			for hpath, _ in pairs (hmap) do
-				log('TREEMGR', 'DETAIL', "Notify: unregister unused hook on hpath %q", hpath)
-				handler :unregister (hpath)
-			end
-		end
+    if not next(notified_hooks) then -- Nobody watches these hpaths anymore, unregister them
+        local handler = get_handler(handler_name)
+        if not handler then log('TREEMGR', 'ERROR', "Unknown handler %s", handler_name)
+        elseif handler.unregister then
+            for hpath, _ in pairs (hmap) do
+                log('TREEMGR', 'DETAIL', "Notify: unregister unused hook on hpath %q", hpath)
+                handler :unregister (hpath)
+            end
+        end
 
-	else -- For each hook to be notified, build the argument map and call the hook
-		for hook, _ in pairs(notified_hooks) do
+    else -- For each hook to be notified, build the argument map and call the hook
+        for hook, _ in pairs(notified_hooks) do
 
-			-- build the map #1: sort `lmap` subset relevant to this hook
-			local hook_lmap = { }
-			for llpath, val in pairs(lmap) do
-				for lprefix, _ in path.gsplit(llpath) do -- listed as registered?
-					if hook.monitored_lpath_set[lprefix] or hook.associated_lpath_set[lprefix] then
-						log('TREEMGR', 'DEBUG', "Notify: llpath %q needed because of lprefix %q", llpath, lprefix)
-						hook_lmap[llpath] = val
-						break -- to the next llpath/value pair
-					end
-				end
-			end
+            -- build the map #1: sort `lmap` subset relevant to this hook
+            local hook_lmap = { }
+            for llpath, val in pairs(lmap) do
+                for lprefix, _ in path.gsplit(llpath) do -- listed as registered?
+                    if hook.monitored_lpath_set[lprefix] or hook.associated_lpath_set[lprefix] then
+                        log('TREEMGR', 'DEBUG', "Notify: llpath %q needed because of lprefix %q", llpath, lprefix)
+                        hook_lmap[llpath] = val
+                        break -- to the next llpath/value pair
+                    end
+                end
+            end
 
-			-- build the map #2: add missing lpaths for this hook
-			-- Beware that `M.get` will ignore non-leaf associated paths.
-			local associated_lmap = { }
-			for lpath, _ in pairs (hook.associated_lpath_set) do
-				if hook_lmap[lpath]==nil then
-					log('TREEMGR', 'DEBUG', "Need to retrieve associated lpath %q", lpath)
-					table.insert(associated_lmap, lpath)
-				end
-			end
-			local _, children = M.get(associated_lmap, hook_lmap)
+            -- build the map #2: add missing lpaths for this hook
+            -- Beware that `M.get` will ignore non-leaf associated paths.
+            local associated_lmap = { }
+            for lpath, _ in pairs (hook.associated_lpath_set) do
+                if hook_lmap[lpath]==nil then
+                    log('TREEMGR', 'DEBUG', "Need to retrieve associated lpath %q", lpath)
+                    table.insert(associated_lmap, lpath)
+                end
+            end
+            local _, children = M.get(associated_lmap, hook_lmap)
 
-			-- Check for erroneous non-leaf associated paths
-			if children and next(children) then 
-				-- Some associated vars were non-leaf, log an error
-				local non_llpaths = { }
-				for _, lpath in ipairs(children) do
-					local non_llpath, _ = path.split(lpath, -1)
-					non_llpaths [non_llpath] = true
-				end
-				local list = table.concat(utils_table.keys(non_llpaths), ", ")
-				log("TREEMGR", "ERROR", "Non-leaf associated path %s", list)
-			end
+            -- Check for erroneous non-leaf associated paths
+            if children and next(children) then
+                -- Some associated vars were non-leaf, log an error
+                local non_llpaths = { }
+                for _, lpath in ipairs(children) do
+                    local non_llpath, _ = path.split(lpath, -1)
+                    non_llpaths [non_llpath] = true
+                end
+                local list = table.concat(utils_table.keys(non_llpaths), ", ")
+                log("TREEMGR", "ERROR", "Non-leaf associated path %s", list)
+            end
 
-			if log.musttrace('TREEMGR', 'DEBUG') then
-				log('TREEMGR', 'DEBUG', "Notify hook with lmap %s", sprint(hook_lmap))
-			end
-			
-			-- perform the hook call
-			hook.f(hook_lmap)
-		end
-	end
-	return M
+            if log.musttrace('TREEMGR', 'DEBUG') then
+                log('TREEMGR', 'DEBUG', "Notify hook with lmap %s", sprint(hook_lmap))
+            end
+
+            -- perform the hook call
+            hook.f(hook_lmap)
+        end
+    end
+    return "ok"
 end
 
 return M

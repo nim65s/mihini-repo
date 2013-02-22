@@ -251,7 +251,7 @@ swi_status_t swi_dset_Next(swi_dset_Iterator_t* data)
 swi_status_t swi_dset_Rewind(swi_dset_Iterator_t* data)
 {
   CHECK_CONTEXT(data);
-  
+
   data->currentIndex = 0;
   return SWI_STATUS_OK;
 }

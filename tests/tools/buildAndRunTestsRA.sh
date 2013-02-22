@@ -37,7 +37,7 @@ cd $DESTDIR
 cmake $RA_SVNDIR
 
 #Build ReadyAgent and tests suites
-make embeddedtests lua all omadmclient
+make embeddedtests lua all
 
 # copy "run" files for Application Container tests
 mkdir -p runtime/externalapp/appconlua

@@ -10,24 +10,24 @@
 -------------------------------------------------------------------------------
 
 {
-  -- Global information  
+  -- Global information
   version = "toto_1.0",
-  
+
   -- Packages information
-  components = 
+  components =
   {
        --test for install/un-install in the same component of the same package, parameter of component are returned in hook function
-    {   
+    {
         name = "update_test_05_assetupdatehook_rm_cmp.update",
-        location = ".",                
+        location = ".",
         version = "2",
-        parameters = { reason = "test" }  
+        parameters = { reason = "test" }
     },
-    
-    {   
-        name = "update_test_05_assetupdatehook_rm_cmp.update",             
+
+    {
+        name = "update_test_05_assetupdatehook_rm_cmp.update",
         version = nil,
-        parameters = { reason = "bye bye" }  
+        parameters = { reason = "bye bye" }
     },
   }
 }

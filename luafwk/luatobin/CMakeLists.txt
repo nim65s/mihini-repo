@@ -9,5 +9,7 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-include_directories(${COMMON_SOURCE_DIR})
-add_lua_library(luatobin ${COMMON_SOURCE_DIR}/awt_endian.c luatobin.c)
+PROJECT(MIHINI_LUATOBIN)
+
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
+ADD_LUA_LIBRARY(luatobin ${LIB_MIHINI_COMMON_SOURCE_DIR}/awt_endian.c luatobin.c)

@@ -14,7 +14,6 @@
 
 require 'sched.timer'
 require 'sched.fd'
-require 'print'
 require 'pack'
 require 'log'
 require 'utils.table' -- used at least for table.pack
@@ -31,9 +30,13 @@ function sched.stop()
 end
 
 function sched.loop ()
-   -- The patched versions of `execute` and `popen` only work inside the
-   -- scheduling loop, so they're patched just before the loop starts.
-   local exec = require 'sched.exec'
+    -- The patched versions of `execute` and `popen` only work inside the
+    -- scheduling loop, so they're patched just before the loop starts.
+    local exec = require 'sched.exec'
+    --save original functions
+    os.execute_orig = os.execute
+    io.popen_orig = io.popen
+    --patch/replace functions in global modules
     os.execute = exec.execute
     io.popen = exec.popen
 

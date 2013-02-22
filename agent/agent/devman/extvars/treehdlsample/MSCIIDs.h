@@ -1932,7 +1932,7 @@
 #define         MSCIID_MODEM_DOMAIN               50041
 
 #define         MSCIID_SMS_SCA                 50042
-#define 	MSCIID_SMS_AT_CGSMS		  50043
+#define     MSCIID_SMS_AT_CGSMS          50043
 
 
 

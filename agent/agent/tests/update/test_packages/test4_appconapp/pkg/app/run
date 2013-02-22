@@ -30,7 +30,7 @@ on_term()
 
 
 while true
-do  
+do
   echo $APPNAME "pid:" $$ "date:" `date` "id=" `id`
   sleep 5
 done

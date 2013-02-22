@@ -217,7 +217,7 @@ static char *format_message(const char *module, swi_log_level_t severity, const 
   static time_t s_t;
   time_t t;
   struct tm *tm;
-  
+
   format = swi_log_format ? swi_log_format : "%t %m-%s: %l";
 
   t = time(NULL);
@@ -307,7 +307,7 @@ void swi_log_trace(const char *module, swi_log_level_t severity, const char *for
     return;
 
   va_start(ap, format);
-  
+
   ret = vasprintf(&user_message, format, ap);
   (void)ret;
   formatted_message = format_message(module, severity, user_message);

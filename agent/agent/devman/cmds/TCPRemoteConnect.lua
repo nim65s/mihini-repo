@@ -12,7 +12,7 @@
 
 local sched  = require 'sched'
 local socket = require 'socket'
-local lock = require 'lock'
+local lock   = require 'sched.lock'
 
 require 'pack'
 local string = string

@@ -14,17 +14,17 @@
 #include "swi_system.h"
 #include "swi_log.h"
 
-#define CALL_TEST(call)				\
-do {			                        \
-  swi_status_t res;				\
-  						\
-  res = call;								\
+#define CALL_TEST(call)                \
+do {                                    \
+  swi_status_t res;                \
+                          \
+  res = call;                                \
   SWI_LOG("DT_TEST", (res == SWI_STATUS_OK) ? INFO : ERROR,  #call "...%s\n", (res == SWI_STATUS_OK) ? "OK" : "FAIL"); \
-  if (res != SWI_STATUS_OK)						\
-    {									\
+  if (res != SWI_STATUS_OK)                        \
+    {                                    \
       SWI_LOG("DT_TEST", ERROR, "Test failed with status code %d\n", res); \
-      return 1;								\
-  }									\
+      return 1;                                \
+  }                                    \
 } while(0)
 
 static int test_sys_Init()

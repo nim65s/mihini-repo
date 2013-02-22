@@ -35,7 +35,7 @@ local function TST_AWTDA_Callback(m, instance)
     end
 
     -- return ack if necessary
-    if needToAck then 
+    if needToAck then
         assetSoftwareUpdate:sendacknowledgement(m)
     end
 

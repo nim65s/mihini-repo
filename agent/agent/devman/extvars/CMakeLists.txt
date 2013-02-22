@@ -10,8 +10,8 @@
 #*******************************************************************************
 
 # CMakeLists for the lua linux version
-cmake_minimum_required (VERSION 2.6)
-project (EXTVARS)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+PROJECT(EXTVARS)
 
-add_subdirectory (common)
-add_subdirectory (treehdlsample)
+ADD_SUBDIRECTORY (common)
+ADD_SUBDIRECTORY (treehdlsample)

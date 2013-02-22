@@ -26,8 +26,8 @@ function M :get(hpath)
     local root, subtree = pathutils.split(hpath, 1)
     --note that ucommon.data is proxy table for cache implementation, it is not possible to index it content directly
     --subtable are, however, regular table.
-    if not root or root =="" then --list update root path childs: only 2 subtables are accessible
-        return nil, { swlist=true, currentupdate=(ucommon.data.currentupdate ~= nil)}
+    if not root or root == "" then --list update root path childs: only 2 subtables are accessible
+        return nil, { swlist=true, currentupdate=(ucommon.data.currentupdate ~= nil or nil)}
     else
         if not ucommon.data[root] then return nil, "invalid path" -- ckeck sub path is valid
         else

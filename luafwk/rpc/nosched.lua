@@ -46,7 +46,7 @@ function M.loop(session)
 
     skt:close() -- make sure the oscket is closed locally so that a later send on that socket will fail!
     local clean_exit = err_msg == "closed"
-    if err_msg then 
+    if err_msg then
         local level = clean_exit and "DEBUG" or "ERROR"
         log("LUARPC", level, "Lua RPC connection closed: %s", err_msg)
     end
@@ -82,6 +82,6 @@ function M.newclient(address, port)
     print(client :getsockname())
     M.newsession(client)
  end
- 
+
 
 return M

@@ -9,25 +9,21 @@
 --     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-local log = require "log"
-local sched = require "sched"
---local pack = require "pack"
-local socket =require "socket"
+local log    = require "log"
+local sched  = require "sched"
+local socket = require "socket"
 local config = require "agent.config"
-local math = require "math"
---local system = require "agent.system"
-local ntp = require "ntp.core"
-local timer = require "timer"
-local lock = require "lock"
+local math   = require "math"
+local ntp    = require "ntp.core"
+local timer  = require "timer"
+local lock   = require "sched.lock"
 
-local os = os
-local table = table
---local string = string
+local os       = os
+local table    = table
 local tonumber = tonumber
-local type = type
-local assert = assert
+local type     = type
+local assert   = assert
 local tostring = tostring
---local p = p
 
 --[[
  rfc 4330 is the base used to develop this file

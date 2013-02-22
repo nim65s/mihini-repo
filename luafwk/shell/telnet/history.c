@@ -27,7 +27,7 @@ void tl_history_addhistory(TeelInstance* ti, const char* line, int len)
 
   int idx = h->widx;
   if (h->list[idx])
-	  MEM_FREE(h->list[idx]);
+      MEM_FREE(h->list[idx]);
   h->list[idx] = MEM_ALLOC(len+sizeof(*h->list[0]));
   h->list[idx]->buf = (char*) (h->list[idx]+1);
   memcpy(h->list[idx]->buf, line, len);
@@ -52,7 +52,7 @@ void tl_history_sethistorysize(TeelInstance* ti, int size)
     p[s-i-1] = h->list[(h->widx-i+h->size)%h->size];
 
   for (i=s; i<h->size; i++)
-	  MEM_FREE(h->list[(h->widx-i+h->size)%h->size]);
+      MEM_FREE(h->list[(h->widx-i+h->size)%h->size]);
 
   h->size = size;
   h->idx = h->widx = 0;
@@ -68,7 +68,7 @@ void tl_history_destroy(TeelInstance* ti)
     int i;
     for (i = 0; i < h->size; ++i)
       if (h->list[i])
-    	  MEM_FREE(h->list[i]);
+          MEM_FREE(h->list[i]);
     MEM_FREE(h->list);
   }
 }
@@ -93,7 +93,7 @@ void tl_history_resetcontext(TeelInstance* ti)
   History* h = &ti->history;
   if (h->curline)
   {
-	  MEM_FREE(h->curline);
+      MEM_FREE(h->curline);
     h->curline = 0;
     h->curlen = h->curpos = 0;
   }

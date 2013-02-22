@@ -25,7 +25,7 @@ void InitBuffer(WriteBuffer* buf)
 void FreeBuffer(WriteBuffer* buf)
 {
   if (buf->buffer != buf->prealloc)
-	  MEM_FREE(buf->buffer);
+      MEM_FREE(buf->buffer);
   buf->size = 0;
   buf->buffer = 0;
   buf->len = 0;

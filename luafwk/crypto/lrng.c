@@ -76,17 +76,17 @@ static int Ltostring(lua_State* L) {
 
 /** done(userdata) */
 static int Ldone(lua_State* L) {
-    prng_state* prng = luaL_checkudata(L, 1, MYTYPE);    
+    prng_state* prng = luaL_checkudata(L, 1, MYTYPE);
     int status = fortuna_done(prng);
     if (status != CRYPT_OK) {
         lua_pushnil(L);
-        lua_pushstring(L, error_to_string(status));    
+        lua_pushstring(L, error_to_string(status));
     }
     return 0;
 }
 
 static const luaL_Reg R[] = {
-        { "__gc", Ldone },        
+        { "__gc", Ldone },
         { "new", Lnew },
         { "read", Lread },
         { "tostring", Ltostring },

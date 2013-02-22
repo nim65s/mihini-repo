@@ -25,7 +25,7 @@ function t:setup()
   local target = "Linux"
   local host = 'localhost'
   local port = nil
-  
+
 end
 
 function t:teardown()
@@ -40,7 +40,7 @@ local function runtestsuite(name)
   t.rpcclient:call('unittest.run')
   local stats = t.rpcclient:call('unittest.getStats')
   assert(stats, "Can't get stats from unittest execution")
-   
+
   local fct_script=[[
       local loader = require"utils.loader"
       loader.unload('tests.']]..name..[[)
@@ -49,7 +49,7 @@ local function runtestsuite(name)
   local fct_tmp = t.rpcclient:newexec(fct_script)
   assert(fct_tmp, "Can't create remote function to unload code")
   fct_tmp()
-  
+
 end
 
 function t:test_executeRPC()

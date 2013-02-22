@@ -12,7 +12,7 @@
 #!/bin/sh
 cd test_build_reforged
 cmake ../ReadyAgentReforged/
-make embeddedtests lua all omadmclient
+make embeddedtests lua all
 #make clean
 
 cd runtime

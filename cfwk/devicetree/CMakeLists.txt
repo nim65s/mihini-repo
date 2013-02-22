@@ -9,20 +9,10 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project (devicetree)
+PROJECT(CFWK_DEVICETREE)
 
-include_directories(${YAJL_SOURCE_DIR})
-include_directories(${YAJL_SOURCE_DIR}/include)
-include_directories(${YAJL_SOURCE_DIR}/api)
-include_directories(${racon_SOURCE_DIR})
-include_directories(${COMMON_SOURCE_DIR})
-include_directories(${airvantage_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+ADD_LIBRARY(Swi_DeviceTree SHARED swi_devicetree.c)
+ADD_PUBLIC_HEADER(Swi_DeviceTree swi_devicetree.h)
+TARGET_LINK_LIBRARIES(Swi_DeviceTree Emp lib_yajl)
 
-set(SRC_SWIDEVICETREE swi_devicetree.c)
-
-add_library(Swi_DeviceTree SHARED ${SRC_SWIDEVICETREE})
-add_public_header(Swi_DeviceTree swi_devicetree.h)
-target_link_libraries(Swi_DeviceTree Emp yajl)
-
-add_unit_test(dt_test dt_test.c RUNTIME_DEPENDENCIES Swi_DeviceTree Swi_Log)
+ADD_UNIT_TEST(dt_test dt_test.c RUNTIME_DEPENDENCIES Swi_DeviceTree lib_swi_log)

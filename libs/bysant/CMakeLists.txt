@@ -9,30 +9,33 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-cmake_minimum_required (VERSION 2.6)
-project (LIBBYSANTPROTOCOL)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+PROJECT(LIB_MIHINI_BYSANT)
 
-include_directories(${COMMON_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
 
-set(BYSANT_SRC bysants.c bysantd.c bysant_common.c bysant_class.c ${COMMON_SOURCE_DIR}/awt_endian.c)
+SET(BYSANT_SRC
+    bysants.c
+    bysantd.c
+    bysant_common.c
+    bysant_class.c
+    ${LIB_MIHINI_COMMON_SOURCE_DIR}/awt_endian.c)
 
-add_library(bysant_lib SHARED ${BYSANT_SRC})
-target_link_libraries(bysant_lib m)
-SET_TARGET_PROPERTIES(bysant_lib PROPERTIES COMPILE_FLAGS -fPIC)
+ADD_LIBRARY(lib_bysant SHARED ${BYSANT_SRC})
+TARGET_LINK_LIBRARIES(lib_bysant m)
+SET_TARGET_PROPERTIES(lib_bysant PROPERTIES
+    COMPILE_FLAGS -fPIC
+    OUTPUT_NAME bysant
+    )
 
-add_library(bysantlib-static EXCLUDE_FROM_ALL STATIC ${BYSANT_SRC})
-target_link_libraries(bysantlib-static m)
-SET_TARGET_PROPERTIES(bysantlib-static PROPERTIES COMPILE_FLAGS -fPIC)
-
-set(SDB_SRC
+SET(SDB_SRC
   sdb_table.c
   sdb_read.c
   sdb_write.c
   sdb_serialize.c
   sdb_consolidate.c)
 
-add_library(stagedb_lib SHARED ${SDB_SRC})
-target_link_libraries(stagedb_lib bysant_lib)
-
-add_library(stagedblib-static EXCLUDE_FROM_ALL STATIC ${SDB_SRC})
-target_link_libraries(stagedblib-static bysantlib-static)
+ADD_LIBRARY(lib_stagedb SHARED ${SDB_SRC})
+TARGET_LINK_LIBRARIES(lib_stagedb lib_bysant bysant_core)
+SET_TARGET_PROPERTIES(lib_stagedb PROPERTIES
+    OUTPUT_NAME stagedb)

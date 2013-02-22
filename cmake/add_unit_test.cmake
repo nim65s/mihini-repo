@@ -12,7 +12,15 @@
 function(add_unit_test target sourceFile)
 
   foreach(_currentArg ${ARGN})
-      
+
+    if(${_currentArg} STREQUAL "TEST_TYPE")
+      set(test_type "")
+    else()
+      if(DEFINED test_type AND "${test_type}" STREQUAL "")
+	set(test_type ${_currentArg})
+      endif()
+    endif()
+
     if(${_currentArg} STREQUAL "TEST_DEPENDENCY")
       set(test_dependency "")
     else(${_currentArg} STREQUAL "TEST_DEPENDENCY")
@@ -25,7 +33,7 @@ function(add_unit_test target sourceFile)
       set(runtime_dependencies "")
     else(${_currentArg} STREQUAL "RUNTIME_DEPENDENCIES")
       if(DEFINED runtime_dependencies)
-	set(runtime_dependencies ${runtime_dependencies} ${_currentArg})
+    set(runtime_dependencies ${runtime_dependencies} ${_currentArg})
       endif(DEFINED runtime_dependencies)
     endif(${_currentArg} STREQUAL "RUNTIME_DEPENDENCIES")
 
@@ -69,23 +77,26 @@ function(add_unit_test target sourceFile)
     set(EMBEDDED_REMOTE_TARGET_DIR ${EMBEDDED_BINARY_DIR}/runtime)
   endif(NOT DEFINED EMBEDDED_REMOTE_TARGET_DIR)
 
+  if (DEFINED test_type)
+    set(testwrapper_options "-t ${test_type}")
+  endif()
   if (DEFINED test_dependency)
-    set(testwrapper_options "-l ${test_dependency}")
+    set(testwrapper_options "${testwrapper_options} -l ${test_dependency}")
   endif(DEFINED test_dependency)
 
-  set(test_command "ADD_TEST(${_target} ${UNITTEST_PREFIX_CMD} ${EMBEDDED_REMOTE_TARGET_DIR}/bin/lua ${EMBEDDED_REMOTE_TARGET_DIR}/start_dev_test.lua ${testwrapper_options} ${_target})")
+  set(test_command "ADD_TEST(${_target} ${UNITTEST_PREFIX_CMD} ${EMBEDDED_REMOTE_TARGET_DIR}/bin/lua ${EMBEDDED_REMOTE_TARGET_DIR}/racontestwrapper.lua ${testwrapper_options} ${_target})")
 
   if(TARGET test)
     file(APPEND ${EMBEDDED_BINARY_DIR}/DartTestfile.txt "${test_command}\n")
   else (TARGET test)
     add_custom_target(test
-      COMMAND ctest --output-on-failure
+      COMMAND ctest -j`getconf _NPROCESSORS_ONLN` --output-on-failure --timeout 30
       WORKING_DIRECTORY ${EMBEDDED_BINARY_DIR}
     )
     if (SHARKS_BUILD)
       add_custom_target(start_dev_test_upload
-	COMMAND sshpass -p v3r1fym3 scp ${CMAKE_INSTALL_PREFIX}/start_dev_test.lua root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}
-	COMMAND sshpass -p v3r1fym3 scp -r ${CMAKE_SOURCE_DIR}/tests/tools/testwrapperfwk root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}
+      COMMAND sshpass -p v3r1fym3 scp ${CMAKE_INSTALL_PREFIX}/racontestwrapper.lua root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}
+      COMMAND sshpass -p v3r1fym3 scp -r ${CMAKE_INSTALL_PREFIX}/testwrapperfwk root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}
       )
       add_dependencies(test start_dev_test_upload)
     endif (SHARKS_BUILD)
@@ -99,5 +110,5 @@ function(add_unit_test target sourceFile)
   if (SHARKS_BUILD)
     add_dependencies(test unittest_${target}_upload)
   endif(SHARKS_BUILD)
-  
+
 endfunction(add_unit_test)

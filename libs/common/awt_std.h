@@ -40,7 +40,7 @@
 
 // Global macros
 #define ASSERT(a)
-#define MIN(a, b)	(a < b ? a : b)
+#define MIN(a, b)    (a < b ? a : b)
 #define assert(a)
 //if(!a){SWI_TRACE(STDERR,#a##"-Assert was not satisfied at "__FILE__":"__LINE__);}
 
@@ -55,18 +55,18 @@ int printf(const char * fmt, ...);
 
 static inline void * lib_realloc ( void * src, size_t srcSize, size_t newSize)
 {
-	void* res;
-	res = adl_memGet( newSize );
-	if ( newSize > srcSize )
-		wm_memset( res + srcSize, 0, newSize - srcSize );
-	if ( src != NULL ) {
-		wm_memcpy( res, src, MIN(srcSize, newSize) );
-		adl_memRelease( src );
-	}
-	return res;
+    void* res;
+    res = adl_memGet( newSize );
+    if ( newSize > srcSize )
+        wm_memset( res + srcSize, 0, newSize - srcSize );
+    if ( src != NULL ) {
+        wm_memcpy( res, src, MIN(srcSize, newSize) );
+        adl_memRelease( src );
+    }
+    return res;
 }
 
-#else	// __OAT_API_VERSION__
+#else    // __OAT_API_VERSION__
 
 #define SYSTEM_LINUX
 
@@ -97,10 +97,10 @@ static inline void * lib_realloc ( void * ptr, size_t prevSize, size_t size )
   return realloc(ptr, size);
 }
 
-#define fatal_error(...)			\
-  SWI_LOG("AWT-STD", ERROR, __VA_ARGS__);	\
+#define fatal_error(...)            \
+  SWI_LOG("AWT-STD", ERROR, __VA_ARGS__);    \
   assert(0)
 
-#endif	// __OAT_API_VERSION__
+#endif    // __OAT_API_VERSION__
 
-#endif	// AWTDA_PORT_H_
+#endif    // AWTDA_PORT_H_

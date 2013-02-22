@@ -9,9 +9,16 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-include_directories(${COMMON_SOURCE_DIR})
-add_lua_library(log_lua    DESTINATION log init.lua tools.lua)
-add_lua_library(log_store  DESTINATION log log_store.c log_storeflash.c)
-set_target_properties( log_store PROPERTIES OUTPUT_NAME store)
+PROJECT(MIHINI_LOG)
 
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
 
+ADD_LUA_LIBRARY(log DESTINATION log init.lua)
+ADD_DEPENDENCIES(log utils checks)
+
+ADD_LUA_LIBRARY(log_tools DESTINATION log tools.lua)
+ADD_DEPENDENCIES(log_tools log log_store sched)
+
+ADD_LUA_LIBRARY(log_store  DESTINATION log log_store.c log_storeflash.c)
+SET_TARGET_PROPERTIES(log_store PROPERTIES OUTPUT_NAME store)
+ADD_DEPENDENCIES(log_store log)

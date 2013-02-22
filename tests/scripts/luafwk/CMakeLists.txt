@@ -9,7 +9,7 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(embeddedtestsluafwk DESTINATION tests EXCLUDE_FROM_ALL
+ADD_LUA_LIBRARY(embeddedtestsluafwk DESTINATION tests EXCLUDE_FROM_ALL
   luafwktests.lua
 )
 

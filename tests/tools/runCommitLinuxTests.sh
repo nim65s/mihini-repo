@@ -46,7 +46,7 @@ cd $DESTDIR
 cmake $RA_SVNDIR
 
 #Build ReadyAgent and tests suites
-make embeddedtests lua all omadmclient
+make embeddedtests lua all
 makeret=$?
 if [ $makeret -ne 0 ]; then
     echo "Make error"

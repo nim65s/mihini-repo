@@ -9,53 +9,60 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project (LUA)
+PROJECT(MIHINI_LUAFWK)
 
-include_directories(lua)
+INCLUDE_DIRECTORIES(lua)
 
-add_subdirectory (tests)
-add_subdirectory (serialframework)
+ADD_SUBDIRECTORY (tests)
+ADD_SUBDIRECTORY (serialframework)
 
-add_subdirectory (checks)
-add_subdirectory (lpack)
-add_subdirectory (luatobin)
-add_subdirectory (messaging)
-add_subdirectory (shell)
-add_subdirectory (log)
-add_subdirectory (luasocket)
-add_subdirectory (ntp)
-add_subdirectory (sched)
-add_subdirectory (crypto)
-add_subdirectory (utils)
-add_subdirectory (web)
-add_subdirectory (rpc)
+ADD_SUBDIRECTORY (checks)
+ADD_SUBDIRECTORY (lpack)
+ADD_SUBDIRECTORY (luatobin)
+ADD_SUBDIRECTORY (messaging)
+ADD_SUBDIRECTORY (shell)
+ADD_SUBDIRECTORY (log)
+ADD_SUBDIRECTORY (luasocket)
+ADD_SUBDIRECTORY (ntp)
+ADD_SUBDIRECTORY (sched)
+ADD_SUBDIRECTORY (crypto)
+ADD_SUBDIRECTORY (utils)
+ADD_SUBDIRECTORY (web)
+ADD_SUBDIRECTORY (rpc)
 
-add_subdirectory (coxpcall)
-add_subdirectory (lfs)
-add_subdirectory (loader)
-add_subdirectory (lua)
-add_subdirectory (serial)
-add_subdirectory (luacdb)
-add_subdirectory (persist)
-add_subdirectory (lua-yajl)
+ADD_SUBDIRECTORY (coxpcall)
+ADD_SUBDIRECTORY (lfs)
+ADD_SUBDIRECTORY (loader)
+ADD_SUBDIRECTORY (lua)
+ADD_SUBDIRECTORY (serial)
+ADD_SUBDIRECTORY (luacdb)
+ADD_SUBDIRECTORY (persist)
+ADD_SUBDIRECTORY (lua-yajl)
 
-add_lua_library(luafwk_misc 
-	daemon.lua lock.lua pipe.lua print.lua
-	strict.lua timer.lua unittest.lua niltoken.lua )
+ADD_SUBDIRECTORY (racon)
 
-add_lua_library(luafwk_linux
-                fdwrapper.lua messaginghal.lua posixsignal.lua
-)
-include_directories(liblua)
-
-add_subdirectory(bysant)
-add_subdirectory(stagedb)
-
-add_lua_library(racon
-    =/racon/asset/init.lua =racon/asset/tree.lua =racon/common.lua 
-    =racon/empparser.lua =racon/init.lua =racon/ipc.lua =racon/table.lua
-    =racon/system.lua =racon/devicetree.lua =racon/sms.lua
+# Some different names have been chosen for Racon services. They're aliased here:
+ADD_LUA_LIBRARY(racon_aliases
     system.lua airvantage.lua devicetree.lua sms.lua)
+ADD_DEPENDENCIES(racon_aliases racon)
 
-add_lua_library(luadebug
-    debugger.lua debugintrospection.lua)
+ADD_LUA_LIBRARY(mihini_misc
+    print.lua strict.lua timer.lua unittest.lua niltoken.lua)
+
+# TODO move to platform
+ADD_LUA_LIBRARY(mihini_linux
+    fdwrapper.lua messaginghal.lua posixsignal.lua
+)
+
+ADD_DEPENDENCIES(mihini_linux sched_posixsignal)
+
+INCLUDE_DIRECTORIES(liblua)
+
+ADD_SUBDIRECTORY(m3da)
+ADD_SUBDIRECTORY(stagedb)
+
+ADD_LUA_LIBRARY(debugger debugger.lua debugintrospection.lua)
+
+ADD_CUSTOM_TARGET(luafwk DEPENDS
+    mihini_misc mihini_linux
+    bit32 luasignalcmd appmon_daemon serial racon_aliases)

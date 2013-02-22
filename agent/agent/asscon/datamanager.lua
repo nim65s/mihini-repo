@@ -18,11 +18,11 @@
 require 'stagedb'
 require 'persist'
 local niltoken = require 'niltoken'
-local asscon  = require 'agent.asscon'
-local srvcon  = require 'agent.srvcon'
-local upath   = require 'utils.path'
-local utable  = require 'utils.table'
-local awtda   = require 'bysant.awtda'
+local asscon   = require 'agent.asscon'
+local srvcon   = require 'agent.srvcon'
+local upath    = require 'utils.path'
+local utable   = require 'utils.table'
+local m3da     = require 'm3da.bysant'
 --------------------------------------------------------------------------------
 -- A policy features:
 -- * records, a support->records list table
@@ -130,12 +130,12 @@ end
 local function match_columns(tbl, columns)
     local tblcols = tbl.sdb:state().columns
     local newcols = { } -- column names list for the new table
-    
+
     for key, col in pairs(columns) do
         -- column name is key for consolidation, value for short columnspec or name field for full columnspec
         table.insert(newcols, type(key) == 'string' and key or (type(col) == 'string' and col or col.name))
     end
-    
+
     if #newcols ~= #tblcols then return false end
     -- both table has same length, compare names
     table.sort(newcols)
@@ -157,7 +157,7 @@ function handle.TableNew(asset, x)
     local table_id = get_table_id (path, x.storage, x.columns)
     local P = POLICIES[x.policy or 'default']
     if not P then return 11, "no such policy" end
-    
+
     -- check whether the table is created or reused from existing
     local t = TABLES[table_id]
     if t then
@@ -172,7 +172,7 @@ function handle.TableNew(asset, x)
             return 11, "cannot reuse "..table_id..": columns does not match"
         end
     end
-    
+
     -- create table if not exists or purged
     if not t then
         log('DATAMGR', 'DEBUG', "Create new table %s", table_id)
@@ -180,7 +180,7 @@ function handle.TableNew(asset, x)
         if not sdb then return 1, errmsg end
         t = { id=table_id, path=path, sdb=sdb }
     else log('DATAMGR', 'DEBUG', "Retrieving existing table %s", table_id) end
-    
+
     t.send_policy=P
     P.tables[table_id] = t
     TABLES[table_id] = t
@@ -285,12 +285,12 @@ local function sdb2srv(path, sdb, policy_to_kill, key_to_kill, dont_reset)
     sdb_sendings_in_progress[sdb] = true
     local function src_factory()
         local s = sdb :state()
-        log('DATAMGR', 'INFO', "sending table %s (%d rows of %d columns) to server",
+        log('DATAMGR', 'DETAIL', "sending table %s (%d rows of %d columns) to server",
             s.id, s.nrows, #s.columns)
         assert (sdb :serialize_cancel())
 
         local prolog_sent, epilog_sent = false, false
-        local bss = awtda.serializer{ }
+        local bss = m3da.serializer{ }
 
         local function prolog_src()
             if prolog_sent then return nil else prolog_sent = true end
@@ -351,32 +351,32 @@ local function consolidate(src, dont_reset)
     local c = false
     local dst = src.conso_table
 
-    log('DATAMGR', 'INFO', "consolidating table %s into %s", src.id, dst.id)
+    log('DATAMGR', 'DETAIL', "consolidating table %s into %s", src.id, dst.id)
     local ok, msg = src.sdb :consolidate()
     if not ok and msg ~= 'EMPTY' then
         log('DATAMGR', 'ERROR', 'consolidation error: %s', msg)
         return
     end
-    
+
     if msg ~= 'EMPTY' then
         -- only if a row was actually inserted
         local maxrows = dst.maxrows
         if maxrows then
             local nrows = dst.sdb :state() .nrows
             if nrows >= maxrows then
-                log('DATAMGR', 'INFO', "Flushing consolidation table for %s (full with %d rows)", src.id, nrows)
+                log('DATAMGR', 'DETAIL', "Flushing consolidation table for %s (full with %d rows)", src.id, nrows)
                 flush_table(dst)
             end
         end
-        
+
         local f = dst.send_policy.latency_trigger
         if f then f() end
-        
+
         if not dont_reset then
             src.sdb :reset()
         end
     end
-    
+
     src.lastconso = os.time()
     sched.signal(src, 'consolidated')
     return c
@@ -405,7 +405,7 @@ local function send_ack(x, store)
     local status   = tonumber(x.status) or (x.status and 0 or -1)
     local message  = x.message or (status==0 and "ok" or "unknown")
     local function src_factory()
-        local serialize, acc = awtda.serializer{ }
+        local serialize, acc = m3da.serializer{ }
         assert(serialize {
             __class = 'Response',
             ticketid = ticket,
@@ -414,7 +414,7 @@ local function send_ack(x, store)
         local serialized = table.concat(acc)
         return ltn12.source.string(serialized)
     end
-    log('DATAMGR', 'DEBUG', "Send ACK for ticket #%d to SRVCON", ticket)
+    log('DATAMGR', 'DETAIL', "Send ACK for ticket #%d to SRVCON", ticket)
     local function remove_from_store(status, errmsg)
         if status then store[ticket] = nil
         else log('DATAMGR', 'ERROR', "Failed to send ACK #%d: %q", ticket, errmsg) end
@@ -425,7 +425,7 @@ end
 
 -- Send a single policy; return true if there's a need to connect to the server.
 local function send_policy(P)
-    log('DATAMGR', 'DETAIL', "flushing policy %q", P.name)
+    log('DATAMGR', 'INFO', "flushing policy %q", P.name)
 
     local c = false -- whether a connection has been requested
 
@@ -455,14 +455,14 @@ local function send_policy(P)
     if P.ack_rom then
         for _, item in pairs(P.ack_rom) do
             c = true
-            send_ack(item, P.ack_rom) 
+            send_ack(item, P.ack_rom)
         end
     end
 
     -- 5/ reset periodic flush policy, if applicable
     local t = P.periodic_timer
-    if t then timer.cancel(t); timer.rearm(t) end
-    
+    if t then timer.rearm(t) end
+
     -- 6/ record next event date for the policy
     t = t or P.cron_timer
     P.nextevent = t and t.nd or nil
@@ -488,7 +488,7 @@ function handle.TableRow (asset, x)
     if maxrows then
         local nrows = t.sdb :state() .nrows
         if nrows >= maxrows then
-            log('DATAMGR', 'INFO', "Flushing table %s (full with %d rows)", x.table, nrows)
+            log('DATAMGR', 'DETAIL', "Flushing table %s (full with %d rows)", x.table, nrows)
             flush_table(t)
         end
     end
@@ -501,7 +501,7 @@ end
 -- x fields: policy, which might be set to '*' to flush all policies
 --------------------------------------------------------------------------------
 function handle.PFlush(asset, x)
-    local c = false -- c is true if there's a need to connect (some data to send)    
+    local c = false -- c is true if there's a need to connect (some data to send)
     if x.policy=='*' then
         for name, P in pairs(POLICIES) do
             if name ~= 'never' then c = send_policy(P) or c end
@@ -509,7 +509,7 @@ function handle.PFlush(asset, x)
     elseif x.policy == 'never' then
         return 11, "Don't flush the 'never' policy"
     else
-        local P = POLICIES[x.policy or 'default']        
+        local P = POLICIES[x.policy or 'default']
         if not P then return 11, "no such policy" end
         c = send_policy(P)
     end
@@ -522,11 +522,11 @@ function handle.ConsoNew(asset, x)
     local src = TABLES[src_table_id]
     if not src then return 11, "no such source table" end
     local assetname = upath.split(src.path, 1)
-    
+
     local dst_path = upath.concat(assetname, x.path)
     local dst_table_id = get_table_id (dst_path, x.storage, x.columns)
     local dst = TABLES[dst_table_id]
-    
+
     local SP = POLICIES[x.send_policy or 'default']
     local CP = POLICIES[x.conso_policy or 'default']
     if not SP then return 11, "no such send policy" end
@@ -534,10 +534,10 @@ function handle.ConsoNew(asset, x)
     if src.send_policy ~= POLICIES.never and CP ~= POLICIES.never then
         return 11, "either send or consolidation policy for source must be 'never'"
     end
-    
+
     if dst then
         -- if consolidation table already exists, then it is returned as is and cannot be purged
-        if src.conso_table == dst then 
+        if src.conso_table == dst then
             if x.purge then return nil, "cannot purge consolidation table while source is still open" end
             if not match_columns(dst, x.columns) then return nil, "cannot reuse "..table_id..": columns does not match" end
             log('DATAMGR', 'DEBUG', "Retrieving existing conso table %s", dst_table_id)
@@ -556,9 +556,9 @@ function handle.ConsoNew(asset, x)
         if not dst_sdb then return 1, errmsg end
         dst = { id=dst_table_id, path=dst_path, sdb=dst_sdb, src_table=src }
     end
-    
+
     dst.send_policy=SP
-    SP.tables[dst_table_id] = dst  
+    SP.tables[dst_table_id] = dst
     src.conso_table = dst
     src.conso_policy = CP
     CP.consolidations[src_table_id] = src
@@ -674,7 +674,6 @@ end
 
 
 function M.init(cfg)
-
     -- Check policy setup consistency:
     -- * there must be a default policy, whose content is free
     -- * there must be a 'now' policy, it must be triggered with a latency
@@ -683,7 +682,7 @@ function M.init(cfg)
 
     for pname, pcfg in pairs(cfg.policy or { }) do M.new_policy(pname, pcfg) end
 
-    for _, name in pairs{ 'default', 'now', 'never' } do
+    for _, name in pairs{ 'default', 'now', 'never', 'on_boot' } do
         if not POLICIES[name] then
             log('DATAMGR', 'ERROR',
             "Missing mandatory data policy in agent config: data.policy.%s",
@@ -696,6 +695,12 @@ function M.init(cfg)
         log('DATAMGR', 'ERROR',
         "Missing mandatory latency or onboot param in data.policy.now policy")
         return nil, "Invalid now policy"
+    end
+
+    if not cfg.policy.on_boot.onboot  then
+        log('DATAMGR', 'ERROR',
+        "Missing mandatory  onboot param in data.policy.on_boot policy")
+        return nil, "Invalid on_boot policy"
     end
 
     for k, v in pairs(cfg.policy.never) do

@@ -71,32 +71,32 @@ while(0)
 
 //Debug functions: to be activated whe packet printing is needed
 //void print_pkg(const char* pktname, const uint8_t* pkt) {
-//	char str[512];
-//	memset(str, 0, 512);
-//	int i;
-//	for (i = 0; i < 48; i++) {
-//		sprintf(str + (3 * i), "%02d ", i);
-//	}
+//    char str[512];
+//    memset(str, 0, 512);
+//    int i;
+//    for (i = 0; i < 48; i++) {
+//        sprintf(str + (3 * i), "%02d ", i);
+//    }
 //
-//	*(str + (3 * 48)) = '\n';
-//	char* str2 = (str + (3 * 48) + 1);
-//	for (i = 0; i < 48; i++) {
-//		sprintf(str2 + (3 * i), "%02x ", *(pkt + i));
-//	}
+//    *(str + (3 * 48)) = '\n';
+//    char* str2 = (str + (3 * 48) + 1);
+//    for (i = 0; i < 48; i++) {
+//        sprintf(str2 + (3 * i), "%02x ", *(pkt + i));
+//    }
 //
-//	*(str2 + (3 * 48)) = '\n';
-//	SWI_LOG("NTP", DEBUG, "%s:\n%s\n", pktname, str);
+//    *(str2 + (3 * 48)) = '\n';
+//    SWI_LOG("NTP", DEBUG, "%s:\n%s\n", pktname, str);
 //}
 //
 //void print_uint64_hexa(const char* name, uint64_t val) {
-//	char str[25];
-//	memset(str, 0, 25);
-//	int i;
-//	for (i = 7; i >= 0; i--) {
-//		sprintf(str + (3 * (7 - i)), "%02x ", (uint8_t) ((val
-//				& ((uint64_t) 0xff << (8 * (i)))) >> (8 * i)));
-//	}
-//	SWI_LOG("NTP", DEBUG,"%s:%s\n", name, str);
+//    char str[25];
+//    memset(str, 0, 25);
+//    int i;
+//    for (i = 7; i >= 0; i--) {
+//        sprintf(str + (3 * (7 - i)), "%02x ", (uint8_t) ((val
+//                & ((uint64_t) 0xff << (8 * (i)))) >> (8 * i)));
+//    }
+//    SWI_LOG("NTP", DEBUG,"%s:%s\n", name, str);
 //}
 
 
@@ -181,7 +181,7 @@ static int TsDiff(uint64_t t1, uint64_t t2) {
  *
  * outputs:
  * - on success: status = 0, offset, delay, originate timestamp, reception timestamp
- * 		(the 4 last outputs are (string) buffers of size 8)
+ *         (the 4 last outputs are (string) buffers of size 8)
  * - when time as be set to server time (34 years limit was run over): 1, maxTsDiff (fixed offset in seconds)
  * - sanity checks failed: status=2
  * - on error: nil+error string
@@ -347,7 +347,7 @@ int l_settime(lua_State *L) {
         lua_Number res = ((lua_Number) (offset >> 32));
         lua_Number div = ((lua_Number) (((int64_t) 1) << 32) );
         if(div)
-            res+= ((lua_Number) (offset & 0xFFFFFFFF))	/ div;
+            res+= ((lua_Number) (offset & 0xFFFFFFFF))    / div;
         lua_pushnumber(L, res);
         return 2;
     }
@@ -358,7 +358,7 @@ static const luaL_reg R[] = {
     { "processpackets", l_processpackets },
     { "settime", l_settime },
     { "getbestdelay", l_getbestdelay},
-    { NULL,	NULL } };
+    { NULL,    NULL } };
 
 int luaopen_ntp_core(lua_State *L) {
     luaL_register(L, "ntp.core", R);

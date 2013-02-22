@@ -9,7 +9,7 @@
  *     Romain Perier      for Sierra Wireless - initial API and implementation
  *******************************************************************************/
 
-#define _GNU_SOURCE
+#define _GNU_SOURCE // this is required for strndup, which might cause warnings depending on the used toolchains
 #include <string.h>
 #include <arpa/inet.h>
 #include "swi_devicetree.h"
@@ -53,9 +53,9 @@ static swi_status_t empNotifyVariables(uint32_t payloadsize, char *payload)
   cb_list_t *entry;
   yajl_val yval;
   int i;
-  
+
   SWI_LOG("DT", DEBUG, "%s: begin\n", __FUNCTION__);
-  
+
   res = swi_dset_Create(&data);
   if (res != SWI_STATUS_OK)
   {
@@ -84,31 +84,31 @@ static swi_status_t empNotifyVariables(uint32_t payloadsize, char *payload)
     switch(yval->u.array.values[1]->u.object.values[i]->type)
     {
       case yajl_t_string:
-        res = swi_dset_PushString(data, varName, strlen(varName), yval->u.array.values[1]->u.object.values[i]->u.string, 
-				strlen(yval->u.array.values[1]->u.object.values[i]->u.string));
-	SWI_LOG("DT", DEBUG, "%s: pushing string value %s -> %s\n", __FUNCTION__, varName, yval->u.array.values[1]->u.object.values[i]->u.string);
+        res = swi_dset_PushString(data, varName, strlen(varName), yval->u.array.values[1]->u.object.values[i]->u.string,
+                strlen(yval->u.array.values[1]->u.object.values[i]->u.string));
+    SWI_LOG("DT", DEBUG, "%s: pushing string value %s -> %s\n", __FUNCTION__, varName, yval->u.array.values[1]->u.object.values[i]->u.string);
         break;
       case yajl_t_number:
         if (yval->u.array.values[1]->u.object.values[i]->u.number.flags & YAJL_NUMBER_INT_VALID)
-	{
-	  res = swi_dset_PushInteger(data, varName, strlen(varName), yval->u.array.values[1]->u.object.values[i]->u.number.i);
-	  SWI_LOG("DT", DEBUG, "%s: pushing int value %s -> %lld\n", __FUNCTION__, varName, yval->u.array.values[1]->u.object.values[i]->u.number.i);
-	}
+    {
+      res = swi_dset_PushInteger(data, varName, strlen(varName), yval->u.array.values[1]->u.object.values[i]->u.number.i);
+      SWI_LOG("DT", DEBUG, "%s: pushing int value %s -> %lld\n", __FUNCTION__, varName, yval->u.array.values[1]->u.object.values[i]->u.number.i);
+    }
         else if (yval->u.array.values[1]->u.object.values[i]->u.number.flags & YAJL_NUMBER_DOUBLE_VALID)
-	{
-	  res = swi_dset_PushFloat(data, varName, strlen(varName), yval->u.array.values[1]->u.object.values[i]->u.number.d);
-	  SWI_LOG("DT", DEBUG, "%s: pushing double value %s -> %lf\n", __FUNCTION__, varName, yval->u.array.values[1]->u.object.values[i]->u.number.d);
-	}
+    {
+      res = swi_dset_PushFloat(data, varName, strlen(varName), yval->u.array.values[1]->u.object.values[i]->u.number.d);
+      SWI_LOG("DT", DEBUG, "%s: pushing double value %s -> %lf\n", __FUNCTION__, varName, yval->u.array.values[1]->u.object.values[i]->u.number.d);
+    }
         break;
       case yajl_t_true:
-	res = swi_dset_PushBool(data, varName, strlen(varName), true);
-	break;
+    res = swi_dset_PushBool(data, varName, strlen(varName), true);
+    break;
       case yajl_t_false:
-	res = swi_dset_PushBool(data, varName, strlen(varName), false);
-	break;
+    res = swi_dset_PushBool(data, varName, strlen(varName), false);
+    break;
       case yajl_t_null:
-	res = swi_dset_PushNull(data, varName, strlen(varName));
-	break;
+    res = swi_dset_PushNull(data, varName, strlen(varName));
+    break;
       default:
         break;
     }
@@ -252,7 +252,7 @@ swi_status_t swi_dt_Init()
 
   if (initialized)
     return SWI_STATUS_OK;
-  
+
   res = emp_parser_init(1, empCmds, empHldrs, empReregisterServices);
   if (res != SWI_STATUS_OK)
   {
@@ -304,7 +304,7 @@ swi_status_t swi_dt_Get(const char* pathPtr, swi_dset_Iterator_t** data)
   }
 
   YAJL_GEN_ALLOC(gen);
-  
+
   YAJL_GEN_STRING(pathPtr, "pathPtr");
   res = swi_dset_Create(data);
   if (res != SWI_STATUS_OK)
@@ -402,7 +402,7 @@ swi_status_t swi_dt_Get(const char* pathPtr, swi_dset_Iterator_t** data)
     if (ptr == NULL)
       continue;
     is_leaf = 0;
-    SWI_LOG("DT", DEBUG, "  %s: %s -> %.*s\n", __FUNCTION__, yarray->u.array.values[i]->u.string, 
+    SWI_LOG("DT", DEBUG, "  %s: %s -> %.*s\n", __FUNCTION__, yarray->u.array.values[i]->u.string,
       (yarray->u.array.values[i]->u.string + len) - ptr, ptr + 1);
     swi_dset_PushString(*data, yarray->u.array.values[i]->u.string, len, ptr + 1, (yarray->u.array.values[i]->u.string + len) - ptr - 1);
   }
@@ -462,19 +462,19 @@ swi_status_t swi_dt_MultipleGet(size_t numVars, const char** pathPtr, swi_dset_I
       {
         case SWI_DSET_INTEGER:
           swi_dset_PushInteger(set, name, strlen(name), swi_dset_ToInteger(tmp));
-	  SWI_LOG("DT", DEBUG, "%s: concat %s=%ld\n", __FUNCTION__, name, swi_dset_ToInteger(tmp));
-	  break;
+      SWI_LOG("DT", DEBUG, "%s: concat %s=%ld\n", __FUNCTION__, name, swi_dset_ToInteger(tmp));
+      break;
         case SWI_DSET_FLOAT:
-	  swi_dset_PushFloat(set, name, strlen(name), swi_dset_ToFloat(tmp));
-	  SWI_LOG("DT", DEBUG, "%s: concat %s=%f\n", __FUNCTION__, name, swi_dset_ToFloat(tmp));
-	  break;
+      swi_dset_PushFloat(set, name, strlen(name), swi_dset_ToFloat(tmp));
+      SWI_LOG("DT", DEBUG, "%s: concat %s=%f\n", __FUNCTION__, name, swi_dset_ToFloat(tmp));
+      break;
         case SWI_DSET_STRING:
-	  value = swi_dset_ToString(tmp);
-	  swi_dset_PushString(set, name, strlen(name), value, strlen(value));
-	  SWI_LOG("DT", DEBUG, "%s: concat %s=%s\n", __FUNCTION__, name, value);
-	  break;
+      value = swi_dset_ToString(tmp);
+      swi_dset_PushString(set, name, strlen(name), value, strlen(value));
+      SWI_LOG("DT", DEBUG, "%s: concat %s=%s\n", __FUNCTION__, name, value);
+      break;
         default:
-	  break;
+      break;
       }
     }
     swi_dset_Destroy(tmp);
@@ -627,7 +627,7 @@ swi_status_t swi_dt_Unregister(swi_dt_regId_t regId)
     {
       if (entry->next == regId)
       {
-	break;
+    break;
       }
     }
     tmp = entry->next;

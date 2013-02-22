@@ -9,18 +9,10 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project (update)
+PROJECT(update)
 
-include_directories (${LUA_SOURCE_DIR}/liblua)
-include_directories(${racon_SOURCE_DIR})
-include_directories(${COMMON_SOURCE_DIR})
-include_directories(${YAJL_SOURCE_DIR})
-include_directories(${YAJL_SOURCE_DIR}/include)
-include_directories(${YAJL_SOURCE_DIR}/api)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+ADD_LIBRARY(Swi_Update SHARED swi_update.c)
+ADD_PUBLIC_HEADER(Swi_Update swi_update.h)
+TARGET_LINK_LIBRARIES(Swi_Update Emp lib_yajl lib_swi_log)
 
-add_library(Swi_Update SHARED swi_update.c)
-add_public_header(Swi_Update swi_update.h)
-target_link_libraries(Swi_Update Emp yajl Swi_Log)
-
-add_unit_test(updatetest update_test.c TEST_DEPENDENCY messaging_stubs RUNTIME_DEPENDENCIES Swi_Update Swi_Log luavm)
+ADD_UNIT_TEST(updatetest update_test.c TEST_DEPENDENCY messaging_stubs RUNTIME_DEPENDENCIES Swi_Update lib_swi_log lualib)

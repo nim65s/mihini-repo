@@ -63,21 +63,21 @@ end
 
 --server main loop
 local function mediationloop(status)
-	local s, err, host, port
-	log("MEDSRV", "INFO", "server started")
-	if status then
-	    status.countack = 0
-	    status.countkeepalive = 0
-	end
-	while mediationserver do
+    local s, err, host, port
+    log("MEDSRV", "INFO", "server started")
+    if status then
+        status.countack = 0
+        status.countkeepalive = 0
+    end
+    while mediationserver do
         s, host, port = mediationserver:receivefrom()
-		if not s or not host or not port then
-		    break
-		end
-		clients = type(clients) == "table" and clients or {}
-		if not clients[tostring(host)..tostring(port)] then
-		    clients[tostring(host)..":"..tostring(port)] = setmetatable({host=host, port=port}, {__index=cmdapi})
-		    table.insert(clients, clients[tostring(host)..":"..tostring(port)])
+        if not s or not host or not port then
+            break
+        end
+        clients = type(clients) == "table" and clients or {}
+        if not clients[tostring(host)..tostring(port)] then
+            clients[tostring(host)..":"..tostring(port)] = setmetatable({host=host, port=port}, {__index=cmdapi})
+            table.insert(clients, clients[tostring(host)..":"..tostring(port)])
         end
         local offset, cmdid, ackid, deviceIdlength, deviceId = string.unpack(s, ">bbbA")
         log("MEDSRV", "INFO", "received [%d:%d] from [%s:%d]", cmdid, ackid, host, port)

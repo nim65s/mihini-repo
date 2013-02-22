@@ -27,7 +27,7 @@
 #define PHONE_NUMBER "33606060606"
 #define MESSAGE "TEST MESSAGE"
 
-static const char *lua_script = 
+static const char *lua_script =
 "local sched = require 'sched'\n"
 "local rpc = require 'rpc'\n"
 "local os = require 'os'\n"
@@ -101,7 +101,7 @@ static int test_sms_Destroy()
 }
 
 static int test_sms_Register(swi_sms_ReceptionCB_t callback, const char* senderPatternPtr,
-			     const char* messagePatternPtr, swi_sms_regId_t *regIdPtr)
+                 const char* messagePatternPtr, swi_sms_regId_t *regIdPtr)
 {
   swi_status_t res;
 
@@ -152,7 +152,7 @@ static int test_sms_Unregister(swi_sms_regId_t regId)
 static int test_sms_Unregister_failure()
 {
   swi_status_t res;
-  
+
   res = test_sms_Unregister((swi_sms_regId_t)0);
   if (res != SWI_STATUS_WRONG_PARAMS)
     return res;
@@ -168,7 +168,7 @@ static int test_sms_Unregister_failure()
 }
 
 int main(void)
-{  
+{
   swi_sms_regId_t regId;
 
   INIT_TEST("SMS_TEST");

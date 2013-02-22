@@ -9,21 +9,14 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project(racon)
+PROJECT(CFWK_RACON)
 
-include_directories(${YAJL_SOURCE_DIR})
-include_directories(${YAJL_SOURCE_DIR}/include)
-include_directories(${YAJL_SOURCE_DIR}/api)
-include_directories(${COMMON_SOURCE_DIR})
-include_directories(${LIBHESSIANPROTOCOL_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+ADD_LIBRARY(Swi_DSet SHARED swi_dset.c)
+ADD_PUBLIC_HEADER(Swi_DSet swi_dset.h)
+TARGET_LINK_LIBRARIES(Swi_DSet lib_pointerlist)
 
-add_library(Swi_DSet SHARED swi_dset.c)
-add_public_header(Swi_DSet swi_dset.h)
-target_link_libraries(Swi_DSet pointerlist)
+ADD_LIBRARY(Emp SHARED emp.c)
+TARGET_LINK_LIBRARIES(Emp Swi_DSet pthread)
 
-add_library(Emp SHARED emp.c)
-target_link_libraries(Emp Swi_DSet pthread)
-
-add_unit_test(dset_test dset_test.c RUNTIME_DEPENDENCIES Swi_Log Swi_DSet)
-add_unit_test(emp_test emp_test.c TEST_DEPENDENCY emp_server RUNTIME_DEPENDENCIES Swi_Log Emp pthread yajl)
+ADD_UNIT_TEST(dset_test dset_test.c RUNTIME_DEPENDENCIES lib_swi_log Swi_DSet)
+ADD_UNIT_TEST(emp_test emp_test.c TEST_DEPENDENCY emp_server RUNTIME_DEPENDENCIES lib_swi_log Emp pthread lib_yajl)

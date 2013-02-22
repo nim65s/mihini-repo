@@ -9,7 +9,7 @@
 --     Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
---asset tests the parameters return in hook function, see manifest file for more information 
+--asset tests the parameters return in hook function, see manifest file for more information
 --be aware that testname is used as asset name, and must be set accordingly in Manifest
 local testname="update_test_05_assetupdatehook_rm_cmp"
 local airvantage = require"airvantage"
@@ -20,7 +20,7 @@ local asset
 local function uhook(name, version, path, parameters)
     local param = {name = name, version = version, path = path, parameters = parameters}
     p(testname, param)
-    
+
     if not param then log(testname, "ERROR", "not param") return end
     if param.name and param.name~="update" then log(testname, "ERROR", "name in param is invalid") return end
     if param.version and param.parameters and param.parameters.reason~="test" then log(testname,"ERROR", "parameters inconsistent with Manifest")  return end

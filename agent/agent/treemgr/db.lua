@@ -32,7 +32,7 @@
 -- handler and a `hpath`, separated by a colon, to a sequence of every
 -- `lpath` which mount it. This allows to translate handler
 -- notifications into logical ones.
--- 
+--
 -- The third DB allows children enumeration. It associates
 -- each `lpath` to the list of every child node directly below it.
 --
@@ -63,52 +63,52 @@ local l2m_db
 
 -- Returns a list of all filenames containing map definitions.
 local function get_all_map_names()
-	local maps = { }
-	local gdir, msg = lfs.dir (resources_path)
-	if not gdir then
-		log('TREEMGR.DB', 'ERROR', "Cannot find map folder %s", treemgr_path)
-		return nil, msg
-	end
-	for m in gdir do
-		if m :sub(-4, -1) == '.map' then
-			table.insert (maps, resources_path..m)
-		end
-	end	
-	return maps
+    local maps = { }
+    local gdir, msg = lfs.dir (resources_path)
+    if not gdir then
+        log('TREEMGR-DB', 'ERROR', "Cannot find map folder %s", treemgr_path)
+        return nil, msg
+    end
+    for m in gdir do
+        if m :sub(-4, -1) == '.map' then
+            table.insert (maps, resources_path..m)
+        end
+    end
+    return maps
 end
 
 -- Returns true iff the maps are more recent than the compiled DB
 local function check_map_dates()
-	local att = lfs.attributes(treemgr_path.."load.lua")
+    local att = lfs.attributes(treemgr_path.."load.lua")
 
-	if not att then
-		log('TREEMGR.DB', 'INFO', "Need to create the treemgr databases, no compiled file")
-		return true
-	end
+    if not att then
+        log('TREEMGR-DB', 'DEBUG', "Need to create the treemgr databases, no compiled file")
+        return true
+    end
 
-	local compilation_date = att.modification
+    local compilation_date = att.modification
 
-	for _, name in ipairs(get_all_map_names()) do
-		local map_date = lfs.attributes(name).modification
-		if not map_date or map_date > compilation_date then
-			log('TREEMGR.DB', 'INFO', "Need to rebuild the treemgr databases, %s (%d) has changed since last compilation (%d)",
-				name, map_date, compilation_date)
-			return true
-		end
-	end
-	log('TREEMGR.DB', 'INFO', "DB files already compiled from maps")
-	return false
-end		
+    for _, name in ipairs(get_all_map_names()) do
+        local map_date = lfs.attributes(name).modification
+        if not map_date or map_date > compilation_date then
+            log('TREEMGR-DB', 'INFO', "Need to rebuild the treemgr databases, %s (%d) has changed since last compilation (%d)",
+                name, map_date, compilation_date)
+            return true
+        end
+    end
+    log('TREEMGR-DB', 'DETAIL', "DB files already compiled from maps")
+    return false
+end
 
 -- rebuild DB files if map files are more recent
 local function rebuild_db_if_needed()
-	if check_map_dates() then -- need to rebuild
-		local b = require 'agent.treemgr.build' (treemgr_path)
-		for _, filename in ipairs(get_all_map_names()) do
-			b :add (filename)
-		end
-		b :close()
-	end
+    if check_map_dates() then -- need to rebuild
+        local b = require 'agent.treemgr.build' (treemgr_path)
+        for _, filename in ipairs(get_all_map_names()) do
+            b :add (filename)
+        end
+        b :close()
+    end
 end
 
 local initialized = false
@@ -117,14 +117,14 @@ local initialized = false
 -- Load every handler referenced by the mapping databases
 function M.init()
 
-	rebuild_db_if_needed()
+    rebuild_db_if_needed()
 
-	-- Open databases
-	h2l_db = cdb.init (treemgr_path..'treemgr.h2l.cdb'); M.databases.h2l = h2l_db
-	l2h_db = cdb.init (treemgr_path..'treemgr.l2h.cdb'); M.databases.l2h = l2h_db
-	l2c_db = cdb.init (treemgr_path..'treemgr.l2c.cdb'); M.databases.l2c = l2c_db
-	l2m_db = cdb.init (treemgr_path..'treemgr.l2m.cdb'); M.databases.l2m = l2m_db
-	initialized = true
+    -- Open databases
+    h2l_db = cdb.init (treemgr_path..'treemgr.h2l.cdb'); M.databases.h2l = h2l_db
+    l2h_db = cdb.init (treemgr_path..'treemgr.l2h.cdb'); M.databases.l2h = l2h_db
+    l2c_db = cdb.init (treemgr_path..'treemgr.l2c.cdb'); M.databases.l2c = l2c_db
+    l2m_db = cdb.init (treemgr_path..'treemgr.l2m.cdb'); M.databases.l2m = l2m_db
+    initialized = true
 end
 
 --------------------------------------------------------------------------------
@@ -136,8 +136,8 @@ end
 -- @return a for-loop iterator listing every lpath associated to this hpath
 --
 function M.h2l(handler_name, hpath)
-	if not initialized then M.init() end
-	return h2l_db :values(handler_name..":"..hpath)
+    if not initialized then M.init() end
+    return h2l_db :values(handler_name..":"..hpath)
 end
 
 --------------------------------------------------------------------------------
@@ -147,9 +147,9 @@ end
 -- @return handler_name, hpath
 --
 function M.l2h(lpath)
-	if not initialized then M.init() end
-	local line = l2h_db :values (lpath) ()
-	if line then return line :match "^([^:]+):(.*)$" end
+    if not initialized then M.init() end
+    local line = l2h_db :values (lpath) ()
+    if line then return line :match "^([^:]+):(.*)$" end
 end
 
 --------------------------------------------------------------------------------
@@ -159,8 +159,8 @@ end
 -- each direct child of `lpath`.
 --
 function M.l2c(lpath)
-	if not initialized then M.init() end
-	return  l2c_db :values (lpath)
+    if not initialized then M.init() end
+    return  l2c_db :values (lpath)
 end
 
 
@@ -172,8 +172,8 @@ end
 -- mounted below this logical node.
 --
 function M.l2m(lpath)
-	if not initialized then M.init() end
-	return l2m_db :values (lpath)
+    if not initialized then M.init() end
+    return l2m_db :values (lpath)
 end
 
 return M

@@ -36,7 +36,7 @@
 -- Persisted Tables.
 -- -----------------
 --
--- Persisted tables behave mostly as regular Lua tables, except that their 
+-- Persisted tables behave mostly as regular Lua tables, except that their
 -- content survives across reboots. They can hold strings, numbers, booleans,
 -- and possibly nested tables thereof, both as their keys and as their values.
 --
@@ -123,6 +123,7 @@
 
 local l2b      = require 'luatobin'
 local checks   = require 'checks'
+local log      = require 'log'
 
 require "pack"
 
@@ -130,7 +131,9 @@ if global then global 'WORKING_DIR' end
 
 if global then global 'LUA_AF_RW_PATH' end
 local persist_path = (LUA_AF_RW_PATH or "./").."persist/"
-os.execute("mkdir -p "..persist_path)
+--force using non-sched aware os.execute function to avoid "cross boundaries" issues
+local exec = os.execute_orig or os.execute
+exec("mkdir -p "..persist_path)
 
 local M = { }
 
@@ -152,19 +155,19 @@ end
 ------------------------------------------------------------------------------
 -- The table sub-module of persist
 -- @type table
--- 
+--
 
 
 ------------------------------------------------------------------------------
 -- The table sub-module of persist
 -- @field [parent=#persist] #table table
--- 
+--
 
 M.table = { } -- sub-module persist.table
 
 -- Remove useless entries from a table
 local function recompact(self)
-    log('PERSIST-FILE', 'DEBUG', 
+    log('PERSIST-FILE', 'DEBUG',
         "%d entries wasted for %d entries, recompacting table %s",
         self.__overridden, self.__length, self.__id)
     local file = io.open(persist_path..self.__id..'.l2b', 'wb') -- overwrite
@@ -228,7 +231,7 @@ function M.table.new(name)
     checks('string')
 
     M.init()
-    
+
     local cached = cache[name]
     if cached then return cached end
 
@@ -262,7 +265,7 @@ function M.table.new(name)
             local k, v
             offset, k, v = l2b.deserialize(filecontent, 2, offset)
             if k==nil then break end
-            if self.__cache[k] then 
+            if self.__cache[k] then
                 self.__overridden = self.__overridden+1
             else self.__length = self.__length + 1 end
             self.__cache[k] = v
@@ -283,11 +286,26 @@ function M.table.empty(self)
     self.__length = 0
     self.__overridden = 0
     self.__file :close()
-    self.__file = io.open(persist_path..self.__id..'.l2b', 'wb'); -- truncate file to 0
+    self.__file = assert(io.open(persist_path..self.__id..'.l2b', 'wb')); -- truncate file to 0
     self.__cache = { }
 end
 
 local store = assert(M.table.new("PersistStore"))
+
+
+--- Resets all persist tables:
+-- this function is not to be mistaken with persist.table.empty API
+-- this function resets all persisted files: all tables explicitly created by user, and the PersistStore used to provide load/save API in persist module.
+-- (This data rest only applies to the current Lua framework running persist module).
+function M.table.emptyall()
+    log("PERSIST", "WARNING", "All persist files will be reset")
+    for k, v in pairs(cache) do
+        M.table.empty(v)
+    end
+
+    M.table.empty(store)
+end
+
 
 ------------------------------------------------------------------------------
 -- Saves an object for later retrieval.
@@ -298,7 +316,7 @@ local store = assert(M.table.new("PersistStore"))
 --
 -- @function [parent=#persist] save
 -- @param name the name of the persisted object to save.
--- @param obj the object to persist. 
+-- @param obj the object to persist.
 -- @usage
 --
 -- persist.save ('xxx', 1357) -- Save it in the store as 'xxx'
@@ -314,7 +332,7 @@ end
 
 ------------------------------------------------------------------------------
 -- Retrieve from flash an object saved with @{#persist.save}.
--- 
+--
 -- @function [parent=#persist] load
 -- @param name the name of the persisted object to load.
 -- @return the object stored under that name, or `nil` if no such object exists.

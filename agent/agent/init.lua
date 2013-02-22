@@ -16,7 +16,7 @@ local sched = require "sched"
 require "strict"
 
 --load platform specifics
-require "agent.platform"
+local platform = require "agent.platform"
 local print = print
 local log = require "log"
 local socket = require "socket"
@@ -250,7 +250,7 @@ local function startInitProcess()
 
     -- Load PlatformSpecifics before anything
     local s, e = protectedinit("platform", config.platformsettings)
-	if not s then log("GENERAL", "ERROR", "Error while loading PlatformSpecifics, error=%s",e or "unknown") end
+    if not s then log("GENERAL", "ERROR", "Error while loading PlatformSpecifics, error=%s",e or "unknown") end
     -- Actually start the init process
     sched.signal("ReadyAgent", "InitStart")
 end
@@ -300,7 +300,7 @@ local function initialize()
     scheduleinit{name="DeviceManagement", mod="devman", initflag=c"device.activate", reqdep="AssetConnector", params=c"device"}
 
     -- Start the Monitoring Engine, currently disabled
-    -- scheduleinit{name="Monitoring", mod="monitoring", initflag=c"monitoring.activate", reqdep="DeviceManagement"}
+    scheduleinit{name="Monitoring", mod="monitoring", initflag=c"monitoring.activate", reqdep="DeviceManagement"}
 
     -- Start the Time / NTP services
     scheduleinit{name="Time", mod="time", initflag=c"time.activate"}
@@ -308,12 +308,12 @@ local function initialize()
     -- Add Lua RPC mechanism
     scheduleinit{name="Lua RPC", mod="rpc", initflag=c"rpc.activate", params=c"rpc"}
 
-	-- Data manager: SendData requests between asset and server, both directions
-	scheduleinit{name="DataManagement", mod="asscon.datamanager", initflag=c"data.activate",params=c"data", reqdep="AssetConnector"}
+    -- Data manager: SendData requests between asset and server, both directions
+    scheduleinit{name="DataManagement", mod="asscon.datamanager", initflag=c"data.activate",params=c"data", reqdep="AssetConnector"}
 
     scheduleinit{name="AutoExec", mod="autoexec", initflag=c"autoexec.activate",
                  reqdep= {"DeviceManagement"}, optdep = {"ApplicationContainer", "SMS", "NetworkManager" }}
-	
+
     -- Launch the Init process
     startInitProcess()
 end

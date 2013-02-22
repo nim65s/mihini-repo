@@ -38,8 +38,8 @@ typedef enum {
  * \brief the serial uart baudrate
  */
 typedef enum {
-	SERIAL_UART_BAUDRATE_300 = 3,
-	SERIAL_UART_BAUDRATE_600 = 6,
+    SERIAL_UART_BAUDRATE_300 = 3,
+    SERIAL_UART_BAUDRATE_600 = 6,
     SERIAL_UART_BAUDRATE_1200 = 12,
     SERIAL_UART_BAUDRATE_2400 = 24,
     SERIAL_UART_BAUDRATE_4800 = 48,
@@ -96,7 +96,7 @@ typedef enum {
  */
 typedef struct SerialConfig_ {
     /* line parameters */
-	SerialUARTId identity;
+    SerialUARTId identity;
     SerialUARTBaudrate baudrate;
     SerialUARTParity parity;
     SerialUARTStop stop;
@@ -107,19 +107,19 @@ typedef struct SerialConfig_ {
     SerialGPIOWriteModeLevel gpioLevel; // gpio write level (non-mandatory)
 
     /* id */
-	uint32_t stackId;         // must be unique among all procotocols (for oat message passing)
+    uint32_t stackId;         // must be unique among all procotocols (for oat message passing)
 
-	/* transport behaviour */
-	uint8_t  sendASAP;        // if true request can be sent without waiting for previous request's response (0 means false)
-	uint8_t  flushBeforeSend; // if true flush UART service provider transmission and reception FIFO before each send.
-	uint8_t  listenASAP;      // if true transport will listen for incoming data as startup and as soon as a valid response as been processed (0 means false)
-	uint8_t  noTimeoutOnUnso; // if true and if listenASAP is true, timeout will be disabled on unsollicited response ( [response]<-timeout-> )
+    /* transport behaviour */
+    uint8_t  sendASAP;        // if true request can be sent without waiting for previous request's response (0 means false)
+    uint8_t  flushBeforeSend; // if true flush UART service provider transmission and reception FIFO before each send.
+    uint8_t  listenASAP;      // if true transport will listen for incoming data as startup and as soon as a valid response as been processed (0 means false)
+    uint8_t  noTimeoutOnUnso; // if true and if listenASAP is true, timeout will be disabled on unsollicited response ( [response]<-timeout-> )
 
-	/* transport options */
-	uint16_t timeout;         // [request]<-timeout->[response], request-response timeout value x100ms (0 means no timeout)
-	                          // if listenASAP is true and timeoutOnUnso is true: [response]<-timeout->,  response timeout value x100ms (0 means no timeout)
-	uint16_t retry;           // request max retry (0 means no retry)
-	uint16_t maxBufferSize;   // reception and send buffer max length (generally equal to serializer buffers' maxsize)
+    /* transport options */
+    uint16_t timeout;         // [request]<-timeout->[response], request-response timeout value x100ms (0 means no timeout)
+                              // if listenASAP is true and timeoutOnUnso is true: [response]<-timeout->,  response timeout value x100ms (0 means no timeout)
+    uint16_t retry;           // request max retry (0 means no retry)
+    uint16_t maxBufferSize;   // reception and send buffer max length (generally equal to serializer buffers' maxsize)
 } SerialConfig;
 
 #endif /* SERIAL_TYPES_H_ */

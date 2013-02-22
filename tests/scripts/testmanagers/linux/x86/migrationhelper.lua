@@ -55,21 +55,21 @@ local function assert_migrationexecution(path, expectedtext)
   u.assert_not_nil(status)
   u.assert_equal(0, status)
   u.assert_not_nil(oldpath)
-  
-  local fd = system.popen("cd ".. path.." && ./bin/agent")                                                                                                                                                                                                                    
-  u.assert_not_nil(fd, "File descriptor of migration script test is nil: "..path)                                                                                                                                                                                             
-  local data = fd:read("*l")                                                                                                                                                                                                                                                  
-       
+
+  local fd = system.popen("cd ".. path.." && ./bin/agent")
+  u.assert_not_nil(fd, "File descriptor of migration script test is nil: "..path)
+  local data = fd:read("*l")
+
   sched.wait(10)
-  
+
   local client, err = rpc.newclient('localhost', 2012)
   u.assert_not_nil(client, err)
-  
+
   -- exit ReadyAgent
   local result = client:call('os.exit', 0)
-  
+
   sched.wait(2)
-  
+
   u.assert_match(expectedtext, data, "Expected text of migration script not found")
   result = system.execute("cd "..oldpath)
 end
@@ -79,7 +79,7 @@ end
 -- Method: test_withoutmigrationscript
 -- Description:
 --  This method tries to perform a migration without using migration script
---  The agent is compiled in a separated directory and started with a specific persist file containing 
+--  The agent is compiled in a separated directory and started with a specific persist file containing
 -- Scenario:
 --    - Place the backup persist file
 --    - Start the ReadyAgent and redirect ouput into a file.
@@ -94,7 +94,7 @@ function t:test_withoutmigrationscript()
   u.assert_equal(0, result, "Can't remove persisted files")
   sched.wait(1)
   -- start the special ReadyAgent and check expected value
-  assert_migrationexecution("../../specific/migrationwithout/runtime", "GENERAL") 
+  assert_migrationexecution("../../specific/migrationwithout/runtime", "GENERAL")
 
 end
 
@@ -103,7 +103,7 @@ end
 -- Method: test_cmigrationscript
 -- Description:
 --  This method tries to perform a migration with a c migration script
---  The agent is compiled in a separated directory and started with a specific persist file containing 
+--  The agent is compiled in a separated directory and started with a specific persist file containing
 -- Scenario:
 --    - Place the backup persist file
 --    - Start the ReadyAgent and redirect ouput into a file.
@@ -118,7 +118,7 @@ function t:test_cmigrationscript()
   u.assert_equal(0, result, "Can't remove persisted files")
   sched.wait(1)
   -- start the special ReadyAgent with redirected output
-  assert_migrationexecution("../../specific/migrationc/runtime", "MIGRATIONSCRIPT") 
+  assert_migrationexecution("../../specific/migrationc/runtime", "MIGRATIONSCRIPT")
 end
 
 
@@ -126,7 +126,7 @@ end
 -- Method: test_luamigrationscript
 -- Description:
 --  This method tries to perform a migration with a lua migration script
---  The agent is compiled in a separated directory and started with a specific persist file containing 
+--  The agent is compiled in a separated directory and started with a specific persist file containing
 -- Scenario:
 --    - Place the backup persist file
 --    - Start the ReadyAgent and redirect ouput into a file.
@@ -141,7 +141,7 @@ function t:test_luamigrationscript()
   u.assert_equal(0, result, "Can't remove persisted files")
   sched.wait(1)
   -- start the special ReadyAgent with redirected output
-  assert_migrationexecution("../../specific/migrationlua/runtime", "vfrom	unknown	vto") 
+  assert_migrationexecution("../../specific/migrationlua/runtime", "vfrom	unknown	vto")
 end
 
 return t

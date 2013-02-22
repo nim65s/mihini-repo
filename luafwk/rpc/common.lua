@@ -22,6 +22,7 @@ local upath = require 'utils.path'
 local socket = require 'socket'
 local loader = require 'utils.loader'
 local proxy = require 'rpc.proxy'
+require 'print'
 
 local M = { }
 
@@ -49,7 +50,7 @@ M.execstore = setmetatable({ }, { __mode="k" })
 -- this id is sent back to the peer. The peer will then be able to call the
 -- registered function through `__rpcrunexec()`.
 -- Those functions are not intended to be called directly, the official API is
--- through the `:newexec()` method. 
+-- through the `:newexec()` method.
 function M.remotefunctions.__rpcbuildexec(skt, script)
     if not M.execstore[skt] then M.execstore[skt] = {execid=1} end
     local store = M.execstore[skt]
@@ -66,7 +67,7 @@ function M.remotefunctions.__rpcbuildexec(skt, script)
 end
 
 --- Executes a a function previously uploaded by a peer, upon requests by
--- that peer. 
+-- that peer.
 function M.remotefunctions.__rpcrunexec(skt, execid, ...)
     local store = M.execstore[skt]
     local exec =  store and store[execid]
@@ -99,7 +100,7 @@ function M.resulttypes.__rpceval(obj)
         local obj_ref = proxy.localref_byobj[obj]
     local obj_type = obj_ref and obj_ref.type
     return obj_type and proxy.method_signatures[obj_type] or { }
-    
+
 end
 
 --- Execute the function denoted by `func_name` and sends the response package
@@ -123,20 +124,20 @@ function M.execute(skt, seqnum, func_name, params)
 
     -- Retrieve the function; add a `skt` 1st param to it.
     local func = M.remotefunctions[func_name]
-    if func then 
+    if func then
         local raw_func = func
         func = function(...) return raw_func(skt, ...) end
     else _, func = pcall (upath.get, _G, func_name) end -- not in remote funcs, look for a global
 
-    if func == nil then 
+    if func == nil then
         log('LUARPC', 'ERROR', "Function %q not found", func_name)
         status = 2
-    elseif type(func)~="function" then 
-        log('LUARPC', 'ERROR', "%q is a %s, not a function", type(func))
+    elseif type(func)~="function" then
+        log('LUARPC', 'ERROR', "%q is a %s, not a function", tostring(func), type(func))
         status = 3
     else
         r = table.pack(copcall(func, unpack(params)))
-        if not r[1] then 
+        if not r[1] then
             log('LUARPC', 'ERROR', "error while executing %s(%s): %q",
                 func_name,
                 sprint(params) :sub (2, -2),
@@ -151,14 +152,14 @@ function M.execute(skt, seqnum, func_name, params)
     if status == 0 then
         -- Attempt to retrieve signature
         local resulttypes_f =  M.resulttypes[func_name]
-        res_types = resulttypes_f and resulttypes_f(unpack(params)) or 
+        res_types = resulttypes_f and resulttypes_f(unpack(params)) or
             proxy.function_signatures[func_name] or { }
     else res_types = { } end
-    
+
     -- Serialize results or copcall error
     for i = 1, r.n - 1 do
-        local success, ser = pcall(proxy.serialize, r[i+1], res_types[i]) 
-        if success then payload[i] = ser else 
+        local success, ser = pcall(proxy.serialize, r[i+1], res_types[i])
+        if success then payload[i] = ser else
             log('LUARPC', 'ERROR', "Cannot serialize result #%i of %q",
                 i, func_name)
             status, payload = 4, { proxy.serialize("Cannot serialize result") }
@@ -201,7 +202,7 @@ function M.session_mt :call (func_name, ...)
     local payload = { proxy.serialize(func_name) }
     local params = table.pack(...)
     local types = proxy.function_signatures[func_name] or { }
-    for i = 1, params.n do 
+    for i = 1, params.n do
         --log('LUARPC', 'WARNING', "Adding parameter %i/%i %s to RPC call %q", i, params.n, sprint(params[i]), func_name)
         table.insert(payload, proxy.serialize(params[i]))--, types[i]))
     end
@@ -210,7 +211,7 @@ function M.session_mt :call (func_name, ...)
 
     if not seqnum then return nil, err
     else return self :_waitcallresponse (seqnum) end
-    --[[else 
+    --[[else
         local r = { self :_waitcallresponse (seqnum) }
         log('LUARPC', 'DEBUG', "Got response with %i results", #r)
         return unpack(r)

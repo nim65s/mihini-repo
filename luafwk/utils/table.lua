@@ -14,7 +14,7 @@
 -- Table utils.
 --
 -- @module utils.table
--- 
+--
 
 
 local coroutine = require"coroutine"
@@ -38,7 +38,7 @@ assert(not table.pack, "This was temporary, waiting for Lua5.2. Remove table.pac
 -- Note that the resulting table may not be a sequence.
 --
 -- Note that when loading utils.table module, this pack function is also added to global/std table module.
--- 
+--
 -- @function [parent=#utils.table] pack
 -- @param varargs arguments to pack
 -- @return a table that contains all the arguments followed by the number of arguments.
@@ -61,7 +61,7 @@ table.pack = pack --until we switch to 5.2.
 -- @param src a table to be used as the source of the copy.
 -- @param dst a table to be used as the destination of the copy.
 -- @param overwrite boolean value, to enable overwrite of existing field in dst table.
--- @return the resulting dst table. 
+-- @return the resulting dst table.
 --
 
 function copy(src, dst, overwrite)
@@ -84,7 +84,7 @@ end
 -- Produces a diff of two tables.
 --
 -- Recursive diff by default.
--- 
+--
 -- @function [parent=#utils.table] diff
 -- @param t1 first table to compare.
 -- @param t2 second table to compare.
@@ -129,9 +129,9 @@ end
 
 --------------------------------------------------------------------------------
 -- Checks if the table is regular array.
--- 
+--
 -- Regular array is a table with only conscutive integer keys (no holes).
--- 
+--
 -- @function [parent=#utils.table] isArray
 -- @param T table to check.
 -- @return true or false.
@@ -259,7 +259,7 @@ end
 -- @param t1 first table to traverse.
 -- @param ... additional tables to traverse.
 -- @return iterator function.
--- 
+--
 
 function multipairs(t1, ...)
     local state = { tables = {t1, ...}, i=1, k=next(t1) }
@@ -283,8 +283,8 @@ end
 --public API
 M.pack=pack; M.copy=copy; M.diff=diff; M.keys=keys; M.map=map;
 M.isarray=isarray; M.isArray=isarray;
-M.sortedpairs=sortedpairs; M.sortedPairs=sortedpairs; 
-M.recursivepairs=recursivepairs; M.recursivePairs=recursivepairs; 
+M.sortedpairs=sortedpairs; M.sortedPairs=sortedpairs;
+M.recursivepairs=recursivepairs; M.recursivePairs=recursivepairs;
 M.multipairs=multipairs; M.multiPairs=multipairs;
 
 return M

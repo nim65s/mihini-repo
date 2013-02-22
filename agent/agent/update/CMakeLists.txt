@@ -9,11 +9,13 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(update_linux DESTINATION agent/update
-	init.lua builtinupdaters.lua omaconnector.lua pkgcheck.lua updatemgr.lua common.lua downloader.lua
+ADD_LUA_LIBRARY(agent_update DESTINATION agent/update
+    init.lua builtinupdaters.lua pkgcheck.lua updatemgr.lua common.lua downloader.lua
 )
 
-add_lua_library(update_tools EXCLUDE_FROM_ALL DESTINATION agent/update/tools
+ADD_DEPENDENCIES(agent_update racon)
+
+ADD_LUA_LIBRARY(agent_update_tools EXCLUDE_FROM_ALL DESTINATION agent/update/tools
     tools/createpkg.lua
 )
 

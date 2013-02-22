@@ -27,9 +27,9 @@
 local common      = require 'racon.common'
 local niltoken    = require 'niltoken'
 
-local M = { 
+local M = {
     initialized=false; -- has M.init() been run?
-    notifyvarid = { }; -- associate a registration ID returned by treemgr 
+    notifyvarid = { }; -- associate a registration ID returned by treemgr
                        -- through EMP, with the callback that should be run
                        -- upon notification (by treemgr through EMP).
     sem_value = 1
@@ -95,7 +95,7 @@ end
 -- returned.
 --
 -- @usage `devicetree.get("system.sw_info.fw_ver")` may return `"4.2.5"`.
--- @usage `devicetree.get("system.sw_info")` may return 
+-- @usage `devicetree.get("system.sw_info")` may return
 --   `nil, {"system.sw_info.fw_ver", "system.sw_info.boot_ver"}`.
 -- @usage `devicetree.get({"system.sw_info", "system.sw_info.boot_ver"})`
 -- may return `{["system.sw_info.boot_ver"]="4.2.5"}, {"system.sw_info.fw_ver", "system.sw_info.boot_ver"}`.
@@ -121,12 +121,12 @@ end
 -- Registers to receive a notification when one or several variables change.
 --
 -- The callback is triggered everytime one or some of the variables listed in
--- `regvars` changes. It receives as parameter a table of 
+-- `regvars` changes. It receives as parameter a table of
 -- variable-name / variable-value pairs; these variables are all the variables
--- listed in `regvars` which have changed, plus every variables listed in 
+-- listed in `regvars` which have changed, plus every variables listed in
 -- `passivevars`, whether  their values changed or not.
 --
--- Please note that the callback can be called with table param  
+-- Please note that the callback can be called with table param
 -- containing @{niltoken#niltoken} value(s) to indicate variable(s) deletion.
 --
 -- Variables listed in `regvars` can be either FQVN names,
@@ -140,7 +140,7 @@ end
 -- @param callback the function triggered everytime a `regvars` variable changes.
 --   The callback is called with a table containing all the changes, paths as
 --   keys and values as values.
--- @param passivevars optional variables to always pass to `callback`, 
+-- @param passivevars optional variables to always pass to `callback`,
 --   whether they changed or not.
 -- @return a registration id, to be passed to @{devicetree.unregister}
 --   in order to unsubscribe.
@@ -163,7 +163,7 @@ function M.register(regvars, callback, passivevars)
        userId = v.userId
     end
     userId = userId + 1
-    -- A user identifier is required to avoid gaps in the list (when the callback is unregistered) 
+    -- A user identifier is required to avoid gaps in the list (when the callback is unregistered)
     table.insert(M.notifyvarid, {userId=userId, regId=id, cb=callback, regvars=regvars, passivevars=passivevars})
     sem_post()
     return userId
@@ -171,7 +171,7 @@ end
 
 --------------------------------------------------------------------------------
 -- Cancels registration to receive a notification when a variable changes.
--- 
+--
 -- @function [parent=#devicetree] unregister
 -- @param userid is the id returned by previous @{devicetree.register}
 --        call to be cancelled.
@@ -186,12 +186,12 @@ function M.unregister(userid)
     sem_wait()
     for k, v in pairs(M.notifyvarid) do
        if v.userId == userid then
-	  local s, msg = common.sendcmd("UnregisterVariable", v.regId)
-	  if s == "ok" then
-	     table.remove(M.notifyvarid, k)
-	  end
-	  sem_post()
-	  return s, msg
+      local s, msg = common.sendcmd("UnregisterVariable", v.regId)
+      if s == "ok" then
+         table.remove(M.notifyvarid, k)
+      end
+      sem_post()
+      return s, msg
        end
     end
     sem_post()
@@ -201,17 +201,17 @@ end
 
 -- React to a notification by treemgr sent through racon.
 local function emp_handler_NotifyVariable(payload)
-	local id, varmap = unpack(payload) -- do not filter niltoken here ?
-	for path, val in pairs(varmap) do
-	   if val then varmap[path]=niltoken(val) end
-	end
-	for _, v in pairs(M.notifyvarid) do
-	   if v.regId == id then
-	      v.cb(varmap)
-	      return 0
-	   end
-	end
-	return -1, "cannot find callback"
+    local id, varmap = unpack(payload) -- do not filter niltoken here ?
+    for path, val in pairs(varmap) do
+       if val then varmap[path]=niltoken(val) end
+    end
+    for _, v in pairs(M.notifyvarid) do
+       if v.regId == id then
+          v.cb(varmap)
+          return 0
+       end
+    end
+    return -1, "cannot find callback"
 end
 
 --MUST NOT BLOCK !!!!
@@ -221,17 +221,17 @@ local function emp_ipc_broken_handler()
    -- This avoids data races between reregistration and other threads which send EMP commands
    M.sem_value=0
    sched.run(function()
-		for _, reg in pairs(M.notifyvarid) do
-		   local status, id = common.sendcmd("RegisterVariable", { reg.regvars, reg.passivevars})
-		   if status ~= "ok" then
-		      log("DT", "WARNING", "Failed to register back callback notification %s", tostring(reg.cb))
-		   else
-		      reg.regId = id
-		   end
-		end
-		sem_post()
-	     end
-	    )
+        for _, reg in pairs(M.notifyvarid) do
+           local status, id = common.sendcmd("RegisterVariable", { reg.regvars, reg.passivevars})
+           if status ~= "ok" then
+              log("DT", "WARNING", "Failed to register back callback notification %s", tostring(reg.cb))
+           else
+              reg.regId = id
+           end
+        end
+        sem_post()
+         end
+        )
 end
 --------------------------------------------------------------------------------
 -- Initializes the module.
@@ -241,13 +241,13 @@ end
 --
 
 function M.init()
-	if M.initialized then return "already initialized" end
-	local a, b = common.init()
-	if not a then return a, b end
-	common.emphandlers.NotifyVariable = emp_handler_NotifyVariable
-	common.emp_ipc_brk_handlers.DeviceTreeIpcBrkHandler = emp_ipc_broken_handler
-	M.initialized=true
-	return M
+    if M.initialized then return "already initialized" end
+    local a, b = common.init()
+    if not a then return a, b end
+    common.emphandlers.NotifyVariable = emp_handler_NotifyVariable
+    common.emp_ipc_brk_handlers.DeviceTreeIpcBrkHandler = emp_ipc_broken_handler
+    M.initialized=true
+    return M
 end
 
 return M

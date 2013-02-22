@@ -9,9 +9,22 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_subdirectory(racon)
-add_subdirectory(airvantage)
-add_subdirectory(sms)
-add_subdirectory(system)
-add_subdirectory(update)
-add_subdirectory(devicetree)
+PROJECT(CFWK)
+
+INCLUDE_DIRECTORIES (${LUA_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_YAJL_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_YAJL_SOURCE_DIR}/include)
+INCLUDE_DIRECTORIES(${LIB_YAJL_SOURCE_DIR}/api)
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${CFWK_SOURCE_DIR})
+
+ADD_SUBDIRECTORY(racon)
+INCLUDE_DIRECTORIES(${CFWK_RACON_SOURCE_DIR}) # Other modules need racon headers
+ADD_SUBDIRECTORY(airvantage)
+ADD_SUBDIRECTORY(sms)
+ADD_SUBDIRECTORY(system)
+ADD_SUBDIRECTORY(update)
+ADD_SUBDIRECTORY(devicetree)
+
+ADD_CUSTOM_TARGET(cfwk DEPENDS
+    Emp Swi_DSet Swi_AirVantage Swi_Sms Swi_System Swi_Update Swi_DeviceTree)

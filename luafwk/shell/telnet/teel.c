@@ -77,7 +77,7 @@ int compareksa(const void* p1, const void* p2)
 void tl_setkeyseqact_map(TeelInstance* ti, KeySeqAction* map, int len)
 {
   if (ti->map)
-	  MEM_FREE(ti->map);
+      MEM_FREE(ti->map);
 
   // Copy and sort the array by key sequence order
   ti->map = MEM_ALLOC(sizeof(*ti->map)*len);
@@ -122,7 +122,7 @@ int teel_destroy(TeelInstance* ti)
   // Free edited line
   tl_editor_destroy(ti);
   if (ti->previousline)
-	  MEM_FREE(ti->previousline);
+      MEM_FREE(ti->previousline);
 
   // Free Key map
   MEM_FREE(ti->map);
@@ -226,7 +226,7 @@ static void tl_statechanged(TeelInstance* ti, TeelState laststate)
       // Reset the newline state as soon as we read something on the input
       if (ti->previousline)
       {
-    	MEM_FREE(ti->previousline);
+        MEM_FREE(ti->previousline);
         ti->previousline = 0;
       }
       break;

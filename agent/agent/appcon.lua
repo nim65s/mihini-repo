@@ -10,7 +10,8 @@
 -------------------------------------------------------------------------------
 
 local sched = require"sched"
-local persist = require'persist'
+local persist = require"persist"
+local os = require "os"
 local config = require"agent.config"
 local lfs = require"lfs"
 local socket  = require"socket"
@@ -30,7 +31,7 @@ list[id] = { id ="app_id", autostart=true/false}
 local application_list = {}
 
 local function loadAppList()
-    application_list = persist.load("ApplicationList") or {}    
+    application_list = persist.load("ApplicationList") or {}
 end
 
 -- an application/path is runnable if file named "run" is in installation folder.
@@ -58,16 +59,16 @@ local function sndcmd(str)
     local port = config.appcon.port and tonumber(config.appcon.port) or 4242
     local host = "localhost"
     local res, err = skt:connect(host, port)
-    if not res then 
-        skt :close() 
+    if not res then
+        skt :close()
         local fmt = "Cannot connect to appmon daemon on localhost [%s] and port [%s] , error=[%s]"
         local msg = string.format(fmt, tostring(host), tostring(port), err or "unknown")
         log('APPCON', 'ERROR', msg)
         return nil, msg
     end
     res,err = skt:send(str)
-    if res~= #str then 
-        skt :close(); 
+    if res~= #str then
+        skt :close();
         local fmt = "Cannot send command to appmon daemon, err=%q"
         local msg = string.format(fmt, err or "unknown")
         log('APPCON', 'ERROR', msg)
@@ -101,20 +102,20 @@ end
 -- If the application is not runnable, or the application is already started, it has no effect.
 -- @param id the string used as unique id when application was installed
 -- @return "ok" string in case of success, nil+error message otherwise
-local function start(id)    
+local function start(id)
     local app =  application_list[id]
-    if not app then return nil, "Unknown app" 
+    if not app then return nil, "Unknown app"
     elseif not is_app_runnable(id) then
         log('APPCON', 'ERROR', "attempt to start non-runnable app %q", id)
-        return nil, "Not runnable" 
+        return nil, "Not runnable"
     elseif not app.app_id_daemon then
         local msg = string.format("Runnable app %q not setup in daemon", id)
-        log('APPCON', 'ERROR', msg) 
+        log('APPCON', 'ERROR', msg)
         return nil, msg
     end
     log("APPCON", "DEBUG", "Starting application %s", id)
     local res, err = sndcmd("start "..app.app_id_daemon)
-    if not res then 
+    if not res then
         log("APPCON", "ERROR", "Cannot start application %q: %s", id, err or "unknown error")
     end
     return res, err
@@ -126,15 +127,15 @@ end
 -- @return "ok" string in case of success, nil+error message otherwise
 local function stop(id)
     local app =  application_list[id]
-    if not app then return nil, "Unknown app" 
-    elseif not is_app_runnable(id) then 
+    if not app then return nil, "Unknown app"
+    elseif not is_app_runnable(id) then
         log('APPCON', 'ERROR', "attempt to stop non-runnable app %q", id)
         return nil, "Not runnable"
-    elseif not app.app_id_daemon then 
+    elseif not app.app_id_daemon then
         local msg = string.format("Runnable app %q not setup in daemon", id)
-        log('APPCON', 'ERROR', msg) 
+        log('APPCON', 'ERROR', msg)
         return nil, msg
-    else 
+    else
         return sndcmd("stop "..app.app_id_daemon)
     end
 end
@@ -143,7 +144,7 @@ end
 -- 1: if app is already setup in appmon_daemon, it retrieves the app id in appmon_daemon to act on it later,
 --     otherwise it setup the app in appmon_daemon
 --    (This is needed to deal with the case where RA reboots but appmon_daemon have not)
--- 2: starts 
+-- 2: starts
 local function initapp(app)
     log('APPCON', 'DEBUG', "Initializing application %q", app.id)
     local listres, err = sndcmd("list")
@@ -175,21 +176,21 @@ end
 --@return "ok" on success, (nil,error) otherwise
 --Note: this functions is recursive (i.e. one internal function is called recursively)
 --Huge copy (with very much imbricated folders) could lead to some issues...
-local function recursive_copy_overwrite(src, dst)    
-    local function iterate_files_to_copy(src, dst)        
+local function recursive_copy_overwrite(src, dst)
+    local function iterate_files_to_copy(src, dst)
         local mode,err
-        for file in lfs.dir(src) do            
-            if file~="." and file ~= ".." then 
+        for file in lfs.dir(src) do
+            if file~="." and file ~= ".." then
                 local srcpath = src.."/"..file
-                local dstpath = dst.."/"..file --may not exist                
-                mode, err = lfs.attributes(srcpath, "mode")                
+                local dstpath = dst.."/"..file --may not exist
+                mode, err = lfs.attributes(srcpath, "mode")
                 if not mode then return nil, string.format("cannot use file %s in source folder, err=%s", srcpath, tostring(err)) end
-                if lfs.attributes(dstpath, "mode") then                    
+                if lfs.attributes(dstpath, "mode") then
                     local res, err = os.execute("rm -rf "..dstpath)
                     if res~= 0 then return nil, "cannot remove existing files prior to copying new file with same path" end
-                    if mode == "directory" then iterate_files_to_copy(srcpath, dstpath) 
+                    if mode == "directory" then iterate_files_to_copy(srcpath, dstpath)
                     elseif mode ~= "file" and mode ~= "link" then return nil, string.format("cannot use file %s in source folder, file type %s not supported", srcpath, mode) end
-                end            
+                end
             end
         end
         return "ok"
@@ -197,7 +198,7 @@ local function recursive_copy_overwrite(src, dst)
 
     local res, err = iterate_files_to_copy(src, dst)
     if not res then return nil, err or "cannot iterate over files to copy" end
-    --copy files 
+    --copy files
     res, err = os.execute("cp -p -r "..src.."/* "..dst)
     if res ~= 0 then return nil, err or "cannot copy install files"
     else return "ok" end
@@ -216,26 +217,26 @@ local function install(id, data_path, autostart, purge)
     log('APPCON', 'INFO', "Installing application %q", id)
     local res,err
     local pattern = '^[%a%d_%-]+$'
-    --checks    
+    --checks
     if not data_path or "directory"~= lfs.attributes(data_path, "mode") then return nil, "Invalid data" end
     --check id chars
     if not string.match(id, pattern) then return nil, "Invalid id name of application" end
-    
+
     res = os.execute("chmod -R 775 "..data_path.."/*")
     if res~= 0 then log("APPCON", "WARNING", "Can't set file permission on app data: %s", tostring(res or "unknown error")) end
-    
-    if application_list[id] then 
+
+    if application_list[id] then
         log("APPCON", "WARNING", "Install: Application_id[%s] already used, the application will be overwritten", id)
         local app = application_list[id]
         if app.app_id_daemon then --clean the "old version" of the app in the daemon
-            log('APPCON', 'DEBUG', "Re-installing runnable application %q", id)        
-            stop(id)--do not complain if stop is already etc, remove cmd            
+            log('APPCON', 'DEBUG', "Re-installing runnable application %q", id)
+            stop(id)--do not complain if stop is already etc, remove cmd
             res, err = sndcmd("remove "..app.app_id_daemon)
             if not res or not res:match("^ok") then
                 log('APPCON', 'ERROR', "Re-installing application %q: failed to remove it from appmon_daemon, res:%s, error:%s", id, tostring(res), tostring(err))
             end
             app.app_id_daemon=nil
-        end    
+        end
         if purge then --clean the app folder if required
             log("APPCON", "INFO", "Install: purging folder for Application_id[%s] before reinstall", id)
             res = os.execute("rm -rf "..apps_path..id.."/*")
@@ -248,25 +249,25 @@ local function install(id, data_path, autostart, purge)
         if res~= 0 then return nil, "Error while creating app runtime dir" end
     end
     res, err = recursive_copy_overwrite(data_path, apps_path..id)
-    if not res then return nil, err end    
-    
+    if not res then return nil, err end
+
     res = os.execute("chmod 775 "..apps_path..id)
     if res~= 0 then log("APPCON", "WARNING", "Can't set file permission on app folder: %s", tostring(res or "unknown error")) end
-    
+
     --fill app list
     local app = { id=id, autostart = autostart and true or false }
-    application_list[id] = app    
+    application_list[id] = app
     if is_path_runnable(apps_path..id) then
         log("APPCON", "DEBUG", "Installing runnable app")
         res, err = setupapp(id)
         if not res then return nil, "Cannot setup application in Application Monitoring Daemon: "..(err or "unknown error") end
         app.app_id_daemon=res
         --start app depending on autostart
-        if autostart then 
+        if autostart then
             log("APPCON", "DEBUG", "Auto-starting app")
             start(id)
         end
-    end    
+    end
     persist.save("ApplicationList", application_list);
     return "ok"
 end
@@ -285,9 +286,9 @@ local function status(id)
     elseif not app.app_id_daemon then
         return "Runnable app not setup in daemon."
     else
-        local res,err = sndcmd("status "..app.app_id_daemon, true)                
+        local res,err = sndcmd("status "..app.app_id_daemon, true)
         if res then
-            res = res :match "appname=%[%d-%] privileged=%[%d-%] (.*)"                         
+            res = res :match "appname=%[%d-%] privileged=%[%d-%] (.*)"
             return res or nil,  not res and "error while getting application info from appmon_daemon: status command parsing error" or nil
         else return nil, err or "error while getting application info from appmon_daemon: status command failed" end
     end
@@ -296,7 +297,7 @@ end
 --- Uninstall an application.
 -- First: stop the application if running, then remove permanently the whole folder where the application was installed.
 -- @param id the string used as unique id when application was installed
--- @return "ok" string in case of success, nil+error message otherwise 
+-- @return "ok" string in case of success, nil+error message otherwise
 local function uninstall(id)
     log('APPCON', 'INFO', "Uninstalling application %q", id)
     local res,err
@@ -314,15 +315,15 @@ local function uninstall(id)
     end
     local appdir=apps_path..app.id
     --remove files on filesystem
-    if lfs.attributes(appdir) then 
-        res, err = os.execute("rm -rf "..appdir)        
-        if res~=0  then 
+    if lfs.attributes(appdir) then
+        res, err = os.execute("rm -rf "..appdir)
+        if res~=0  then
             log('APPCON', 'INFO', "Uninstalling application %q: failed to remove application install folder: ", id, appdir)
             err=string.format("failed to remove application install folder: %s %s", tostring(res), tostring(err))
-            res=nil 
-        end        
+            res=nil
+        end
     end
-    
+
     --remove app from internal state
     application_list[id] = nil
     persist.save("ApplicationList", application_list);
@@ -333,12 +334,12 @@ end
 -- Set autostart parameter of an runnable application.
 -- if the application is not runnable, or the application is already stopped, it has no effect.
 -- @param id the string used as unique id when application was installed
--- @param autostart boolean value to set autostart mode of the application 
--- @return "ok" string in case of success, nil+error message otherwise 
+-- @param autostart boolean value to set autostart mode of the application
+-- @return "ok" string in case of success, nil+error message otherwise
 local function configure(id, autostart)
     local app = application_list[id]
     if not app then return nil, "Unknown app" end
-    if not is_app_runnable(id) then 
+    if not is_app_runnable(id) then
         return nil, "Not Runnable"
     else
         app.autostart = autostart
@@ -358,7 +359,7 @@ local function attributes(id)
     local result = {
         autostart = app.autostart;
         runnable = is_app_runnable(id) }
-    if app.app_id_daemon then  
+    if app.app_id_daemon then
         local status_string, err = sndcmd("status "..app.app_id_daemon, true)
         if status_string then
             for k, v in status_string :gmatch "(%w+)=%[(.-)%]" do
@@ -371,7 +372,7 @@ end
 
 
 --- Get installed applications list.
--- @return table listing the installed application, nil+error message otherwise 
+-- @return table listing the installed application, nil+error message otherwise
 local function list()
     local res = {}
     for k,v in pairs(application_list) do
@@ -383,11 +384,11 @@ end
 --- Init function to be called by ReadyAgent initializer module.
 -- Loads the installed application list, inits each application and starts all applications
 --  with autostart parameter set to true.
--- @return "ok" string in case of success, nil+error of message otherwise 
-local function init()   
+-- @return "ok" string in case of success, nil+error of message otherwise
+local function init()
     local res, err = os.execute("mkdir -p "..apps_path)
     assert( 0 == res, string.format("ApplicationContainer cannot create apps runtime directory, err=%s", tostring(err)))
- 
+
     loadAppList();
     local res, err
     -- init applications: needed for any runnable app.

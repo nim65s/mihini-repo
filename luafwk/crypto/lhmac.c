@@ -65,8 +65,8 @@ static int get_hmac_desc(lua_State* L, int index, SHmacDesc* desc) {
         lua_getfield(L, 1, "keyidx");
         desc->keyidx = -1;
         if (!lua_isnil(L, -1)) {
-            desc->keyidx = (int)lua_tointeger(L, -1);
-            if (desc->keyidx < 1) {
+            desc->keyidx = (int)lua_tointeger(L, -1) - 1;
+            if (desc->keyidx < 0) {
                 lua_pushnil(L);
                 lua_pushstring(L, "'desc.keyidx' should be > 0");
                 return 2;
@@ -101,7 +101,7 @@ static int Lnew(lua_State* L) {
 
     unsigned char* key = NULL;
     unsigned char keycrypt[16];
-    if (hmac->desc.keyidx > 0) {
+    if (hmac->desc.keyidx >= 0) {
         hmac->desc.keysize = 16;
         if (get_plain_bin_key(hmac->desc.keyidx, keycrypt) != CRYPT_OK) {
              lua_pushnil(L);
@@ -151,14 +151,14 @@ static int Ldigest(lua_State* L) {
         CHECK(hmac_done(&hstmp, dst, &dstlen));
         i = 2;
     } else {
-        SHmacDesc desc;        
+        SHmacDesc desc;
         int param = get_hmac_desc(L, 1, &desc);
         if (param > 0)
             return param;
-        
+
         unsigned char* key = NULL;
         unsigned char keycrypt[16];
-        if (desc.keyidx > 0) {
+        if (desc.keyidx >= 0) {  //keyidx may be equal to 0
             desc.keysize = 16;
             if (get_plain_bin_key(desc.keyidx, keycrypt) != CRYPT_OK) {
                  lua_pushnil(L);
@@ -169,10 +169,10 @@ static int Ldigest(lua_State* L) {
         } else {
             key = desc.key;
         }
-        
+
         size_t in_size;
         unsigned char* in = (unsigned char*) luaL_checklstring(L, 2, &in_size);
-        
+
         int status = CRYPT_ERROR;
         if (key != NULL)
             status = hmac_memory(desc.hash_id, (const unsigned char*) key, (unsigned long) desc.keysize, in, (unsigned long) in_size, dst, &dstlen);
@@ -230,7 +230,7 @@ static int Ldone(lua_State* L) {
     unsigned long dstlen = MAXBLOCKSIZE;
     SHmac* hmac = luaL_checkudata(L, 1, MYTYPE);
     if( NULL == hmac->desc.key) {
-        printf( "Attempt to clean an uninitialized hmac handle\n");
+        //printf( "Attempt to clean an uninitialized hmac handle\n");
     } else {
         CHECK(hmac_done(&(hmac->state), dst, &dstlen));
     }

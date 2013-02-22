@@ -400,13 +400,6 @@ static int test_3_ConnectToServer()
   if (res != SWI_STATUS_OK)
     return res;
 
-//test using negative latency:
-//expected behavior here: negative value casted into unsigned int
-//resulting value above INT_MAX, the max value accepted, so it's rejected
-  res = swi_av_ConnectToServer(-5);
-  if (res != SWI_STATUS_WRONG_PARAMS)
-    return res;
-
 //test using too big latency:
 //expected behavior here: rejected
   res = swi_av_ConnectToServer((unsigned int) INT_MAX + 1);

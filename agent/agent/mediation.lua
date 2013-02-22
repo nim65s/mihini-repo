@@ -69,23 +69,23 @@ local function sendkeepalive(currentid)
             log("MEDIATION", "DETAIL", "keep alive [%d] sent...", currentid)
             local ev = sched.wait("MEDIATION", "ACK"..currentid, timeout)
             if status > 1 and skt then
-	            if ev == "timeout" then
-		            log("MEDIATION", "WARNING", "no ack [%d] received...", currentid)
-		            retries = retries - 1
-		        else
-		            log("MEDIATION", "DETAIL", "ack [%d] received", currentid)
-		            if pollingperiod then
-		                if keepalive then timer.cancel(keepalive) keepalive = nil end
-		                keepalive = timer.new(pollingperiod, sendkeepalive, currentid % 255 + 1)
-		            end
-		            return true
-		        end
-	        end
+                if ev == "timeout" then
+                    log("MEDIATION", "WARNING", "no ack [%d] received...", currentid)
+                    retries = retries - 1
+                else
+                    log("MEDIATION", "DETAIL", "ack [%d] received", currentid)
+                    if pollingperiod then
+                        if keepalive then timer.cancel(keepalive) keepalive = nil end
+                        keepalive = timer.new(pollingperiod, sendkeepalive, currentid % 255 + 1)
+                    end
+                    return true
+                end
+            end
         end
     end
 
     if status > 1 and skt then
-    	status = 1 skt:close()
+        status = 1 skt:close()
     end
 end
 
@@ -93,8 +93,8 @@ end
 -- mediation listener                       --
 ----------------------------------------------
 local function mediationlistener(index)
-	local s, err
-	while status > 2 and skt do
+    local s, err
+    while status > 2 and skt do
         s, err = skt:receive()
         if not s then
             break
@@ -144,7 +144,7 @@ local function mediationlistener(index)
     log("MEDIATION", "WARNING", "connection lost on server(%d), '%s'", index, err or "unknown")
     if status > 0 and skt then
         status = 1 skt:close()
-    	sched.run(findserver, index)
+        sched.run(findserver, index)
     end
 end
 
@@ -157,30 +157,30 @@ function findserver(index)
         if skt then skt:close() skt = nil end
         --local serveraddr = socket.dns.toip(config.mediation.servers[index].addr)
         local serveraddr = config.mediation.servers[index].addr
-		local serverport = config.mediation.servers[index].port
-		local ok, err
-		if status > 0 and serveraddr and serverport then
-		    skt, err = socket.udp()
-		    if skt then
-            	ok, err = skt:setpeername(serveraddr, serverport)
-			    if status > 0 and ok then
-			    	log("MEDIATION", "INFO", "listening on server(%d) [%s:%d]", index, serveraddr, serverport)
-			    	status = 3
-			    	if keepalive then timer.cancel(keepalive) keepalive = nil end
+        local serverport = config.mediation.servers[index].port
+        local ok, err
+        if status > 0 and serveraddr and serverport then
+            skt, err = socket.udp()
+            if skt then
+                ok, err = skt:setpeername(serveraddr, serverport)
+                if status > 0 and ok then
+                    log("MEDIATION", "INFO", "listening on server(%d) [%s:%d]", index, serveraddr, serverport)
+                    status = 3
+                    if keepalive then timer.cancel(keepalive) keepalive = nil end
                     if heartbeat then sched.kill(heartbeat) heartbeat = nil end
                     if listener then sched.kill(listener) listener = nil end
-			    	listener = sched.run(mediationlistener, index)
-			    	heartbeat = sched.run(sendkeepalive, 1)
-			    	return
-			    end
-		    end
-		end
-		log("MEDIATION", "ERROR", "cannot listen on server(%d), %s", index, err or "wrong parameters")
+                    listener = sched.run(mediationlistener, index)
+                    heartbeat = sched.run(sendkeepalive, 1)
+                    return
+                end
+            end
+        end
+        log("MEDIATION", "ERROR", "cannot listen on server(%d), %s", index, err or "wrong parameters")
     end
     if status > 0 and not restart then
         local delay = tonumber(config.mediation.retrydelay) or 1800
-		log("MEDIATION", "INFO", "restarting in %ds", delay)
-    	restart = timer.new(delay, function() stop() start(pollingperiod) end)
+        log("MEDIATION", "INFO", "restarting in %ds", delay)
+        restart = timer.new(delay, function() stop() start(pollingperiod) end)
     end
 end
 
@@ -189,8 +189,8 @@ end
 -------------------------
 function start(period, index)
     if status > 0 then
-    	log("MEDIATION", "WARNING", "already started (polling='%d')", pollingperiod or 0)
-    	return nil, "mediation is running"
+        log("MEDIATION", "WARNING", "already started (polling='%d')", pollingperiod or 0)
+        return nil, "mediation is running"
     end
     status = 1
     period = tonumber(period) or 0

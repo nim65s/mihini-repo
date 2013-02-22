@@ -9,4 +9,4 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(telnet history.c actions.c buffers.c editor.c teel.c telnet.c)
+ADD_LUA_LIBRARY(telnet history.c actions.c buffers.c editor.c teel.c telnet.c)

@@ -11,8 +11,10 @@
 
 -- Update module
 -- - deals with update package with dependency checking (no update can be run without a package)
--- - "abstract component"(i.e. component taht does)
--- - update package can come from AWTDA or OMADM protocols or be copied localy on the device.
+-- - "abstract component"(i.e. component that does)
+-- - update package can come from M3DA or be copied locally on the device.
+--   The update process itself is not dependant on the way to get the package, so it is easy to add a new way to
+--   download the package.
 --
 -- Internal data management and explanation are in update.common sub module.
 --
@@ -27,36 +29,38 @@
 -- There are several "check point" where an update can be resumed from:
 -- -Download resume needs to be supported by each protocol
 -- -- OMADM download resume is OK
--- -- AWTDA download resume is NOT done yet
+-- -- M3DA download resume is NOT done yet
 -- - Once the package has been *totally* successfully checked, the check process will not be restarted on each retry.
 -- - Once an component has reported status, if the reboot occurs after that information is saved, then this component will not be notified again.
 -- Only the components that haven't reported yet the update status will be notified on resume.
 --
 
-local sched = require "sched"
-local persist = require 'persist'
-local pathutils = require "utils.path"
-local log = require "log"
-local system = require "system"
-local niltoken = require "niltoken"
-local timer = require"timer"
-local lfs = require "lfs"
-local sprint = sprint
-local asscon = require "agent.asscon"
-local config = require "agent.config"
-local device = require "agent.devman"
-local devasset = device.asset
-local airvantage = require"airvantage"
+require 'print'
+
+local sched      = require "sched"
+local persist    = require 'persist'
+local pathutils  = require "utils.path"
+local log        = require "log"
+local niltoken   = require "niltoken"
+local timer      = require"timer"
+local lfs        = require "lfs"
+local sprint     = sprint
+local asscon     = require "agent.asscon"
+local config     = require "agent.config"
+local airvantage = require "racon"
+local system     = require "racon.system"
+local device     = require "agent.devman"
+local devasset   = device.asset
 --internal sub modules
-local common = require"agent.update.common"
-local downloader  = require"agent.update.downloader"
-local pkgcheck  = require"agent.update.pkgcheck"
-local updatemgr = require"agent.update.updatemgr"
-local updaters = require"agent.update.builtinupdaters"
+local common     = require"agent.update.common"
+local downloader = require"agent.update.downloader"
+local pkgcheck   = require"agent.update.pkgcheck"
+local updatemgr  = require"agent.update.updatemgr"
+local updaters   = require"agent.update.builtinupdaters"
 
 local data = common.data
 
-local M = {}
+local M = { }
 
 local notifynewupdate
 local STEPS
@@ -159,62 +163,37 @@ local function savestate()
     common.savecurrentupdate()
 end
 
---end of an update
---send result to server
---save state and clean last files
-local function sendresult(resultcode, errstr)
-   
-end
-
---@return "async" if update package is accepted (update not started yet)
---@return nil, errcode, errstr if update package is rejected
---local function internalstart()
---    local manifest, errcode, errstr = check.checkpackage()
---    if manifest then
---        data.currentupdate.manifest = manifest
---        common.savecurrentupdate()
---        log("UPDATE", "INFO", "Software Update Package from %s protocol is accepted.", data.currentupdate.infos.proto)
---	mgr.changestatus("crc_ok")
---        sched.run(mgr.startupdate)
---        return "async"
---    else
---        log("UPDATE", "INFO", "Software Update Package from %s protocol is rejected, errcode=%s, errstr = %s", data.currentupdate.infos.proto, tostring(errcode), tostring(errstr))
---        savestate(errcode, errstr)
---        return nil, errcode or 479, errstr --no resultcode specified means error ##29
---    end
---end
-
 
 local stepfinished
-local stepstart 
-
+local stepstart
 
 local function start_update()
+    --just call stepfinished to start the state machine.
     stepfinished("success")
 end
 
-local function finish_update()    
-    --if no result(i.e. no error) set when we get here, then the update is successfull
+local function finish_update()
+    --if no result(i.e. no error) is set when we get here, then the update is successful
     data.currentupdate.result = data.currentupdate.result or 200
     data.currentupdate.resultdetails = data.currentupdate.resultdetails or "success"
-    common.savecurrentupdate() --TODO maybe not usefull to save here
+    common.savecurrentupdate() --TODO maybe not useful to save here
     local result = data.currentupdate.result
     local resultdetails = data.currentupdate.resultdetails
-    local proto = data.currentupdate.infos.proto    
-    if proto == "awtda" then
+    local proto = data.currentupdate.infos.proto
+    if proto == "m3da" then
         if not data.currentupdate.infos.ticketid then
-            log("UPDATE", "INFO", "sendresult for AWTDA: no ticketid saved, no acknowledge to send")
+            log("UPDATE", "INFO", "sendresult for M3DA: no ticketid saved, no acknowledge to send")
         else
-            log("UPDATE", "INFO", "acknowledging update command to AWTDA server")
-            local awtcode = result==200 and 0 or result --0 is AWTDA success code
+            log("UPDATE", "INFO", "acknowledging update command to M3DA server")
+            local m3dacode = result==200 and 0 or result --0 is M3DA success code
             --send the ack to srv: use default policy for ack, but request the ack to be persisted in flash
-            local res, err = airvantage.acknowledge(data.currentupdate.infos.ticketid, awtcode, resultdetails or "no description", nil, true)
+            local res, err = airvantage.acknowledge(data.currentupdate.infos.ticketid, m3dacode, resultdetails or "no description", nil, true)
             if not res then
-                log("UPDATE", "ERROR", "Update: can't send awtda ack: airvantage.acknowledge response: %s", tostring(err))
+                log("UPDATE", "ERROR", "Update: can't send m3da ack: airvantage.acknowledge response: %s", tostring(err))
                 log("UPDATE", "ERROR", "Update: can't accept new update until this ack is accepted by RA, next retry will be done on next RA boot")
                 --define what to do here: cleaning or not the update have significant csqs
                 -- return: do not empty current update; do not send the signal etc...
-                return nil, "can't send awtda ack"
+                return nil, "can't send m3da ack"
             end
         end
     elseif proto=="localupdate" then
@@ -226,37 +205,40 @@ local function finish_update()
     savestate()
     --signal the end of an update
     sched.signal("updateresult", result==200 and "success" or "failure")
-    
+
     --no more currentupdate, so any request received during notifystatus will be discarded
-    --event 6 is event update succesful, 5 is event update failed
+    --event 6 is event update successful, 5 is event update failed
     notifystatus(result==200 and 6 or 5, resultdetails);
 
     --ready to run a new update!
     -- check if a local update is present
     sched.run(localupdate)
-    
+
 end
 
 local step_events = {update_new = 0, download_in_progress = 1, download_ok = 2, crc_ok = 3, update_in_progress = 4, update_failed = 5, update_successful = 6, update_paused = 7}
 
 STEPS = {
     { name = "start_update",       start = start_update,          start_event = "update_new"},
-    { name = "download_package",   start = downloader.start,      start_event = "download_in_progress", progress_event = "download_in_progress"}, 
+    { name = "download_package",   start = downloader.start,      start_event = "download_in_progress", progress_event = "download_in_progress"},
     { name = "check_package",      start = pkgcheck.checkpackage, start_event = "download_ok", },
-    { name = "dispach_update",     start = updatemgr.dispatch,    start_event = "crc_ok", progress_event = "update_in_progress"}, 
+    { name = "dispatch_update",     start = updatemgr.dispatch,   start_event = "crc_ok", progress_event = "update_in_progress"},
     { name = "finish_update",      start = finish_update,         start_event = nil} --special event sent throug step pgress api. variable event (success / failure)
 }
 --used to go directly to last step: i.e update result reporting
 last_step = #STEPS;
 
 local function resumeupdate()
-    
+
     if data.currentupdate.request then
-        log("UPDATE", "WARNING", "unprocessed request at resume, to be improved")    
-    end   
-        
+        --for now we deal update request at the moment we receive it
+        log("UPDATE", "WARNING", "Unprocessed request at resume, unsupported")
+    end
+
     if data.currentupdate.status == "paused" then
+        --update is paused at boot, without action it will remain as it
         log("UPDATE", "INFO", "Update is paused, won't resume it automatically")
+        --notify this pause state to users, to give them a chance to resume it
         notifypause()
         return
     end
@@ -266,25 +248,24 @@ end
 
 
 
---this the function that will be called when a new update is available
---the new update can come from AWTDA SoftwareUpdate command
---or OMADM session or local update
+--This isthe function that will be called when a new update is available
+--the new update can come from M3DA SoftwareUpdate command or local update
 --@param newupdate a table describing the update to start, with subfields:
 -- - proto:
---     mandatory string to define the protocol used to reveive the update and to be used to report update status.
---     Can be "awtda", "localupdate".
---     This value determines the other fields of infos
+--     mandatory string to define the protocol used to receive the update and to be used to report update status.
+--     Can be "m3da", "localupdate".
+--     This value determines the other fields of info
 -- - url:
---     string, url to use to download the update, usually http url (awtda job only)
+--     string, url to use to download the update, usually http url (m3da job only)
 -- - updatefile:
 --     string, absolute path to the update file to use (an archive file),
 --     i.e. the archive is already on the file system (local update only)
 -- - ticketid:
---     a userdata used to acknowledge the software update result (awtda job)
+--     a userdata used to acknowledge the software update result (m3da job)
 --@return nil, errorcode, errstr: update cannot be launched
 --@return false, errorcode, errstr: update was started but update package verification failed.
---@return "async" if update package is accepted and being dispached to assets
---@note when returning nil or false as first result, this is the responsability of the service that is calling this API
+--@return "async" if update package is accepted and being dispatched to assets
+--@note when returning nil or false as first result, this is the responsibility of the service that is calling this API
 -- to correctly report the error synchronously, otherwise the update status will be reported asynchronously by this module
 -- at the end of the update
 -- (the way to report the status will depend on protocol used to deliver the update)
@@ -316,13 +297,13 @@ end
 local assets_registered_to_notif={}
 
 
-local function EMPRegisterUpdateListener(assetid, x)  
+local function EMPRegisterUpdateListener(assetid, x)
     log("UPDATE", "DETAIL", "EMPRegisterUpdateListener: %s: %s", tostring(assetid), sprint(assetid));
     assets_registered_to_notif[assetid]=true
     return 0
 end
 
-local function EMPUnregisterUpdateListener(assetid, x)    
+local function EMPUnregisterUpdateListener(assetid, x)
     log("UPDATE", "DETAIL", "EMPUnregisterUpdateListener: %s: %s", tostring(assetid), sprint(assetid));
     assets_registered_to_notif[assetid]=nil
     return 0
@@ -338,14 +319,14 @@ end
 local function abortupdate()
     log("UPDATE", "INFO", "Update abort requested by user")
     data.currentupdate.status="in_progress" -- ensure status is in_progress
-    data.currentupdate.result = 499 --###code TBD aborted by user
+    data.currentupdate.result = 600
     data.currentupdate.resultdetails = "Aborted by user"
     data.currentupdate.step = last_step;
     data.currentupdate.request = nil
     common.savecurrentupdate();
 end
 
--- just set correct result/description values, don't act on the update process 
+-- just set correct result/description values, don't act on the update process
 local function pauseupdate()
     log("UPDATE", "INFO", "Update pause requested by user")
     data.currentupdate.status = "paused"
@@ -356,44 +337,45 @@ end
 
 
 
-local function EMPSoftwareUpdateRequest(assetid, request)    
-    
+local function EMPSoftwareUpdateRequest(assetid, request)
+
     if not data.currentupdate then
         log("UPDATE", "INFO", "Received software update request(%s) while no update is in progress, from %s", tostring(request), sprint(assetid))
-        return 1, "no update in progress" 
+        return 1, "no update in progress"
     end
-    
+
     -- see swi_update.h for request details
     local requests={[0]="pause", [1]="resume", [2]="abort" }
-    
+
     if not requests[request] then
         log("UPDATE", "WARNING", "Received invalid software update request(%s)", tostring(request))
         return 1, "invalid update request"
     end
-    
+
     -- special cases: we are paused and need to take care of the request now
     if data.currentupdate.status=="paused" then
         if requests[request] == "resume" then
             log("UPDATE", "INFO", "Resume requested by user, resuming from 'paused' status")
-            --change status, don't store request: do it immediatly as we can't wait for anything more
+            --change status, don't store request: do it immediately as we can't wait for anything more
             data.currentupdate.status="in_progress"
             common.savecurrentupdate()
             sched.run(resumeupdate)
             --that's it!
-            return 0
         elseif requests[request] == "abort" then
             log("UPDATE", "INFO", "Abort requested by user, aborting from 'paused' status")
-            --change status, don't store request: do it immediatly as we can't wait for anything more
+            --change status, don't store request: do it immediately as we can't wait for anything more
             abortupdate()
             -- abort update will set new step, just start it
             sched.run(stepstart)
             --that's it!
-            return 0
         else
+            --pause request during pause state is discarded
             log("UPDATE", "INFO", "Request [%s] from user discarded during 'paused' status", requests[request])
         end
+
+        return 0
     end
-    
+
     --regular case: update request will be processed on next step
     log("UPDATE", "INFO", "Storing software update request: %s", requests[request])
     data.currentupdate.request=requests[request]
@@ -402,11 +384,11 @@ local function EMPSoftwareUpdateRequest(assetid, request)
     return 0
 end
 
--- little helper function to factorise send update paused event: 
--- it is send when to update goes from running to paused status, and at boot when update is paused
+-- little helper function to factorize sending update paused event:
+-- Paused event is sent when update process goes from running to paused status, and at boot when update is paused
 function notifypause()
-    --explicitly send status by calling notifystatus: pause is not a "real" step in state machine 
-    --status 7 is SWI_UPDATE_PAUSED, see swi_update.h 
+    --explicitly send status by calling notifystatus: pause is not a "real" step in state machine
+    --status 7 is SWI_UPDATE_PAUSED, see swi_update.h
     notifystatus( 7, string.format("current step=[%s]", STEPS[data.currentupdate.step].name));
 end
 
@@ -417,7 +399,7 @@ function notifystatus(status, details)
 
     table.insert(payload, status)
     table.insert(payload, details or "")
-    
+
     log("UPDATE", "DETAIL", "notifystatus: %s, status =%d, details=%s", sprint(assets_registered_to_notif), status, details)
 
     for assetid in pairs(assets_registered_to_notif) do
@@ -425,13 +407,13 @@ function notifystatus(status, details)
         local res, err= asscon.sendcmd(assetid, "SoftwareUpdateStatus", payload)
         if not res or res~=0 then
             log("UPDATE", "ERROR", "Error while notifying update status to client:[%s],err=[%s]", tostring(assetid), tostring(err))
-            if err == "unknown assetid" then 
+            if err == "unknown assetid" then
                 --clearing fields within for pairs is ok
                 assets_registered_to_notif[assetid]=nil
                 log("UPDATE", "INFO", "Deregistering asset %s from update status notification because of previous error", tostring(assetid))
             end
         else
-            log("UPDATE", "DETAIL", "SoftwareUpdateStatus resp = %s", tostring(err))            
+            log("UPDATE", "DETAIL", "SoftwareUpdateStatus resp = %s", tostring(err))
         end
     end
 end
@@ -460,18 +442,18 @@ function stepstart()
             pauseupdate();
             return -- don't do anything more
         end
-                
-    end 
-    
+
+    end
+
     log("UPDATE", "DETAIL", "Step: starting step %s", STEPS[data.currentupdate.step].name)
     --TBD sched.run ok not ?
     sched.run(STEPS[data.currentupdate.step].start)
 end
 
 function stepfinished(result, resultcode, resultdetails)
-    local success = result == "success"    
+    local success = result == "success"
     local currentstep =  data.currentupdate.step
-    
+
     if success then
         log("UPDATE", "INFO", "Update Step: [%d][%s] finished successfully", currentstep, STEPS[data.currentupdate.step].name)
         data.currentupdate.step = currentstep + 1
@@ -494,7 +476,7 @@ end
 -- finalizer function is called if calling thread is aborted
 local function stepprogress(details, finalizer)
 
-    if STEPS[data.currentupdate.step].progress_event then 
+    if STEPS[data.currentupdate.step].progress_event then
         local res, err = notifystatus(step_events[STEPS[data.currentupdate.step].progress_event], details)
 
         if data.currentupdate.request == "abort" then
@@ -526,7 +508,7 @@ local function init()
         --internal inits
         --do common first
         local step_api={stepfinished=stepfinished, stepprogress=stepprogress}
-        assert(common.init())        
+        assert(common.init())
         assert(downloader.init(step_api))
         assert(pkgcheck.init(step_api))
         assert(updatemgr.init(step_api))
@@ -534,7 +516,7 @@ local function init()
         --airvantage API is used to send ack
         assert(airvantage.init())
 
-        -- Register EMP SoftwareUpdate command targeted to Device(@sys):        
+        -- Register EMP SoftwareUpdate command targeted to Device(@sys):
         assert(asscon.registercmd("RegisterUpdateListener", EMPRegisterUpdateListener))
         assert(asscon.registercmd("UnregisterUpdateListener", EMPUnregisterUpdateListener))
         assert(asscon.registercmd("SoftwareUpdateRequest", EMPSoftwareUpdateRequest))
@@ -566,7 +548,7 @@ end
 M.init = init
 M.localupdate = localupdate
 M.getstatus = getstatus
---to be used from SUF AWTDA cmd hld to notify new update
+--to be used from SUF M3DA cmd hld to notify new update
 M.notifynewupdate = notifynewupdate
 --to be used from mgr to report to srv
 --agnostic from protocol

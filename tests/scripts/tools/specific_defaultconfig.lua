@@ -139,8 +139,6 @@
 
     update = {}
     update.activate = true
-    -- OMA DM client
-    update.omadm = true
 
     -- Application Container
     appcon={}

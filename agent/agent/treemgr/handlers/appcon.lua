@@ -34,7 +34,7 @@ local function get_attrs(appname)
         cache_date = now
     end
     return cache_content
-end 
+end
 
 local M = { }
 

@@ -29,7 +29,7 @@ function recv(asset, m)
     end
 
     -- return ack if necessary
-    if needToAck then 
+    if needToAck then
         asset:sendacknowledgement(m)
         asset.com:connecttoserver()
     end
@@ -86,7 +86,7 @@ function awtdarunsample()
     print("Stop Asset")
     assethouse:stop()
     sched.kill(hook)
-    
+
     return 1
 end
 

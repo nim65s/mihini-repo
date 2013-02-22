@@ -14,4 +14,4 @@ local testname="update_test_02_installscript"
 --install script test: not much to define here
 --signal will be send by install script in package
 
-return { timeout=2, signalname=testname , status="success"} 
+return { timeout=2, signalname=testname , status="success"}

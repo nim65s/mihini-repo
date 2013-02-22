@@ -57,7 +57,7 @@ function t:test_period()
     srv.clients = {}
     target.start(5)
     sched.wait(2)
-    u.assert_equal("ok", srv.clients[1]:setperiod(1))    
+    u.assert_equal("ok", srv.clients[1]:setperiod(1))
     sched.wait(32)
     target.stop()
     u.assert_gte(25, status.countkeepalive)
@@ -92,7 +92,7 @@ function t:test_setaddress()
     local hostname = "m2mop.net"
     local port = 80
     local ip, stats = socket.dns.toip(hostname)
-    u.assert_equal("ok", srv.clients[1]:setaddress(hostname, port))    
+    u.assert_equal("ok", srv.clients[1]:setaddress(hostname, port))
     sched.wait(30)
     target.stop()
     u.assert_equal(ip, config.mediation.servers[1].addr)

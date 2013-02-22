@@ -30,7 +30,7 @@ cd $EXEC_DIR
 #check if build.default exists
 if [ ! -d $EXEC_DIR/build.default ]; then
     #if build.default doesn't exist, call start.sh to create it and build default targets
-    $ROOT_DIR/bin/build.sh 
+    $ROOT_DIR/bin/build.sh
 fi
 
 cd $EXEC_DIR/build.default

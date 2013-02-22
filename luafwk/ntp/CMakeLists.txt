@@ -9,7 +9,9 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-include_directories(${COMMON_SOURCE_DIR} .)
-add_lua_library(ntp ntp.c ntp_time.c)
+PROJECT(MIHINI_NTP)
+
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR} .)
+ADD_LUA_LIBRARY(ntp ntp.c ntp_time.c)
 
 

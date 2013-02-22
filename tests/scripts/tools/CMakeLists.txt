@@ -9,7 +9,7 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(embeddedteststools DESTINATION tests/tools EXCLUDE_FROM_ALL
+ADD_LUA_LIBRARY(embeddedteststools DESTINATION tests/tools EXCLUDE_FROM_ALL
   client.lua
   libtests.lua
   logmanager.lua
@@ -19,27 +19,27 @@ add_lua_library(embeddedteststools DESTINATION tests/tools EXCLUDE_FROM_ALL
 )
 
 ADD_CUSTOM_TARGET(customclientagent_install
-        COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/specific_defaultconfig.lua ${CMAKE_LUA_LIBRARY_OUTPUT_DIRECTORY}/agent/defaultconfig.lua        
+        COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/specific_defaultconfig.lua ${CMAKE_LUA_LIBRARY_OUTPUT_DIRECTORY}/agent/defaultconfig.lua
         )
-add_lua_library(scriptmigrationhelperlua DESTINATION agent EXCLUDE_FROM_ALL
+ADD_LUA_LIBRARY(scriptmigrationhelperlua DESTINATION agent EXCLUDE_FROM_ALL
  migration.lua
 )
-add_lua_library(testsmigrationhelperlua DESTINATION tests/tools EXCLUDE_FROM_ALL)
-add_dependencies(testsmigrationhelperlua scriptmigrationhelperlua customclientagent_install)
+ADD_LUA_LIBRARY(testsmigrationhelperlua DESTINATION tests/tools EXCLUDE_FROM_ALL)
+ADD_DEPENDENCIES(testsmigrationhelperlua scriptmigrationhelperlua customclientagent_install)
 
-add_lua_library(testsmigrationwithout DESTINATION tests/tools EXCLUDE_FROM_ALL)
-add_dependencies(testsmigrationwithout customclientagent_install)
+ADD_LUA_LIBRARY(testsmigrationwithout DESTINATION tests/tools EXCLUDE_FROM_ALL)
+ADD_DEPENDENCIES(testsmigrationwithout customclientagent_install)
 
 
-include_directories(${COMMON_SOURCE_DIR})
-include_directories (../tests/scripts/tools)
-add_lua_library(migration DESTINATION agent EXCLUDE_FROM_ALL
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
+INCLUDE_DIRECTORIES (../tests/scripts/tools)
+ADD_LUA_LIBRARY(migration DESTINATION agent EXCLUDE_FROM_ALL
   migration.c
 )
-add_lua_library(testsmigrationhelperc DESTINATION tests/tools EXCLUDE_FROM_ALL)
-add_dependencies(testsmigrationhelperc migration customclientagent_install)
+ADD_LUA_LIBRARY(testsmigrationhelperc DESTINATION tests/tools EXCLUDE_FROM_ALL)
+ADD_DEPENDENCIES(testsmigrationhelperc migration customclientagent_install)
 
 
-include_directories (../../../luafwk/lua)
+INCLUDE_DIRECTORIES (../../../luafwk/lua)
 
 

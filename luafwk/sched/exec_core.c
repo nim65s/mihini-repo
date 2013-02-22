@@ -86,7 +86,7 @@ static int l_read(lua_State* L)
   if ((status=check_file(L, pud)) != 0)
     return status;
 
-  char buffer[READ_BUFFER_SIZE]; 
+  char buffer[READ_BUFFER_SIZE];
   /* It's OK for READ_BUFFER_SIZE to be big, because we expect to have a MMU which
    * will only map it on demand. */
   int nb = read(pud->fd, buffer, READ_BUFFER_SIZE);
@@ -180,11 +180,11 @@ static int fork_and_redirect_output(lua_State* L, uint8_t redirect)
     // create the socket pair that is used to read and write to the spawned process
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) < 0)
     {
-	lua_pushnil(L);
-	lua_pushstring(L, strerror(errno));
-	return 2;
+    lua_pushnil(L);
+    lua_pushstring(L, strerror(errno));
+    return 2;
     }
-    
+
     // Set the socket to non blocking (so it does not block the VM)
     int flags = fcntl(sockets[0], F_GETFL, 0);
     fcntl(sockets[0], F_SETFL, flags | O_NONBLOCK);
@@ -245,7 +245,7 @@ static int l_waitpid(lua_State *L)
   pid_t ret;
 
   ret = waitpid(pid, &status, WNOHANG);
-  
+
   if (ret == 0)
   {
     lua_pushnil(L);

@@ -13,10 +13,10 @@ require 'strict'
 local sched = require 'sched'
 local u = require 'unittest'
 local os = require 'os'
-local rpc   = require 'rpc' 
+local rpc   = require 'rpc'
 
 sched.listen(4001)
-local system = require 'tests.tools.systemtest' 
+local system = require 'tests.tools.systemtest'
 --local system = require 'agent.system' -- TODO: move pexec out of agent
 
 require 'tests.luatobin'

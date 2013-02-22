@@ -100,10 +100,10 @@ system.cellular.sim.pin             =MSCIID_CFG_GPRS_SIM_PIN
 system.cellular.apn.apn             =MSCIID_CFG_GPRS_APN
 system.cellular.apn_current         =MSCIID_STS_CMN_APN_CURRENT
 /*
-system.cellular.apn.1.name          =MSCIID_APN_LIST 
-system.cellular.apn.1.type          =MSCIID_APN_LIST 
-system.cellular.apn.1.user          =MSCIID_APN_LIST 
-system.cellular.apn.1.password      =MSCIID_APN_LIST 
+system.cellular.apn.1.name          =MSCIID_APN_LIST
+system.cellular.apn.1.type          =MSCIID_APN_LIST
+system.cellular.apn.1.user          =MSCIID_APN_LIST
+system.cellular.apn.1.password      =MSCIID_APN_LIST
 system.cellular.apn.1.authtype      =MSCIID_APN_LIST
 */
 

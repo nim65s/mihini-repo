@@ -19,8 +19,8 @@ local MT = { }; MT.__index=MT
 
 --- Read a variable
 function MT :get(hpath)
-	if hpath=='' then return self.constant
-	else return nil, 'path not found' end
+    if hpath=='' then return self.constant
+    else return nil, 'path not found' end
 end
 
 --- Write a map of variables
@@ -33,7 +33,7 @@ function MT :register() end
 
 
 local function newhandler(k)
-	return setmetatable({constant=k}, MT)
+    return setmetatable({constant=k}, MT)
 end
 
 return newhandler

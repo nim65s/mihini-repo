@@ -12,27 +12,27 @@
 {
   -- Global information
   version = "toto_1.0",
-  
+
   -- Packages information
-  components = 
+  components =
   {
     --test for install/un-install in the same component of the same package, parameter of component are returned in 'script2/install.lua' file
-    {   
+    {
         name = "@sys.update.test2",
-        location = "script2",                
-        version = "2"        
+        location = "script2",
+        version = "2"
     },
-    
-    {   
-        name = "@sys.update.test2",             
+
+    {
+        name = "@sys.update.test2",
         version = nil,
-        location = "script2", 
+        location = "script2",
         parameters = { reason = "bye bye" }
     },
-    
+
     --install one component, parameter of component are returned in 'script/install.lua' file
     {   name = "@sys.update.test1",
-        location = "script",                
+        location = "script",
         version = "1",
         parameters = { autostart=true, bar=42 , foo='test'}
     }

@@ -521,7 +521,7 @@ function sched.run (f, ...)
     local thread = coroutine.create (f)
     local cell   = { thread, ... }
     table.insert (ready, cell)
-    log.trace ('sched', 'DEBUG', "SCHEDULE %s", tostring (thread))
+    log.trace('SCHED', 'DEBUG', "SCHEDULE %s", tostring (thread))
 
     return thread
 end
@@ -551,7 +551,7 @@ function sched.step()
         if not cell then break end
         local thread = cell[1]
         __tasks.running = thread
-        log.trace ('sched', 'DEBUG', "STEP %s", tostring (thread))
+        log.trace('SCHED', 'DEBUG', "STEP %s", tostring (thread))
         local success, msg = coroutine.resume (unpack (cell))
         if not success and msg ~= KILL_TOKEN then
             -- report the error msg
@@ -627,7 +627,7 @@ local function runcell(c, emitter, event, args, wokenup_tasks, new_queue)
             end
             errmsg = string.format("In signal %s.%s: %s",
                 tostring(emitter), event, tostring(errmsg))
-            log('sched', 'ERROR', errmsg)
+            log('SCHED', 'ERROR', errmsg)
             print (errmsg)
         end
         if reattach_hook then
@@ -655,7 +655,7 @@ end
 
 function sched.signal (emitter, event, ...)
     checks('!', '!') -- TODO should we accept non-string events?
-    log.trace ('sched', 'DEBUG', "SIGNAL %s.%s", tostring(emitter), event)
+    log.trace('SCHED', 'DEBUG', "SIGNAL %s.%s", tostring(emitter), event)
     local args  = table.pack(event, ...) -- args passed to hooks & rescheduled tasks
     local ptw   = __tasks.waiting
     local ptr   = __tasks.running
@@ -765,7 +765,7 @@ local function register (cell, emitter, events)
             local ev    = sched.timer.set(delay, emitter, timeout_callback)
             local ptwet = ptwe.timeout
             if ptwet then table.insert(ptwet, cell) else ptwe.timeout={cell} end
-            log.trace('sched', 'DEBUG', "Registered cell for %ds timeout event", event)
+            log.trace('SCHED', 'DEBUG', "Registered cell for %ds timeout event", event)
         end
     end
 
@@ -851,7 +851,7 @@ function sched.wait (emitter, ...)
     local nargs = select('#', ...)
 
     if (emitter==nil and nargs == 0) or (type(emitter) == "number" and emitter == 0) then -- wait()
-        log('sched', 'DEBUG', "Rescheduling %s", tostring(current))
+        log('SCHED', 'DEBUG', "Rescheduling %s", tostring(current))
         table.insert (__tasks.ready, { current })
     else
         local events
@@ -867,13 +867,13 @@ function sched.wait (emitter, ...)
 
         register(cell, emitter, events)
 
-        if log.musttrace('sched', 'DEBUG') then -- TRACE:
+        if log.musttrace('SCHED', 'DEBUG') then -- TRACE:
             local ev_msg = { }
             for i=1, #events do ev_msg[i] = tostring(events[i]) end
             local msg =
                 "WAIT emitter = " .. tostring(emitter) ..
                 ", events = { " .. table.concat(ev_msg,", ") .. " } )"
-            log.trace ('sched', 'DEBUG', msg)
+            log.trace('SCHED', 'DEBUG', msg)
         end -- /TRACE
     end
 
@@ -915,7 +915,7 @@ function sched.multiWait (emitters, events)
         register(cell, emitter, events)
     end
 
-    if log.musttrace('sched', 'DEBUG') then -- TRACE:
+    if log.musttrace('SCHED', 'DEBUG') then -- TRACE:
         local em_msg = { }
         for i=1, #emitters do em_msg[i] = tostring(emitters[i]) end
         local ev_msg = { }
@@ -923,7 +923,7 @@ function sched.multiWait (emitters, events)
         local msg =
             "WAIT emitters = { " .. table.concat(em_msg,", ") ..
             " }, events = { " .. table.concat(ev_msg,", ") .. " } )"
-        log.trace ('sched', 'DEBUG', msg)
+        log.trace('SCHED', 'DEBUG', msg)
     end -- /TRACE
 
     --------------------------------------------------------------------
@@ -1137,9 +1137,9 @@ function sched.kill (x)
             for k in pairs(x) do x[k]=nil end
             CLEANUP_REQUIRED = true
         elseif not next(x) then -- emptied cell
-            log('sched', 'DEBUG', "Attempt to kill a dead cell")
+            log('SCHED', 'DEBUG', "Attempt to kill a dead cell")
         else
-            log("sched", "WARNING", "Don't know how to kill %s", sprint(x))
+            log('SCHED', "ERROR", "Don't know how to kill %s", tostring(x))
         end
     elseif x==__tasks.running then
         -- Kill current thread
@@ -1149,7 +1149,7 @@ function sched.kill (x)
         coroutine.resume (x, KILL_TOKEN)
         sched.signal (x, "die", "killed")
     else
-        log("sched", "WARNING", "Don't know how to kill %s", sprint(x))
+        log('SCHED', "ERROR", "Don't know how to kill %s", tostring(x))
     end
 end
 

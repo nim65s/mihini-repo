@@ -10,7 +10,7 @@
 -------------------------------------------------------------------------------
 
 ---
--- LTN12 source utils.  
+-- LTN12 source utils.
 --
 -- LNT12 stands for Lua Technical Note #12. It deals with sources, sinks, filters, etc.
 --
@@ -21,7 +21,7 @@
 -- This module provides extra LTN12 sources.
 --
 -- @module utils.ltn12.source
--- 
+--
 
 local checks = require 'checks'
 local ltn12 = require 'ltn12'
@@ -34,7 +34,7 @@ local M = {}
 --
 -- @function [parent=#utils.ltn12.source] toString
 -- @param src LTN12 source.
--- @return string. 
+-- @return string.
 --
 
 local function tostring(src)
@@ -55,10 +55,10 @@ end
 
 local function table(t, empty)
     checks('table', '?boolean')
-    local index = 0  
+    local index = 0
     return function()
         index = index + 1
-        local chunk = t[index] 
+        local chunk = t[index]
         if empty then t[index] = nil end
         return chunk
     end

@@ -40,8 +40,7 @@ local function checkpkg()
 
     --precond checking
     if string.find(data.currentupdate.updatefile, "'") then
-        --##4
-        return state.stepfinished("failure", 450 , "invalid update file name")
+        return state.stepfinished("failure", 450 , "Invalid update file name")
     end
 
     -- create a directory with the same name that the updatefile
@@ -79,7 +78,7 @@ local function checkpkg()
        return state.stepfinished("failure", 453, string.format("Cannot extract update package, tar res=[%s, %s]", tostring(res), tostring(err)))
     end
 
-    --load manifes
+    --load manifest
     local mfile, err = io.open(dirname.."/".."Manifest", "r")
     if not mfile then return state.stepfinished("failure", 454, string.format("Cannot open manifest file, err=[%s]", err)) end
     local manifest_data, err = mfile:read("*a")
@@ -95,10 +94,10 @@ local function checkpkg()
     --get the table from the chunk
     local res, manifest = pcall(manifest_chunk)
     if not res then
-        --##11 not valid file
+        --not valid file
         return state.stepfinished("failure", 457,  string.format("Manifest file is not valid lua file, err=[%s]", manifest or "error unknown"))
     elseif "table" ~= type(manifest) then
-        --##12 doesn't return a table
+        --doesn't return a table
         return state.stepfinished("failure", 458,  string.format("Manifest file doesn't returns a table but %s", type(manifest)))
     end
 
@@ -106,12 +105,12 @@ local function checkpkg()
     local res, errcode, errstr = checkmanifest(manifest)
     if not res then
         errstr = errstr or errcode or "unknown"
-        errcode = tonumber(errcode) or 479 -- error ##28
+        errcode = tonumber(errcode) or 479
         return state.stepfinished("failure", errcode, "Manifest error:"..tostring(errstr))
     end
 
     --we're good
-    data.currentupdate.manifest = manifes
+    data.currentupdate.manifest = manifest
     --no need to call savecurrentupdate: stepfinished will do it for us
     log("UPDATE", "INFO", "Software Update Package from %s protocol is accepted.", data.currentupdate.infos.proto)
     state.stepfinished("success")
@@ -124,7 +123,7 @@ local checkpackage = function ()
     if not f then
         log("UPDATE", "INFO", "checkpackage failed: %s", tostring(err))
         return state.stepfinished("failure", 400, string.format("checkpackage: internal error: %s", tostring(err)))
-    end  --##TBD
+    end
 end
 local updateswstate
 
@@ -180,11 +179,11 @@ local function checkman(manifest)
         assert( (not cmp.version) or cmp.location, cmp.name.." 'location' is needed when version is set" )
         --
         assert( cmp.version or ( (not cmp.provides) and ( not cmp.depends) ), cmp.name.." set for removal must not declare 'provides' or 'depends' fields")
-        --checks depends content if se
+        --checks `depends` content if set
         if cmp.depends then
             assert("table" == type(cmp.depends) and testtabletypes(cmp.depends, false), cmp.name.." 'depends' field is invalid")
         end
-        --checks depends content if se
+        --checks `provides` content if set
         if cmp.provides then
             assert("table" == type(cmp.provides) and testtabletypes(cmp.provides, true), cmp.name.." 'provides' field is invalid")
             assert( not cmp.provides[cmp.name],  cmp.name.." 'provides' field is invalid:  cannot contain feature with same name than component")
@@ -193,10 +192,6 @@ local function checkman(manifest)
         -- default values to ease next steps
         cmp.provides = cmp.provides or {}
         cmp.depends = cmp.depends or {}
-
-        --keep the unique id of cmp in current swlist (only for existing cmps update or remove)
-        --will be used later during update progress phase
-        cmp.uid = state.cmps[cmp.name] and state.cmps[cmp.name].uid
 
         if not manifest.force then
             --check dependencies for that component
@@ -222,7 +217,7 @@ local function cmp_version(version, deps)
     for dep in deps:gmatch("([^ ]*) ?") do
         if dep == "" then break end -- last match, TODO improv
         local op, vdep = dep:match("^([><=#!][=]?)(.+)$")
-        --list managemen
+        --list management
         if op == "#" then
             local res
             for listval in vdep:gmatch("([^,]*),?") do
@@ -233,7 +228,7 @@ local function cmp_version(version, deps)
             if not res then return nil,  dep.." failed" end
         else
             if not vdep or not checkversion(vdep) then return nil, dep.." malformed dependency" end
-            --regular operator managemen
+            --regular operator management
             if op == "=" then if not (version==vdep) then return nil, dep.." failed" end
             elseif op == "!=" then if not (version~=vdep) then return nil, dep.." failed" end
             elseif op == ">" then if not (version>vdep) then return nil, dep.." failed" end
@@ -256,7 +251,7 @@ function updateswstate(swstate, cmp, install)
     --local feats = swstate.feats
     --p("updateswstate before ", "cmps", swstate.cmps, "feats", swstate.feats, "cmp", cmp, install)
     if install then
-        if swstate.feats[cmp.name] then return nil, string.format("component %s can not be installed because a feature with the same name exists", cmp.name) end        
+        if swstate.feats[cmp.name] then return nil, string.format("component %s can not be installed because a feature with the same name exists", cmp.name) end
         swstate.cmps[cmp.name] = {}
         utable.copy(cmp, swstate.cmps[cmp.name], true) --do not alter cmp content (for default values)
         swstate.cmps[cmp.name].provides = swstate.cmps[cmp.name].provides or {}
@@ -347,6 +342,7 @@ M.checkswlist = checkswlist
 --those one are public only for tests purpose...
 M.cmp_version = cmp_version
 M.checkmanifest = checkmanifest
+
 
 return M;
 

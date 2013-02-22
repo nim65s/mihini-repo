@@ -42,7 +42,7 @@ do
     esac
 done
 
-if [ ! $BUILD_DIR ] 
+if [ ! $BUILD_DIR ]
 then
   BUILD_DIR=$(pwd)/build.$TARGET
   echo ">>> Set BUILD DIRECTORY to default value: $BUILD_DIR"
@@ -96,7 +96,7 @@ then
 fi
 
 #launch cmake
-CMAKE_OPT=-DCMAKE_TOOLCHAIN_FILE=$CMAKE_DIR/toolchain.$TARGET.cmake
+CMAKE_OPT="-DCMAKE_TOOLCHAIN_FILE=$CMAKE_DIR/toolchain.$TARGET.cmake -DPLATFORM=$TARGET"
 if [ $DEBUG ]
 then
     CMAKE_OPT="$CMAKE_OPT -DCMAKE_BUILD_TYPE=Debug"
@@ -114,8 +114,10 @@ fi
 
 
 # Do the compilation
+cores=1
 cores=$(getconf _NPROCESSORS_ONLN)
-make -j${cores}
+make -j${cores} mihini
+#make -j${cores} all
 ret=$?
 if [ $ret -ne 0 ]
 then

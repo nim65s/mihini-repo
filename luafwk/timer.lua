@@ -120,7 +120,7 @@ end
 -- @function [parent=#timer] nbofdaysinmonth
 -- @param date in `os.time` format included in the considered month
 -- @return number of days in the month: 28,29,30,31
--- 
+--
 
 local function nbofdaysinmonth(now)
     local cd = os_date("*t", now)
@@ -136,7 +136,7 @@ end
 -- @function [parent=#timer] cron_nextevent
 -- @param timer the CRON string
 -- @return next occurrence's date, as an `os.time()` number.
--- 
+--
 
 local function cron_nextevent(timer)
     local entry = timer.cron
@@ -225,8 +225,8 @@ local function table2cron(t)
         for _, name in ipairs(names) do
             local v=t[name]
             if v then
-                if type(v)=='table' then v=table.concat(v,',') end 
-                cron[i]=v; break 
+                if type(v)=='table' then v=table.concat(v,',') end
+                cron[i]=v; break
             end
         end
     end
@@ -241,7 +241,7 @@ end
 -- The event will cause a `signal([returned timer], 'run')` whenever its due
 -- date(s) is/are reached. The date(s) is/are determined by the `expiry` argument:
 --
--- * If `expiry` is a positive number, causes a 1-shot event after that delay, 
+-- * If `expiry` is a positive number, causes a 1-shot event after that delay,
 --   in seconds, has elapsed.
 --
 -- * If `expiry` is a negative number, causes a periodic event whose period is
@@ -254,8 +254,8 @@ end
 -- @function [parent=#timer] new
 -- @param expiry string or number specifying the timer's due date(s).
 --   See explanations above.
--- @param hook an optional function which will be called whenever the timer is due. 
---   The hook is called in a new thread (thus blocking functions are allowed in it). 
+-- @param hook an optional function which will be called whenever the timer is due.
+--   The hook is called in a new thread (thus blocking functions are allowed in it).
 -- @param varargs optional additional parameters, which will be passed to the `hook`
 --   function when called.
 -- @return created timer on success.
@@ -343,22 +343,22 @@ end
 -- event which takes place at 8:30AM every first day of the month.
 --
 -- Beside numbers, some operators are allowed in fields:
--- 
+--
 -- - As mentionned, the asterisk (`'*'`) placeholder represents all possible
 --   values for a field. For example, an asterisk in the hour time field
 --   would be equivalent to 'every hour' (subject to matching other specified
 --   fields).
 --
--- - The comma (`','`) is a binary operator which specifies a list of possible 
+-- - The comma (`','`) is a binary operator which specifies a list of possible
 --   values, e.g. `"1,3,4,7,8"` (there must be no space around commas)
 --
 -- - The dash (`'-'`) is a binary operator which specifies a range of values.
 --   For instance, `"1-6"` is equivalent to `"1,2,3,4,5,6"`
 --
 -- - The slash (`'/'`) is a binary operator, called "step", which allows to skip
---   a given number of values. For instance, `"*/3"` in the hour field is 
+--   a given number of values. For instance, `"*/3"` in the hour field is
 --   equivalent to `"0,3,6,9,12,15,18,21"`.
--- 
+--
 -- For instance, `"0 * * * *"` denotes an event at every hour (whenever the
 -- number of minutes reaches 0), but `"0 */6 * * *"` denotes only the hours
 -- divisible by 6 (i.e. 0:00, 6:00, 12:00 and 18:00). Beware that the formal
@@ -393,8 +393,8 @@ end
 -- CRON specified with a table
 -- ---------------------------
 -- Cron specifications can also be entered as tables, with keys `minute, hour,
--- dayofmonth, dayofweek, jitter` respectively; missing keys are treated as 
--- `"*"` (except for `jitter`, which is treated as missing); lists of values 
+-- dayofmonth, dayofweek, jitter` respectively; missing keys are treated as
+-- `"*"` (except for `jitter`, which is treated as missing); lists of values
 -- are passed as tables; steps and ranges are not supported in any special ways,
 -- but they can be passed as strings, e.g. `{ hour='9-12,14-17', minute=0 }`.
 --
@@ -411,7 +411,7 @@ function cron(cron, hook, ...)
 end
 
 -------------------------------------------------------------------------------------
--- Cancels a running timer.   
+-- Cancels a running timer.
 -- No signal will be triggered with this timer object.
 -- A canceled timer can be rearmed using the @{rearm} function.
 --
@@ -426,8 +426,9 @@ function cancel(timer)
 end
 
 -------------------------------------------------------------------------------------
--- Rearms a canceled or expired timer.  
+-- Rearms a canceled or expired timer.
 -- Same as new function. A signal will be emitted on timer expiration.
+-- Rearming a timer that have not expired, reset it to its inital value.
 --
 -- @function [parent=#timer] rearm
 -- @param timer as returned by @{#timer.new} function.
@@ -436,7 +437,7 @@ end
 --
 function rearm(timer)
     checks('timer')
-    if timer.nd then return nil, "timer not canceled or expired yet" end
+    if timer.nd then timer:cancel() end
     sched_timer.addtimer(timer)
     if not timer.nd then return nil, "unable to rearm timer" end
     return "ok"
@@ -464,12 +465,12 @@ local latencyjobs = { }
 --
 -- @function [parent=#timer] latencyExec
 -- @param func function to run.
--- @param latency optional number. Time to wait before running the function (in seconds), 
+-- @param latency optional number. Time to wait before running the function (in seconds),
 -- if set to O then the function is run asynchronously but as soon as possible.
 -- if set to nil, then the function is run synchronously.
 -- @return "ok" on success.
 -- @return nil followed by an error message otherwise.
--- 
+--
 -- @usage
 --
 -- timer.latencyExec examples
@@ -505,10 +506,10 @@ function latencyExec(func, latency)
     -- calculate exec time
     local next = os_time() + latency
     -- if not already scheduled, schedule
-	local entry = latencyjobs[func]
+    local entry = latencyjobs[func]
     if latency == 0 then
-    	if entry then sched.kill(entry.hook) end
-    	sched.run(dofunc)
+        if entry then sched.kill(entry.hook) end
+        sched.run(dofunc)
     elseif not entry then
         latencyjobs[func] = {hook = sched.sigrunonce("timer", latency, dofunc), date = next}
     -- if already schedule and new execution is early

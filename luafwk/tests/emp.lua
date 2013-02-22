@@ -38,8 +38,8 @@ local function send_cmd(id)
       local s, p = emp.sendcmd(cmdmaps["SendCmd"], "sendcmd_payload")
 
       if not s and p ~= "error 517 [hint: ipc broken]" then
-	 log("EMP_TEST", "ERROR", "EMP sender thread #%d failed: %s", id, p)
-	 os.exit(1)
+     log("EMP_TEST", "ERROR", "EMP sender thread #%d failed: %s", id, p)
+     os.exit(1)
       end
    end
 end

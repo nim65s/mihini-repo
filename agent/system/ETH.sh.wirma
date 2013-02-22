@@ -26,15 +26,15 @@ broadcast=192.168.4.255
 readconf()
 {
     if [ -f /tmp/conf.$device ]; then
-	. /tmp/conf.$device
+    . /tmp/conf.$device
     fi
 
     if [ -n "$nameserver1" ]; then
-	echo "nameserver " > /tmp/resolv.conf.$device
-	echo $nameserver1 >> /tmp/resolv.conf.$device
-	echo $nameserver2 >> /tmp/resolv.conf.$device
-	DNS="yes"
-	mode="static"
+    echo "nameserver " > /tmp/resolv.conf.$device
+    echo $nameserver1 >> /tmp/resolv.conf.$device
+    echo $nameserver2 >> /tmp/resolv.conf.$device
+    DNS="yes"
+    mode="static"
     fi
 }
 
@@ -44,12 +44,12 @@ addRoute()
     /sbin/route del default 1>/dev/null 2>/dev/null
 
     if [ -f /tmp/gateway.$device ]; then
-	#file created by udhcpc script
-	. /tmp/gateway.$device
+    #file created by udhcpc script
+    . /tmp/gateway.$device
     fi
 
     if [ -n "${gateway}" ]; then
-	GATEWAY=${gateway}
+    GATEWAY=${gateway}
     fi
 
     /sbin/route add default dev ${device} gw ${GATEWAY} 1>/dev/null 2>/dev/null
@@ -58,23 +58,23 @@ addRoute()
 addResolv()
 {
     if [ "${DNS}" = "yes" ]; then
-	if [ -f /tmp/resolv.conf.$device ]; then
-	    cp /tmp/resolv.conf.$device /etc/resolv.conf 1>/dev/null 2>/dev/null
-	fi
+    if [ -f /tmp/resolv.conf.$device ]; then
+        cp /tmp/resolv.conf.$device /etc/resolv.conf 1>/dev/null 2>/dev/null
+    fi
     fi
 }
 
 startEthernet ()
 {
     if [ "${mode}" = "dhcp" ]; then
-	/sbin/udhcpc -n -q -i ${device} -s /etc/udhcpc.sh 1>/dev/null 2>/dev/null
-	if [ -f /tmp/udhcpc.ok ]; then
-	    return;
-	else
-	    exit 1
-	fi
+    /sbin/udhcpc -n -q -i ${device} -s /etc/udhcpc.sh 1>/dev/null 2>/dev/null
+    if [ -f /tmp/udhcpc.ok ]; then
+        return;
     else
-	/sbin/ifconfig ${device} ${address} broadcast ${broadcast} netmask ${netmask} 1>/dev/null 2>/dev/null
+        exit 1
+    fi
+    else
+    /sbin/ifconfig ${device} ${address} broadcast ${broadcast} netmask ${netmask} 1>/dev/null 2>/dev/null
     fi
 }
 
@@ -82,37 +82,37 @@ startEthernet ()
 case "$1" in
 
     init)
-	if [ -f /tmp/conf.$device ]; then
-	    rm /tmp/conf.$device 1>/dev/null 2>/dev/null
-	fi
+    if [ -f /tmp/conf.$device ]; then
+        rm /tmp/conf.$device 1>/dev/null 2>/dev/null
+    fi
 
-	for arg in $@; do
-	    if [ "$arg" != "$1" ]; then
-		echo $arg >> /tmp/conf.$device;
-	    fi
-	done
+    for arg in $@; do
+        if [ "$arg" != "$1" ]; then
+        echo $arg >> /tmp/conf.$device;
+        fi
+    done
 
-	echo $device
+    echo $device
         exit 0
-	;;
+    ;;
     start)
-	if [ -z "$2" ]; then
-	    exit 1
-	fi
-	device=$1
-	readconf
+    if [ -z "$2" ]; then
+        exit 1
+    fi
+    device=$1
+    readconf
         startEthernet
-	addRoute
+    addRoute
         addResolv
-	exit 0
+    exit 0
         ;;
 
     stop)
-	if [ -z "$2" ]; then
-	    exit 1
-	fi
+    if [ -z "$2" ]; then
+        exit 1
+    fi
         /sbin/ifconfig ${device} down 1>/dev/null 2>/dev/null
-	exit 0
+    exit 0
         ;;
 
     *)

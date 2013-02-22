@@ -100,6 +100,11 @@ swi_status_t swi_av_ConnectToServer
 * This only applies to data sent using simple or advanced Data Sending APIs.
 * Data Reception and Asset Update exchanges are @b not modified by this function.
 *
+* A connection to the server is done only if data needs to be sent as the result
+* to this trigger operation. Put another way, if no data is attached to the
+* triggered policy(ies), then no connection to the server is done.
+* See #swi_av_ConnectToServer for complementary function.
+*
 * For a description of how policies allow to manage data reporting from the assets to the server,
 * see the ReadyAgent product documentation.
 *

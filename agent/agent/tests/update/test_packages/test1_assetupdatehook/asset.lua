@@ -26,7 +26,7 @@ local function uhook(name, version, path, parameters)
 end
 
 local function unload()
-  asset:close()  
+  asset:close()
 end
 
 local function load()
@@ -37,4 +37,4 @@ end
 
 
 --see api in unit test
-return { timeout=2, signalname=testname, unload =  unload, load = load, status="success"} 
+return { timeout=2, signalname=testname, unload =  unload, load = load, status="success"}

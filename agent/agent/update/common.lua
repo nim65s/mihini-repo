@@ -117,7 +117,7 @@ end
 --- uid is used as key to present components to the server
 --  cmp.name is already defining an unique id for component but cmp.name may contains '.'
 --  characters. When sending the swlist to server, having a map with keys containing '.'
---  is likely to be a problem because '.' is the path separator for awtda.
+--  is likely to be a problem because '.' is the path separator for m3da.
 --  so we need to used another id.
 --
 --- same uid is kept over component updates
@@ -149,7 +149,7 @@ local function updateswlist(cmp, force)
         c.depends = cmp.depends and next(cmp.depends) and cmp.depends
         c.parameters = cmp.parameters and next(cmp.parameters) and cmp.parameters
         c.force = force and true or nil -- whether this component installation resulted from a forced update
-        --using cmp.uid here is only useful when provisioning "manually" a component 
+        --using cmp.uid here is only useful when provisioning "manually" a component
         -- (e.g. "platform" cmp, see checkplatformcmp), then we use the uid given in cmp (it must be given!)
         --otherwise we use "regular" getcmpuid() that look for existing uid or create a new one
         c.uid = cmp.uid or getcmpuid(cmp)
@@ -170,8 +170,7 @@ end
 -- gathering these informations might create dependencies (e.g. to `treemgr`).
 --
 -- The platform-specific features are to be provided in an optional global
--- function `getupdateplatformcomponent()`, presumably created by the module
--- `agent.platform`.
+-- function `agent.platformgetupdateplatformcomponent()`.
 --
 -- Once the platform features are loaded, the state consistency is checked,
 -- so that users have a chance to be warned about config problems.
@@ -179,11 +178,11 @@ end
 -- The function is protected to run only once per session, as it it costly.
 local platformcmp_done = false
 function checkplatformcmp() -- declared local on top of file
-    global 'getupdateplatformcomponent'
-    if not platformcmp_done and getupdateplatformcomponent then
+    local platform = require 'agent.platform'.getupdateplatformcomponent
+    if not platformcmp_done and platform then
         platformcmp_done = true
         log('UPDATE', 'INFO', "Checking platform feature versions")
-        local provides = getupdateplatformcomponent()
+        local provides = platform()
         local cmp = {
             name     = "platform",
             version  = "N/A",
@@ -232,12 +231,12 @@ end
 --@return nil and display message error  when error happened
 --@return free space as a number of bytes when it worked
 local function getfreespace(path)
-    if not string.match(path,"%a") then        
+    if not string.match(path,"%a") then
         return nil, "the path is not valid"
     end
     local cmdspace = "df -B 1 " .. path .. " | tail -1 |awk '{print $4}' "
     local err, output = systemutils.pexec(cmdspace)
-    if err ~= 0 then        
+    if err ~= 0 then
         return nil, string.format("Cannot get free space for storage, err=%s",tostring(output))
     end
     return tonumber(output)

@@ -9,7 +9,7 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(embeddedtestmanagers DESTINATION tests/managers EXCLUDE_FROM_ALL
+ADD_LUA_LIBRARY(embeddedtestmanagers DESTINATION tests/managers EXCLUDE_FROM_ALL
   automatedunittest.lua
   RATlinux.lua
   RATcommon.lua

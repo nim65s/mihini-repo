@@ -20,7 +20,7 @@
 #include "version.h"
 
 // LUA_AF_RO_PATH: This is the location used for read only components like binaries, libraries, resources
-// LUA_AF_RF_PATH: This is the location used for persisted data or components which need to be saved for future usage like: 
+// LUA_AF_RF_PATH: This is the location used for persisted data or components which need to be saved for future usage like:
 // persisted settings, appcon, update, treemgr
 static void envsetup(lua_State *L)
 {
@@ -62,7 +62,7 @@ int main(void)
   lua_getfield(L, -1, "traceback");
   lua_getglobal(L, "require");
   lua_pushstring(L, "agent.boot");
- 
+
   int s = lua_pcall (L, 1, 0, -3);
   const char* err = lua_tostring(L, -1);
   if (s == LUA_ERRRUN)
@@ -74,6 +74,6 @@ int main(void)
   else
     printf("Application finished normally.\n");
 
-  lua_close(L);  
+  lua_close(L);
   return s;
 }

@@ -12,7 +12,7 @@
 local sched = require 'sched'
 local common = require 'tests.managers.RATcommon'
 local rpc = require 'rpc'
-sched.listen(4000) 
+sched.listen(4000)
 --local system = require 'agent.system'
 local system = require 'tests.tools.systemtest'
 
@@ -37,14 +37,14 @@ log.setlevel('INFO')
 module(...)
 
 -- Run embedded tests for a linux environment
--- 
+--
 function runLinuxAgent(shellOnly)
   print "[INFO][LINUX] Starting Linux ReadyAgent"
-  
+
   -- start fake AirVantage server
   local avserver = require 'cryptotools.startserver'
   avserver.start(8888)
-  
+
   if shellOnly then
     sched.run(function() system.execute("cd .. && bin/agent") end)
   else
@@ -53,22 +53,22 @@ function runLinuxAgent(shellOnly)
   end
   --sched.run(function() system.execute("cd .. && xterm -bg DarkMagenta -e \"AGENT_DIR=$(dirname $0) && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib && cd $AGENT_DIR && bin/agent\"") sched.signal("TESTS", "AGENT END") end )
   --system.popen("../startNewAgent.sh")
-  
+
   sched.wait(5)
-  
+
   local results = common.runUnittests()
   print "[INFO][LINUX] ReadyAgent closed"
-  
-  return results  
+
+  return results
 end
 
 
 -- Run embedded tests for ReadyAgent lua framework
 function runLinuxLua(shellOnly)
   print "[INFO][LINUX] Starting lua frameWork tests"
-  
+
   --sched.run(function() system.execute("xterm -bg DarkMagenta -e \"cd .. && ./bin/lua ./lua/tests/luafwktests.lua\"") sched.signal("TESTS", "AGENT END") end )
-  -- 
+  --
   if shellOnly then
     sched.run(function() system.execute("cd .. && ./bin/lua ./lua/tests/luafwktests.lua") end)
   else
@@ -78,12 +78,12 @@ function runLinuxLua(shellOnly)
   sched.wait(5)
   local results = common.runLuaFwkUnittests()
   print "[INFO][LINUX] lua frameWork tests ended"
-  
+
   return results
 end
 
 function restartagent()
-  
+
 end
 
 local function runLinuxTests()
@@ -91,7 +91,7 @@ local function runLinuxTests()
   local results = nil
   if (common.assert_client(client, err)) then
     client:call('require', 'tests.embeddedunittests')
-    
+
     -- pre-initialize tests
     commands.init(client)
     generalfeat.init(client)
@@ -99,13 +99,13 @@ local function runLinuxTests()
     ftplogstore.init(client)
     migrationhelper.init(client)
     --applicon.init(client)
-    
+
     unittest.run()
     log('RAT_LINUX', "INFO", "<close lua>")
     client:call('closeLua')
     log('RAT_LINUX', "INFO", "</close lua>")
   end
-  
+
   return unittest.getStats()
 end
 
@@ -113,7 +113,7 @@ end
 -- with backend (jobs for example)
 function runLinuxRemoteTests(shellOnly)
   print "[INFO][LINUX] Starting remote tests"
-  
+
   if shellOnly then
     sched.run(function() system.execute("cd .. && bin/agent") end)
   else
@@ -125,7 +125,7 @@ function runLinuxRemoteTests(shellOnly)
   sched.wait(5)
   local results = runLinuxTests()
   print "[INFO][LINUX] remote tests ended"
-  
+
   return results
 end
 

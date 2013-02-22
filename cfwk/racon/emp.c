@@ -23,7 +23,7 @@
 #include "swi_log.h"
 #include "swi_trace.h"
 
-/* 
+/*
  * EMP is the Embedded Micro Protocol, it is used to communicate to the agent
  * through a TCP socket.
  *
@@ -35,15 +35,15 @@
  * typically a notification. The reader thread supports responses associated to a command and real commands coming from the agent.
  *
  *
- * emp_send_and_wait_response: 
- * 
+ * emp_send_and_wait_response:
+ *
  * This function sends a command with a specified payload to the agent.
  * Once the command has been sent, the calling thread is blocked on a condition until the corresponding
- * response (with ou without payload) is received. For each new command, EMP associates each caller thread to a request identifier (rid). 
+ * response (with ou without payload) is received. For each new command, EMP associates each caller thread to a request identifier (rid).
  * When a message coming from the agent is received EMP wakes up the thread associated with received rid ,
  * if the awakened thread was waiting for this rid, then it quits the function, otherwise it waits on the condition until a new response is received or until
  * the timer is triggered (for example, if the reply is never received).
- * 
+ *
  * reader_emp_parse:
  *
  * This function is executed in a separated thread, called the reader thread, and waits for message coming from the agent.
@@ -51,10 +51,10 @@
  * is dispatched to the application by calling the function reader_dispatch_message.
  *
  * reader_dispatch_message:
- * 
- * This functions is executed in the reader thread and dispatches the message received from the agent to the corresponding component of the running application. 
- * This component can be either the caller thread  previously blocked on a condition or a software component registered with a command handler to EMP. 
- * This functions parses the flags of the last received message to determine if this one is an explicit command sent from the agent to the application, 
+ *
+ * This functions is executed in the reader thread and dispatches the message received from the agent to the corresponding component of the running application.
+ * This component can be either the caller thread  previously blocked on a condition or a software component registered with a command handler to EMP.
+ * This functions parses the flags of the last received message to determine if this one is an explicit command sent from the agent to the application,
  * or just a response to a command coming from the application.
  * When the message is a response to a command sent from the application, the associated blocked thread is awake, then the reader thread continue to process new messages.
  * When the message is an explicit command sent by the agent to the application, the associated callback is invoked in a new thread and then detached.
@@ -168,7 +168,7 @@ static swi_status_t emp_sendmessage(EmpCommand command, uint8_t type, uint8_t* r
   header[6] = (payloadsize >> 8) & 0xff;
   header[7] = payloadsize & 0xff;
 
-  
+
   buffer = malloc (8 + payloadsize);
   if (buffer == NULL)
   {
@@ -227,7 +227,7 @@ static void reader_emp_parse()
     + (((uint32_t) header[6]) << 8) + (uint32_t) header[7];
 
   SWI_LOG("EMP", DEBUG, "%s: new header! command=[%d], type=[%d], rid=[%d], dlen=[%d]\n",
-	  __FUNCTION__, command, type, rid, dlen);
+      __FUNCTION__, command, type, rid, dlen);
 
   // If a payload is found in the message, allocating buffer
   if (dlen)
@@ -240,7 +240,7 @@ static void reader_emp_parse()
     }
     memcpy(data, header, 8);
     data += 8;
-    
+
     // Receiving payload
     do
     {
@@ -248,7 +248,7 @@ static void reader_emp_parse()
       need = dlen - dcnt;
       size = ipc_read((char *) data + dcnt, need);
       if (size == 0)
-	return;
+    return;
       dcnt += size;
     } while (dcnt < dlen);
   }
@@ -297,8 +297,8 @@ static int ipc_reconnect()
 
   while (limit < retry)
   {
-    SWI_LOG("EMP", WARNING, "Connection lost, reconnecting to agent, retry #%d\n", limit); 
-   
+    SWI_LOG("EMP", WARNING, "Connection lost, reconnecting to agent, retry #%d\n", limit);
+
     pthread_mutex_lock(&parser->sockLock);
     SWI_LOG("EMP", DEBUG, "%s: sockLock locked\n", __FUNCTION__, parser->sockfd);
 
@@ -355,12 +355,12 @@ static void* read_routine(void* ud)
       if (ipc_reconnect() == 0)
       {
         // Reconnection handlers might block the reader thread or in the worst case
-	// might call emp_send_and_wait_message which causes the thread to deadlock or timeout.
-	// So we need to call reconnections handlers in a separated thread.
+    // might call emp_send_and_wait_message which causes the thread to deadlock or timeout.
+    // So we need to call reconnections handlers in a separated thread.
         pthread_t t;
         pthread_create(&t, NULL, reconnection_dispatcher, NULL);
         pthread_detach(t);
-	errno = 0;
+    errno = 0;
       }
     }
   }
@@ -543,7 +543,7 @@ static void * thread_cmd_routine(void* ud)
   swi_status_t res = parser->commandHdlrs[command](payloadsize, payload);
   emp_sendmessage(command, 1, &rid, (char *)&status, sizeof(uint16_t));
 
-  SWI_LOG("EMP", DEBUG, "%s: [%d] res = %d\n", __FUNCTION__, rid, res);  
+  SWI_LOG("EMP", DEBUG, "%s: [%d] res = %d\n", __FUNCTION__, rid, res);
   return NULL;
 }
 
@@ -674,7 +674,7 @@ quit:
 static uint32_t ipc_read(char* buffer, uint32_t size)
 {
   int r;
-  
+
   r = recv(parser->sockfd, buffer, size, MSG_WAITALL);
 
   if (r <= 0)
@@ -696,7 +696,7 @@ static uint32_t ipc_read(char* buffer, uint32_t size)
     {
       // Signal a broken pipe to the blocked thread which is waiting for a reply
       throw_and_broadcast_err(SWI_STATUS_IPC_BROKEN);
-      
+
       errno = EPIPE;
       return 0;
     }
@@ -741,9 +741,9 @@ swi_status_t emp_send_and_wait_response(EmpCommand command, uint8_t type, const 
   gettimeofday(&tv, NULL);
   timeout.tv_nsec = tv.tv_usec * 1000;
   timeout.tv_sec = tv.tv_sec + parser->cmdTimeout;
- 
 
-  SWI_LOG("EMP", DEBUG, "%s: [%d] waiting for response, time = %lu\n", __FUNCTION__, rid, timeout.tv_sec);    
+
+  SWI_LOG("EMP", DEBUG, "%s: [%d] waiting for response, time = %lu\n", __FUNCTION__, rid, timeout.tv_sec);
   // Wait on this condition until the reader thread wakes up the caller thread, when a response is received
   // or until the condition raises a timeout
   ret = wait_for_response(rid, &timeout);
@@ -770,8 +770,8 @@ swi_status_t emp_send_and_wait_response(EmpCommand command, uint8_t type, const 
       *respPayload = parser->commandInProgress[rid].respPayload;
     if (respPayloadLen)
       *respPayloadLen = parser->commandInProgress[rid].respPayloadLen;
-    SWI_LOG("EMP", DEBUG, "%s: [%d] got respPayload=%.*s , len=%u\n", __FUNCTION__, rid, parser->commandInProgress[rid].respPayloadLen, 
-	    parser->commandInProgress[rid].respPayload, parser->commandInProgress[rid].respPayloadLen);
+    SWI_LOG("EMP", DEBUG, "%s: [%d] got respPayload=%.*s , len=%u\n", __FUNCTION__, rid, parser->commandInProgress[rid].respPayloadLen,
+        parser->commandInProgress[rid].respPayload, parser->commandInProgress[rid].respPayloadLen);
   }
 
   if (parser->commandInProgress[rid].status != EMP_RID_TIMEDOUT)

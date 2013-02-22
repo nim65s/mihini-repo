@@ -44,19 +44,19 @@ end
 function t:test_updateAWTDA()
 --   local assetID = wsa.queryAsset()
 --   local request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.sierrawireless.com/airvantage/schema/ws/asset/1.0/\" xmlns:ns1=\"http://www.sierrawireless.com/airvantage/schema/api/commons/1.0/\"><soapenv:Header/><soapenv:Body><ns:sendCommandRequest><ns:assets>"..assetID.."</ns:assets><ns:command><ns1:name>SoftwareUpdate</ns1:name><ns1:parameters><ns1:name>Value</ns1:name><ns1:stringValue>test</ns1:stringValue></ns1:parameters></ns:command></ns:sendCommandRequest></soapenv:Body></soapenv:Envelope>"
--- 
+--
 --   t.rpcclient:call('require ', 'tests.tools.libtests')
 --   u.assert_true(t.rpcclient:call('TST_createassetSU'))
---   
+--
 --   local jobnumber = wsa.createJob(request)
---   
+--
 --   u.assert_not_nil(jobnumber, "Job ID is nil")
 --   u.assert_gt(0,jobnumber, "Job ID error")
---    
+--
 --   sched.wait(10)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
 --   t.rpcclient:call('agent.srvcon.connect')
 --   sched.wait(20)  -- wait 20 seconds in order to let the server process the job, then force connection to the server
---    
+--
 --   u.assert_true(t.rpcclient:call('TST_isassetupdated'), "AWTDA: asset not updated, job number is ".. jobnumber)
 end
 
@@ -69,13 +69,13 @@ end
 function t:test_localupdate()
   local request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.sierrawireless.com/airvantage/schema/ws/device/1.0/\" xmlns:ns1=\"http://www.sierrawireless.com/airvantage/schema/api/commons/1.0/\"><soapenv:Header/><soapenv:Body><ns:sendCommandRequest><ns:devices>embeddedtests1337</ns:devices><ns:command><ns1:name>ReadNode</ns1:name><ns1:parameters><ns1:name>path</ns1:name><ns1:stringValue>emptypathtest</ns1:stringValue></ns1:parameters></ns:command></ns:sendCommandRequest></soapenv:Body></soapenv:Envelope>"
   local jobnumber = wsa.createJob(request)
-  
+
   sched.wait(10)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
   t.rpcclient:call('setLogFilter', 'emptypathtest not found')
   t.rpcclient:call('agent.srvcon.connect')
   sched.wait(10)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
   u.assert_true(t.rpcclient:call('checkfilter'), "empty path tests failed")
- 
+
 end
 
 
@@ -87,11 +87,11 @@ end
 -- - check results
 function t:test_updateOMADM()
 --   -- send job to restart the device and check execution
-  
+
   --todo
    local request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.sierrawireless.com/airvantage/schema/ws/device/1.0/\" xmlns:ns1=\"http://www.sierrawireless.com/airvantage/schema/api/commons/1.0/\"><soapenv:Header/><soapenv:Body><ns:sendCommandRequest><ns:devices>embeddedtests1337</ns:devices><ns:command><ns1:name>Unknown</ns1:name></ns:command></ns:sendCommandRequest></soapenv:Body></soapenv:Envelope>"
    local jobnumber = wsa.createJob(request)
---   
+--
    sched.wait(10)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
 --   t.rpcclient:call('setLogFilter', 'Unknown')
    t.rpcclient:call('agent.srvcon.connect')
@@ -109,7 +109,7 @@ function t:test_updateOMADMS()
 --   -- send job to restart the device and check execution
 --   local request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.sierrawireless.com/airvantage/schema/ws/device/1.0/\" xmlns:ns1=\"http://www.sierrawireless.com/airvantage/schema/api/commons/1.0/\"><soapenv:Header/><soapenv:Body><ns:sendCommandRequest><ns:devices>embeddedtests1337</ns:devices><ns:command><ns1:name>Unknown</ns1:name></ns:command></ns:sendCommandRequest></soapenv:Body></soapenv:Envelope>"
 --   local jobnumber = wsa.createJob(request)
---   
+--
 --   sched.wait(10)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
 --   t.rpcclient:call('setLogFilter', 'Unknown')
 --   t.rpcclient:call('agent.srvcon.connect')
@@ -127,7 +127,7 @@ function t:test_updateAsset()
 --   -- send job to restart the device and check execution
 --   local request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.sierrawireless.com/airvantage/schema/ws/device/1.0/\" xmlns:ns1=\"http://www.sierrawireless.com/airvantage/schema/api/commons/1.0/\"><soapenv:Header/><soapenv:Body><ns:sendCommandRequest><ns:devices>embeddedtests1337</ns:devices><ns:command><ns1:name>Unknown</ns1:name></ns:command></ns:sendCommandRequest></soapenv:Body></soapenv:Envelope>"
 --   local jobnumber = wsa.createJob(request)
---   
+--
 --   sched.wait(10)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
 --   t.rpcclient:call('setLogFilter', 'Unknown')
 --   t.rpcclient:call('agent.srvcon.connect')
@@ -139,7 +139,7 @@ function t:test_DataWriting()
   -- create the datawriting job on the server
   local request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.sierrawireless.com/airvantage/schema/ws/device/1.0/\" xmlns:ns1=\"http://www.sierrawireless.com/airvantage/schema/api/commons/1.0/\"><soapenv:Header/><soapenv:Body><ns:writeDataRequest><ns:devices>embeddedtests1337</ns:devices><ns:parameters><ns1:name>Version</ns1:name><ns1:path>/update.swlist</ns1:path><ns1:stringValue>toto</ns1:stringValue></ns:parameters></ns:writeDataRequest></soapenv:Body></soapenv:Envelope>"
   local jobnumber = wsa.createJob(request)
-  
+
   sched.wait(10)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
   t.rpcclient:call('agent.srvcon.connect')
 end
@@ -149,7 +149,7 @@ function t:test_DataReading()
   -- create the datareading job on the server
   local request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.sierrawireless.com/airvantage/schema/ws/device/1.0/\" xmlns:ns1=\"http://www.sierrawireless.com/airvantage/schema/api/commons/1.0/\"><soapenv:Header/><soapenv:Body><ns:writeDataRequest><ns:devices>embeddedtests1337</ns:devices><ns:parameters><ns1:name>Version</ns1:name><ns1:path>/update.swlist</ns1:path><ns1:stringValue>toto</ns1:stringValue></ns:parameters></ns:writeDataRequest></soapenv:Body></soapenv:Envelope>"
   local jobnumber = wsa.createJob(request)
-  
+
   sched.wait(10)  -- wait 10 seconds in order to let the server process the job, then force connection to the server
   t.rpcclient:call('agent.srvcon.connect')
 end

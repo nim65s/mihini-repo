@@ -16,7 +16,7 @@
 -- Service) messages via the embedded radio module.
 --
 -- @module sms
--- 
+--
 
 local common = require 'racon.common'
 
@@ -41,8 +41,8 @@ local function emp_handler_NewSMS (payload)
     local emmitter, message, id = unpack(payload)
     for _, v in pairs(M.notifysmsid) do
        if v.regId == id then
-	  v.cb(emitter, message)
-	  return 0
+      v.cb(emitter, message)
+      return 0
        end
     end
     return -1, "cannot find callback"
@@ -50,19 +50,19 @@ end
 
 --MUST NOT BLOCK !!!!
 local function emp_ipc_broken_handler()
-   
+
    --block sem: services using EMP are blocked until sem is released
    -- This avoids data races between reregistration and other threads which send EMP commands
    M.sem_value=0
    sched.run(function()
-		for _, v in pairs(M.notifysmsid) do
-		   local status, id = common.sendcmd("RegisterSMSListener", { v.senderp, v.messagep })
-		   if status~="ok" then log("SMS", "WARNING", "Failed to register back callback %s", tostring(v.cb)) end
-		   v.regId = id
-		end
-		sem_post()
-	     end
-	    )
+        for _, v in pairs(M.notifysmsid) do
+           local status, id = common.sendcmd("RegisterSMSListener", { v.senderp, v.messagep })
+           if status~="ok" then log("SMS", "WARNING", "Failed to register back callback %s", tostring(v.cb)) end
+           v.regId = id
+        end
+        sem_post()
+         end
+        )
 end
 
 --------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ end
 -- @param recipient string, number/name of the SMS recipient.
 -- @param message string containing the message (binary).
 -- @param format string defining the format to use to send the message.
---  Accepted values are "7bits", "8bits" or "ucs2", supported formats may differ depending on the hardware and network capabilities. 
+--  Accepted values are "7bits", "8bits" or "ucs2", supported formats may differ depending on the hardware and network capabilities.
 -- @return `"ok"` on success.
 -- @return `nil` followed by an error message otherwise.
 --
@@ -111,9 +111,9 @@ end
 -- @param callback function to be called on sms reception matching both patterns
 --  with recepient and message as parameters.
 --  Callback signature: `callback(recipient_string, message_string)`.
--- @param senderp string [lua pattern](http://www.lua.org/pil/20.2.html) 
+-- @param senderp string [lua pattern](http://www.lua.org/pil/20.2.html)
 --  that matches the sender address; `nil` means "no filtering".
--- @param messagep string [lua pattern](http://www.lua.org/pil/20.2.html) 
+-- @param messagep string [lua pattern](http://www.lua.org/pil/20.2.html)
 --  that matches the message (sms content), `nil` means "no filtering".
 -- @return id (can be any Lua non-nil value) should be used only to
 --  call @{#sms.unregister}.
@@ -123,12 +123,12 @@ end
 function M.register(callback, senderp, messagep)
     checks("function", "?string", "?string")
     if not M.initialized then error "Module not initialized" end
-    
+
     sem_wait()
     local status, id = common.sendcmd("RegisterSMSListener", { senderp, messagep })
-    if status ~= "ok" then 
+    if status ~= "ok" then
        sem_post()
-       return nil, (id or "unknown error") 
+       return nil, (id or "unknown error")
     end
     local userId = 1
     for _, v in pairs(M.notifysmsid) do
@@ -156,12 +156,12 @@ function M.unregister(userid)
     sem_wait()
     for k, v in pairs(M.notifysmsid) do
        if v.userId == userid then
-	  local s, msg = common.sendcmd("UnregisterSMSListener", v.regId)
-	  if s == "ok" then
-	     table.remove(M.notifysmsid, k)
-	  end
-	  sem_post()
-	  return s, msg 
+      local s, msg = common.sendcmd("UnregisterSMSListener", v.regId)
+      if s == "ok" then
+         table.remove(M.notifysmsid, k)
+      end
+      sem_post()
+      return s, msg
        end
     end
     sem_post()

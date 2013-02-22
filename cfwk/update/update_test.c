@@ -24,7 +24,7 @@
 #include "lauxlib.h"
 #include "testutils.h"
 
-static const char *lua_script = 
+static const char *lua_script =
 "local sched = require 'sched'\n"
 "local rpc = require 'rpc'\n"
 "local os = require 'os'\n"

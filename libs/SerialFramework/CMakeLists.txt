@@ -9,7 +9,7 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project (SERIALPROTOCOLS)
+PROJECT(LIB_MIHINI_SERIAL_FRAMEWORK)
 
-add_subdirectory (Modbus)
+ADD_SUBDIRECTORY (Modbus)
 

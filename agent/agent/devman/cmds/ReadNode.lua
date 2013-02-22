@@ -17,34 +17,48 @@ local airvantage   = require 'racon'
 local upath    = require 'utils.path'
 local niltoken = require 'niltoken'
 
+
 local POLICY = 'now'
 
 -- Send data recursively. The point of not reifying the table with
 -- `agent.treemgr.table` is that the whole node might not fit in RAM.
 -- However, it tries to send everything with the same path in a single
 -- record, to limit sdb table creations.
-local function recsend(path)
+-- @param path the devtree path to read, possibly recursively
+-- @param error_messages list of error messages: any error msg will be inserted
+--   at the end of this list.
+local function recsend(path, error_messages)
     local value, children = tm.get(path)
-    if not children then 
+    if not children then
         assert(dev.asset :pushdata (path, niltoken(value), POLICY))
     elseif type(children)=='table' then
         local record = { }
         for _, child_path in ipairs(children) do
             local value, children = tm.get(child_path)
-            if not children then 
+            if not children then
                 local _, leaf=upath.split(child_path, -1)
                 record[leaf]=value -- group same-path items together
-            else recsend(child_path) end
+            else recsend(child_path, error_messages) end
         end
         if next(record) then
             assert(dev.asset :pushdata (path, record, POLICY))
         end
-    else error(children) end -- children is actually an error msg
+    else
+        local msg = string.format("error for path [%s]:%s",
+            tostring(path), tostring(children))
+        table.insert(error_messages, msg)
+    end
 end
 
 local function ReadNode(sys_asset, paths)
-	log('XXX', 'WARNING', "Executing Readnode(@sys, %s)", sprint(paths))
-	for _, path in pairs(paths) do recsend(path) end
+    local error_messages = { }
+    local err_msg=""
+    for _, path in pairs(paths) do recsend(path, error_messages) end
+    if next(error_messages) then
+       -- Concatenate all error messages into a single one.
+       err_msg = table.concat(error_messages, ", ")
+       return nil, err_msg
+    end
     return "ok"
 end
 

@@ -9,5 +9,5 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_subdirectory (doxygen)
-add_subdirectory (ldoc)
+ADD_SUBDIRECTORY (doxygen)
+ADD_SUBDIRECTORY (ldoc)

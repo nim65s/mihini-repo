@@ -9,5 +9,7 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(persist DESTINATION persist init.lua file.lua)
+PROJECT(MIHINI_PERSIST)
 
+ADD_LUA_LIBRARY(persist DESTINATION persist init.lua file.lua)
+ADD_DEPENDENCIES(persist luatobin)

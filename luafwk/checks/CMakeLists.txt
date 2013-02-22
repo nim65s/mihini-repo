@@ -9,4 +9,6 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(checks checks.c)
+PROJECT(MIHINI_CHECKS)
+
+ADD_LUA_LIBRARY(checks checks.c)

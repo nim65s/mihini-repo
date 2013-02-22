@@ -10,20 +10,16 @@
 #*******************************************************************************
 
 # CMakeLists for the lua linux version
-cmake_minimum_required (VERSION 2.6)
-project (EXTVARSCOMMON)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+PROJECT(LIB_EXTVARS_COMMON)
 
-set(EXTVARSCOMMON_SRC
-    ${EXTVARSCOMMON_SOURCE_DIR}/extvars.c
+INCLUDE_DIRECTORIES(
+    ${LIB_MIHINI_COMMON_SOURCE_DIR}
+    ${LIB_EXTVARS_COMMON_SOURCE_DIR}
+    ${LIB_MIHINI_LUASIGNAL_SOURCE_DIR}
 )
 
 
-include_directories(
-    ${COMMON_SOURCE_DIR}
-    ${EXTVARSCOMMON_SOURCE_DIR}
-    ${LIB_LINUX_SOURCE_DIR}
-)
-
-
-add_library(extvars SHARED EXCLUDE_FROM_ALL ${EXTVARSCOMMON_SRC})
-target_link_libraries(extvars pointerlist luasignal pthread)
+ADD_LIBRARY(lib_extvars SHARED EXCLUDE_FROM_ALL extvars.c)
+TARGET_LINK_LIBRARIES(lib_extvars lib_pointerlist lib_luasignal pthread)
+SET_TARGET_PROPERTIES(lib_extvars PROPERTIES OUTPUT_NAME extvars)

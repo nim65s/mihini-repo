@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <string.h>
 #include "swi_devicetree.h"
-#include "swi_airvantage.h"
 #include "swi_dset.h"
 #include "swi_log.h"
 #include "testutils.h"
@@ -69,7 +68,7 @@ static swi_status_t test_dt_Set()
 
   if (res != SWI_STATUS_OK)
     return res;
-  
+
   res = swi_dt_SetString("config.toto", "toto");
   if (res != SWI_STATUS_OK)
     return res;
@@ -138,7 +137,7 @@ static swi_status_t test_dt_MultipleGet()
   swi_dset_Iterator_t *set;
   const char * pathPtr[] = {
     "config.toto",
-    "config", 
+    "config",
     "config.tata",
     NULL
   };

@@ -11,18 +11,18 @@
 --     Gilles Cannenterre for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-local require = require
-local sched = require "sched"
-local bearer = require "agent.bearer"
-local config = require "agent.config"
-local log = require "log"
-local lock = require "lock"
-local timer = require "timer"
-local system = require "agent.system"
-local socket = require "socket"
-local pairs = pairs
-local ipairs = ipairs
-local unpack = unpack
+local require  = require
+local sched    = require "sched"
+local bearer   = require "agent.bearer"
+local config   = require "agent.config"
+local log      = require "log"
+local lock     = require "sched.lock"
+local timer    = require "timer"
+local system   = require "agent.system"
+local socket   = require "socket"
+local pairs    = pairs
+local ipairs   = ipairs
+local unpack   = unpack
 local tonumber = tonumber
 local tostring = tostring
 local type = type
@@ -198,7 +198,7 @@ base.tryaction = function (action, ...)
             lock.unlock(_M)
             return s, err
         end
-        
+
         lock.unlock(_M)
         return action(...)
     end

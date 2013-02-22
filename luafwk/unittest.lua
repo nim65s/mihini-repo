@@ -271,7 +271,7 @@ local function runtest(stats, testsuitename, testname, test)
         table.insert(stats.failedtests, {testsuite = testsuitename, test=testname, type = type, msg=err})
     else
         stats.nbpassedtests = stats.nbpassedtests + 1
-	table.insert(stats.passedtests, {testsuite = testsuitename, test=testname, type = type, msg="OK"})
+    table.insert(stats.passedtests, {testsuite = testsuitename, test=testname, type = type, msg="OK"})
         ret = "."
     end
     print(ret, testname)
@@ -299,7 +299,7 @@ end
 
 function run(filterpattern)
     stats = { nbpassedtests = 0,
-	      passedtests = {},
+          passedtests = {},
               nbfailedtests = 0,
               nberrortests  = 0,
               failedtests   = {},

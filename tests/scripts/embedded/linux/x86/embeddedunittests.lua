@@ -52,7 +52,7 @@ function RAgettestsResults()
 end
 
 function RAresume()
-  
+
 end
 
 function closeLua()

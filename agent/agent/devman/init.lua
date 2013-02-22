@@ -18,9 +18,9 @@ local log         = require "log"
 local asscon      = require "agent.asscon"
 local treemgr     = require "agent.treemgr"
 local niltoken    = require "niltoken"
-local airvantage  = require 'airvantage'
 local upath       = require 'utils.path'
 local utable      = require 'utils.table'
+local racon       = require 'racon'
 
 require 'coxpcall'
 
@@ -41,16 +41,22 @@ end
 
 local function tree_cmd_default(asset, data, path, ticket)
     checks('racon.asset', 'table', 'string')
-    local status, err_msg
+    local status, err
+    local err_msg = ""
     for key, val in pairs(data) do
         local fullpath = upath.concat(path, key)
         local prefix, cmdname = upath.split(fullpath, 1)
         assert (prefix=="commands")
         local f = require("agent.devman.cmds."..cmdname)
-        status, err_msg = f(asset, val, fullpath, ticket)
-        if not status then return status, err_msg end
+        status, err = f(asset, val, fullpath, ticket)
+        if err then
+            err_msg = upath.concat(err_msg, err)
+            log('DEVMAN', 'ERROR', "Error while running command %s: %s", cmdname, err_msg)
+        else
+            log('DEVMAN', 'DEBUG', "Ran command %s successfully (status=%s)", cmdname, tostring(status))
+        end
     end
-    return status, err_msg
+    if err_msg~="" then return nil, err_msg else return status end
 end
 
 -- Handle access to non-command tree nodes.
@@ -122,8 +128,8 @@ function M.init(cfg)
     if M.initialized then return "already initialized" end
 
     -- create asset @sys
-    assert(airvantage.init())
-    M.asset = assert(airvantage.newasset ('@sys'))
+    assert(racon.init())
+    M.asset = assert(racon.newasset ('@sys'))
 
     -- configure standard tree handlers
     M.asset.tree.commands.Connect   = tree_cmd_Connect
@@ -134,11 +140,6 @@ function M.init(cfg)
     -- through commands.__default's lazy module loader.
 
     assert(M.asset :start())
-
-    -- init tree according config
-    if cfg and cfg.tree then
-        for k,v in pairs(cfg.tree) do require("agent.devman.extvars."..v) end
-    end
 
     -- register EMP commands
     assert(asscon.registercmd("GetVariable", EMPGetVariable))

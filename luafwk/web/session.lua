@@ -74,14 +74,14 @@ web.site['new-session.html']= {
       body  = [[
          <p>Create a new session. Enter your name in the field.</p>
          <form action='post-new-session' method='POST'>
-           <label>Your name:</label> 
+           <label>Your name:</label>
            <input type='text' id='name' name='name'/>
            <input type="submit"/>
          </form>
       ]] } }
 
 -- Fill the newly created session with browser-provided data --
-web.site['post-new-session'] = web.redirect ('/home.html', function (env) 
+web.site['post-new-session'] = web.redirect ('/home.html', function (env)
    local session = get_session(env)
    session.date = os.date()
    session.name=env.params.name
@@ -107,7 +107,7 @@ web.site['home.html'] = {
           <p>Hello <%=session.name%>, your session has been created on <%=session.date%></p>
           <ul>
             <li> <a href='/logout'>Log out</a></li>
-            <li> 
+            <li>
                <form action='add-session-data' method='POST'>
                   Add data
                   <label>key:</label>
@@ -117,7 +117,7 @@ web.site['home.html'] = {
                   <input type="submit" value='add'/>
                </form>
              </li>
-          </ul> 
+          </ul>
 
           <h2>Session data</h2>
           <table border=2><tr><th>key</th><th>value</th></tr>

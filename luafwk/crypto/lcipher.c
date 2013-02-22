@@ -84,7 +84,7 @@ static int get_cipher_desc(lua_State* L, int index, SCipherDesc* desc) {
         const char* mode = NULL;
         if (!lua_isnil(L, -1))
             mode = lua_tostring(L, -1);
-        desc->mode = MODE_ENC;        
+        desc->mode = MODE_ENC;
         if (mode != NULL && strcmp(mode, "enc") == 0) {
             desc->mode = MODE_ENC;
         } else if (mode != NULL && strcmp(mode, "dec") == 0) {
@@ -103,11 +103,11 @@ static int get_cipher_desc(lua_State* L, int index, SCipherDesc* desc) {
             lua_getfield(L, 1, "keyidx");
             desc->keyidx = -1;
             if (!lua_isnil(L, -1))
-                desc->keyidx = (int)lua_tointeger(L, -1);
+                desc->keyidx = (int)lua_tointeger(L, -1) -1; // 1-based in Lua, 0-based in C
             lua_pop(L, 1);
-            if (desc->keyidx < 1) {
+            if (desc->keyidx < 0) {
                 lua_pushnil(L);
-                lua_pushstring(L, "'desc.keyidxL' should be > 0");
+                lua_pushstring(L, "'desc.keyidx' should be > 0");
                 return 2;
             }
 
@@ -143,7 +143,7 @@ static int get_cipher_chain(lua_State* L, int index, SCipherChain* chain) {
         const char* name = NULL;
         if (!lua_isnil(L, -1))
             name = lua_tostring(L, -1);
-        chain->name = CHAIN_CTR;        
+        chain->name = CHAIN_CTR;
         if (name != NULL && strcmp(name, "ecb") == 0) {
             chain->name = CHAIN_ECB;
         } else if (name != NULL && strcmp(name, "cbc") == 0) {
@@ -250,7 +250,7 @@ static int Lnew(lua_State* L) {
                 (const unsigned char*) key,
                 d->keysize, 0,
                 (symmetric_CBC*) cipher->state);
-        break;   
+        break;
     case CHAIN_CTR:
         cipher->state = malloc(sizeof(symmetric_CTR));
         if (cipher->state != NULL && key != NULL && c->iv != NULL)
@@ -258,7 +258,7 @@ static int Lnew(lua_State* L) {
                 d->cipher_id,
                 (const unsigned char*) c->iv,
                 (const unsigned char*) key,
-                d->keysize, 0, CTR_COUNTER_LITTLE_ENDIAN,
+                d->keysize, 0, CTR_COUNTER_BIG_ENDIAN,
                 (symmetric_CTR*) cipher->state);
         break;
     default:
@@ -521,7 +521,7 @@ static int Lwrite( lua_State *L) {
         }
     }
     /* first_idx+1 because Lua counts from 1 whereas C counts from 0. */
-    int status = set_plain_bin_keys( first_idx+1, n_keys, (const unsigned char *) data);
+    int status = set_plain_bin_keys( first_idx-1, n_keys, (const unsigned char *) data);
     if( allocated) free( allocated);
     if( status) { lua_pushnil( L); lua_pushstring( L, "Crypto error"); return 2; }
     else { lua_pushboolean( L, 1); return 1; }

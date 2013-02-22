@@ -35,13 +35,13 @@ M.emp_ipc_brk_handlers = {}
 
 -- Dispatch EMP commands received through the IPC to the appropriate handler.
 local function emp_handler(cmdname, payload)
-	local handler = M.emphandlers[cmdname]
-	if handler then return handler (payload)
-	else -- other commands are not supported (from agent to client)
-		log("RACON", "WARNING", "No handler for EMP command %q",
-			tostring(cmdname))
-		return -1, "unsupported command"
-	end
+    local handler = M.emphandlers[cmdname]
+    if handler then return handler (payload)
+    else -- other commands are not supported (from agent to client)
+        log("RACON", "WARNING", "No handler for EMP command %q",
+            tostring(cmdname))
+        return -1, "unsupported command"
+    end
 end
 
 local function emp_reconnect()
@@ -60,10 +60,10 @@ local function emp_reconnect()
       sched.wait(M.timeout)
 
       if M.socket then
-	 for _, handler in pairs(M.emp_ipc_brk_handlers) do
-	    handler()
-	 end
-	 return "ok", M.socket
+     for _, handler in pairs(M.emp_ipc_brk_handlers) do
+        handler()
+     end
+     return "ok", M.socket
       end
       r = r + 1
    end
@@ -71,33 +71,33 @@ local function emp_reconnect()
 end
 
 function M.init()
-	if M.initialized then return "already initialized" end
+    if M.initialized then return "already initialized" end
 
-	-- detect best IPC choice
-	local agent = rawget(_G, "agent")
-	if M.FORCE_SOCKETS or not (agent and agent.asscon) then
-		local socket = require "socket"
-		M.socket = assert(socket.connect(M.address, M.port))
-	else
-		local ipc     = require "racon.ipc"
-		local clients = require "agent.asscon"
-		local a, b = ipc.new()
-		M.socket = a
-		sched.run (clients.connectionhandler, b)
-	end
+    -- detect best IPC choice
+    local agent = rawget(_G, "agent")
+    if M.FORCE_SOCKETS or not (agent and agent.asscon) then
+        local socket = require "socket"
+        M.socket = assert(socket.connect(M.address, M.port))
+    else
+        local ipc     = require "racon.ipc"
+        local clients = require "agent.asscon"
+        local a, b = ipc.new()
+        M.socket = a
+        sched.run (clients.connectionhandler, b)
+    end
 
-	-- start the cmd/ack reception thread
-	local emp = require "racon.empparser"
-	empparser = emp.new(M.socket, emp_handler)
-	sched.run (function ()
-		local s, err = empparser:run(emp_reconnect)
-		log("RACON", "DEBUG", "Receiver error, %s", err)
-		--sched.signal(self, "closed") -- TODO: probably not needed anymore
-		if M.socket then M.socket:close(); M.socket = nil end
-	end)
+    -- start the cmd/ack reception thread
+    local emp = require "racon.empparser"
+    empparser = emp.new(M.socket, emp_handler)
+    sched.run (function ()
+        local s, err = empparser:run(emp_reconnect)
+        log("RACON", "DEBUG", "Receiver error, %s", err)
+        --sched.signal(self, "closed") -- TODO: probably not needed anymore
+        if M.socket then M.socket:close(); M.socket = nil end
+    end)
 
-	M.initialized=true
-	return M
+    M.initialized=true
+    return M
 end
 
 function M.sendcmd (cmd, payload)

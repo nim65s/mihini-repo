@@ -16,7 +16,7 @@
 --  which reads and writes on this nested table.
 --
 --  Functions are left in charge of causing notifications, if/when appropriate.
---  However, an additional 
+--  However, an additional
 
 local path  = require 'utils.path'
 

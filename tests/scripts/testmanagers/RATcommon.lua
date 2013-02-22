@@ -42,7 +42,7 @@ function assert_client(client, err)
   end
 end
 
--- Print the result 
+-- Print the result
 function printResults(results)
   p(results.testsResults)
 end
@@ -61,13 +61,13 @@ function runUnittests()
       client:call('RAresumetests')
       m_isFinished = client:call('RAaretestsfinished')
     end
-     
+
     results = client:call('RAgettestsResults')
     log('RAT_COMMON', "INFO", "<close lua>")
     client:call('closeLua')
     log('RAT_COMMON', "INFO", "</close lua>")
   end
-  
+
   return results
 end
 
@@ -81,10 +81,10 @@ function runLuaFwkUnittests()
     print "connected to lua VM"
     print "starting luaFwkTests"
     client:call('startLuaFwkTests')
-     
+
     results = client:call('LuaFWKgettestsResults')
     client:call('closeLua')
   end
-  
+
   return results
 end

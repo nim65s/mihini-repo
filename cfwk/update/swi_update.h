@@ -153,9 +153,9 @@ typedef swi_status_t (*swi_update_StatusNotifictionCB_t)
 
 /**
 * Registers to receive notification about update process.
-* 
+*
 * The callback will be called in a new pthread.
-* 
+*
 * @return SWI_STATUS_OK on success
 */
 swi_status_t swi_update_RegisterStatusNotification

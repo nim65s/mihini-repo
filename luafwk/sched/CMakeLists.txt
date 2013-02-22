@@ -9,19 +9,31 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-include_directories(${LIB_LINUX_SOURCE_DIR})
-include_directories(${COMMON_SOURCE_DIR})
+PROJECT(MIHINI_SCHED)
 
-add_lua_library(sched DESTINATION sched
-                init.lua 
-                timer.lua 
-                platform.lua 
-                fd.lua
-		exec.lua)
-                
-add_lua_library(posixsignal DESTINATION sched 
-                posixsignal/lposixsignal.c)
 
-add_lua_library(exec_core DESTINATION sched 
-                exec_core.c)
-target_link_libraries(exec_core luasignal pthread)
+INCLUDE_DIRECTORIES(${LIB_MIHINI_LUASIGNAL_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
+
+ADD_LUA_LIBRARY(sched_exec DESTINATION sched exec.lua)
+
+ADD_LUA_LIBRARY(sched_exec_core DESTINATION sched/exec exec_core.c)
+TARGET_LINK_LIBRARIES(sched_exec_core lib_luasignal pthread)
+SET_TARGET_PROPERTIES (sched_exec_core PROPERTIES OUTPUT_NAME core)
+ADD_DEPENDENCIES(sched_exec sched_exec_core)
+
+ADD_LUA_LIBRARY(sched_platform DESTINATION sched platform.lua fd.lua)
+ADD_DEPENDENCIES(sched_platform coxpcall utils log checks sched_exec)
+
+ADD_LUA_LIBRARY(sched_posixsignal DESTINATION sched lposixsignal.c)
+ADD_DEPENDENCIES(sched_posixsignal sched)
+SET_TARGET_PROPERTIES (sched_posixsignal PROPERTIES OUTPUT_NAME posixsignal)
+
+ADD_LUA_LIBRARY(sched DESTINATION sched init.lua timer.lua pipe.lua lock.lua)
+ADD_DEPENDENCIES(sched sched_platform)
+
+ADD_LUA_LIBRARY(sched_daemon DESTINATION sched daemon.lua)
+ADD_DEPENDENCIES(sched_daemon sched)
+
+
+

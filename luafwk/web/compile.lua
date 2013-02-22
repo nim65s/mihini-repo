@@ -33,7 +33,7 @@ end
 
 --------------------------------------------------------------------------------
 -- Take a string with some HTML and some <% ... %> markers, return the
--- source of a Lua function serving that page. 
+-- source of a Lua function serving that page.
 -- As a 2nd result, return a Boolean indicating whether some <% ... %> markers
 -- were actually found and parsed.
 --------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ local function html2lua (x)
    -------------------------------------------------------------------
    -- It's cleaner to extract bits of string from a chunk than
    -- chunk fragments from a string, so we add phony markers
-   -- around, to search for "%>...<%" patterns rather "<%...%>" 
+   -- around, to search for "%>...<%" patterns rather "<%...%>"
    -------------------------------------------------------------------
    x = "%>"  ..  x  ..  "<%"
 
@@ -54,7 +54,7 @@ local function html2lua (x)
    local function acc(...)
       for _, x in ipairs{...} do table.insert (_acc, x) end
    end
-   
+
    -------------------------------------------------------------------
    -- the resulting function takes as parameters:
    -- * 'echo' the source producing function
@@ -81,7 +81,7 @@ local function html2lua (x)
 
       -- Surround the string with appropriate [=...=[ ... ]=...=] --
       if #text>0 then
-         if not munch then text = '\n'..text end 
+         if not munch then text = '\n'..text end
          acc ("echo ", quote (text), " ")
       end
    end
@@ -90,10 +90,10 @@ local function html2lua (x)
 end
 
 function web.compile (html, name)
-	local src = "return " .. html2lua (html)
-	--print("***", name, '***\n\n', src)
-	local f = loadstring (src, name or "html-template") ()
-	return f
+    local src = "return " .. html2lua (html)
+    --print("***", name, '***\n\n', src)
+    local f = loadstring (src, name or "html-template") ()
+    return f
 end
 
 return web.compile

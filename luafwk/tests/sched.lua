@@ -12,6 +12,7 @@
 local sched = require 'sched'
 local u = require 'unittest'
 local t = u.newtestsuite 'sched'
+require 'print'
 
 local assert = u.assert -- used unittest assert in order to count used assert (for the stats)
 

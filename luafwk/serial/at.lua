@@ -6,7 +6,7 @@
 -- http://www.eclipse.org/legal/epl-v10.html
 --
 -- Contributors:
---     Cureo Bugot for Sierra Wireless - initial API and implementation
+--     Cuero Bugot for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
 local sched = require 'sched'

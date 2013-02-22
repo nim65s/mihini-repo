@@ -11,7 +11,7 @@
 
 local param = ...
 local sched = require("sched")
- 
+
 if not param then error("install script param is nil") end
 
 --this signal will trigger test success

@@ -75,26 +75,26 @@ Usage examples
 --------------
 
      require 'checks'
-     
+
      -- Custom checker function --
      function checkers.port(p)
        return type(p)=='number' and p>0 and p<0x10000
      end
-     
+
      -- A new named type --
      socket_mt = { __type='socket' }
      asocket = setmetatable ({ }, socket_mt)
-     
+
      -- A function that checks its parameters --
      function take_socket_then_port_then_maybe_string (sock, port, str)
        checks ('socket', 'port', '?string')
      end
-     
+
      take_socket_then_port_then_maybe_string (asocket, 1024, "hello")
      take_socket_then_port_then_maybe_string (asocket, 1024)
 
      -- A couple of other parameter-checking options --
-          
+
      function take_number_or_string()
        checks("number|string")
      end
@@ -108,11 +108,11 @@ Usage examples
      end
 
      -- Catch some incorrect arguments passed to the function --
-     
+
      function must_fail(...)
        assert (not pcall (take_socket_then_port_then_maybe_string, ...))
      end
-     
+
      must_fail ({ }, 1024, "string")      -- 1st argument isn't a socket
      must_fail (asocket, -1, "string")   -- port number must be 0-0xffff
      must_fail (asocket, 1024, { })    -- 3rd argument cannot be a table
@@ -199,10 +199,10 @@ static int matches( const char *actualType, const char *expectedTypes) {
     };
 }
 #else
-#	define matches( a, b) ( ! strcmp( a, b))
+#    define matches( a, b) ( ! strcmp( a, b))
 #endif
 
-/*** 
+/***
 check whether the calling function's argument have the expected types.
 
 `checks( [level], t_1, ..., t_n)` causes an error if the type of
@@ -226,7 +226,7 @@ static int checks( lua_State *L) {
     /* loop for each checked argument in stack frame. */
     for( /* i already initialized. */; ! lua_isnoneornil( L, i); i++) {
 
-    	const char *expectedType = luaL_checkstring( L, i); // -
+        const char *expectedType = luaL_checkstring( L, i); // -
         lua_getlocal( L, & ar, i);  // val (value whose type is checked)
 
         /* 1. Check for nil if type is optional. */
@@ -314,7 +314,7 @@ Example
      function checkers.positive_number(x)
        return type(x)=='number' and x>0
      end
-     
+
      -- Use the `positive_number` type-checking function --
      function sqrt(x)
        checks('positive_number')

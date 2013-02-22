@@ -20,12 +20,12 @@
 -- @module system
 --------------------------------------------------------------------------------
 
-local core  = require 'sched.exec_core'
+local core  = require 'sched.exec.core'
 local psignal = require 'posixsignal'
 
 local M = {}
 
--- Breaks the following circular dependency: 
+-- Breaks the following circular dependency:
 -- agent.boot -> agent.init -> sched.init -> sched.platform -> sched.exec -> fdwrapper -> sched
 local function wrap_new(...)
    return require 'fdwrapper' .new(...)
@@ -58,7 +58,7 @@ end
 -- overwrite the orignal fd close function so to block til the end of the command execution
 local function pclose(self)
     -- Retrieve the original `close` method, as provided by `fdwrapper`.
-    local close = getmetatable(self).__index(self, "close") 
+    local close = getmetatable(self).__index(self, "close")
     local status, err
     while true do
        status, err = core.waitpid(self.file:getpid())
@@ -75,8 +75,8 @@ end
 --- Executes a command and allows access to the command's standard input and output.
 -- The Lua VM is not blocked by the execution of the command.
 -- @param cmd string containing the command to execute.
--- @return [File](http://www.lua.org/manual/5.1/manual.html#pdf-file:read) descriptor to access 
--- to command standard input and output. 
+-- @return [File](http://www.lua.org/manual/5.1/manual.html#pdf-file:read) descriptor to access
+-- to command standard input and output.
 -- @return nil followed by an error message otherwise.
 --------------------------------------------------------------------------------
 function M.popen(cmd)

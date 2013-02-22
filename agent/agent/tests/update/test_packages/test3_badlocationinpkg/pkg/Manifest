@@ -12,12 +12,12 @@
 {
   -- Global information
   version = "test_1.0",
-  
+
   -- Packages information
-  components = 
+  components =
   {
     {   name = "@sys.update.test1",
-        location = "my_absent_folder",                
+        location = "my_absent_folder",
         version = "1"
     }
   }

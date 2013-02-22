@@ -19,16 +19,16 @@
 --
 -- Data read and written by this module are exchanged as _buffers_, i.e. either
 -- strings or lists of strings. String(s) contain data as 8-bits bytes;
--- endianness depends on what is expected/returned by the slave device. 
--- To encode such strings, it is suggested to rely on @{pack#pack}, the binary 
+-- endianness depends on what is expected/returned by the slave device.
+-- To encode such strings, it is suggested to rely on @{pack#pack}, the binary
 -- string packing library.
--- 
+--
 -- @module modbus
 --
 
 local wait = require 'sched'.wait
 local serial = require 'serial'
-local lock = require 'lock'
+local lock = require 'sched.lock'
 local checks = require 'checks'
 local log = require 'log'
 local string = string
@@ -38,7 +38,7 @@ local require = require
 local type = type
 local pairs = pairs
 
-local print=print -- TODO remove, for dbg only 
+local print=print -- TODO remove, for dbg only
 
 module(...)
 
@@ -57,7 +57,7 @@ local MODBUS_MT = { }
 -- @param cfg a optional serial device config table, see @{serial.config} for
 --   details on accepted fields. <br />
 --   Same default values as in @{serial.open}.
---   An additional field 'timeout' can be put in cfg as an integer to configure modbus timeout in seconds. 
+--   An additional field 'timeout' can be put in cfg as an integer to configure modbus timeout in seconds.
 -- @param mode serial mode as a string: `"ASCII"` or `"RTU"`. <br />
 -- Defaults to `"RTU"`.
 -- @return #modbusdev the new @{#modbusdev} on success
@@ -73,9 +73,9 @@ function new (port, cfg, mode)
         timeout = cfg.timeout
         cfg.timeout = nil --set cfg.timeout to nil: not accepted by serial
     end
-    timeout = tonumber(timeout) or 1    
+    timeout = tonumber(timeout) or 1
     local link, err = serial.open(port or "/dev/ttyS0", cfg)
-    if err then if link then link:close() link = nil end return nil, err end    
+    if err then if link then link:close() link = nil end return nil, err end
     link:settimeout(timeout)
     return setmetatable({internal=obj, name=port, cfg=cfg, link=link}, {__index=MODBUS_MT})
 end
@@ -124,7 +124,7 @@ end
 
 function MODBUS_MT:close ()
     self.internal = nil
-    if self.link then self.link:close() self.link = nil end	
+    if self.link then self.link:close() self.link = nil end
     self.name = nil
     self.cfg = nil
     setmetatable(self, nil)
@@ -194,7 +194,7 @@ end
 -- @param value Boolean to write in the coil
 -- @return `"ok"`
 -- @return `nil` + error message
--- 
+--
 
 
 -----------------------------------------------------------------------------------
@@ -221,9 +221,9 @@ end
 -- @param values values to write, as a bytes buffer (8 coils per byte)
 -- @return `"ok"`
 -- @return `nil` + error message
--- @usage 
+-- @usage
 --  m = modbus.new('/dev/ttyS0')
---  res,err=m:writeMultipleCoils(1, 0, 8, string.pack('x8', 
+--  res,err=m:writeMultipleCoils(1, 0, 8, string.pack('x8',
 --  true,false,false,true,false,true,false,true))
 --
 
@@ -244,7 +244,7 @@ end
 --  357,654,852))
 
 -- Create each individual request method, which are mostly variant of a same closure.
-local REQUEST_NAMES = { 
+local REQUEST_NAMES = {
     "readCoils", "readDiscreteInputs", "readHoldingRegisters",
     "readInputRegisters",  "writeSingleCoil", "writeSingleRegister",
     "writeMultipleCoils", "writeMultipleRegisters" }
@@ -270,14 +270,14 @@ end
 -- @return the response as a buffer.
 --   Beware, it contains some error-checking bytes as a suffix.
 -- @return `nil` + error message.
--- 
+--
 
 function MODBUS_MT :customRequest (req, sid, payload)
     checks('?', 'number', 'number', '?string')
     if not self.internal then return nil, "not ready" end
     lock.lock(self.internal)
     local s, err = self.internal:customRequest(sid, req, payload)
-    if not s then 
+    if not s then
         lock.unlock(self.internal)
         return nil, err or "custom request error"
     else

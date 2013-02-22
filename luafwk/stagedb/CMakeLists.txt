@@ -9,12 +9,13 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project(STAGEDB_LUA)
+PROJECT(MIHINI_STAGEDB)
 
-include_directories(${LIBBYSANTPROTOCOL_SOURCE_DIR})
-include_directories(${BYSANTLUA_SOURCE_DIR})
-include_directories(${COMMON_SOURCE_DIR})
-include_directories(../../luafwk/linux/liblua)
+INCLUDE_DIRECTORIES(${LIB_MIHINI_BYSANT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${MIHINI_M3DA_SOURCE_DIR}/bysant)
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LUA_SOURCE_DIR})
 
-add_lua_library(stagedb stagedb_core.c stagedb.lua)
-target_link_libraries(stagedb stagedb_lib bysant_lib bysant_sharedlib)
+ADD_LUA_LIBRARY(stagedb stagedb_core.c stagedb.lua)
+TARGET_LINK_LIBRARIES(stagedb lib_stagedb lib_bysant_lua)
+ADD_DEPENDENCIES(stagedb checks ltn12 m3da_bysant)

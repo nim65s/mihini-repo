@@ -14,4 +14,4 @@ local testname="update_test3_badlocationinpkg"
 --install script test: not much to define here
 --we expect an error, sync error moreover
 
-return { timeout=2, status="failure", type="async"} 
+return { timeout=2, status="failure", type="async"}

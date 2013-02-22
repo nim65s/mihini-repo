@@ -28,7 +28,7 @@
  * This one can be disabled if the macro constant SWI_LOG_ENABLED is set to 0
  **/
 #if SWI_LOG_ENABLED
-#define SWI_LOG(module, info, format, ...)		\
+#define SWI_LOG(module, info, format, ...)        \
   swi_log_trace(module, info, format, ##__VA_ARGS__)
 #else
 #define SWI_LOG(module, info, format, ...)
@@ -52,7 +52,7 @@ typedef enum
   DETAIL,
   // This is a debugging output, use this severity to deliver technical informations or implementations detailed about the program behavior
   DEBUG,
-  /// This severity is mainly useful to change the level of verbosity for a module, when you want to logs all kind of messages. 
+  /// This severity is mainly useful to change the level of verbosity for a module, when you want to logs all kind of messages.
   /// Do not use this severity in order to log a message, it does not make sense. This is the most important severity.
   ALL
 } swi_log_level_t;
@@ -138,7 +138,7 @@ void swi_log_trace(const char *module, swi_log_level_t severity, const char *for
  * @code
  * SWI_LOG("MY_MODULE", ERROR, "CRITICAL ERROR\n")
  * @endcode
- * 
+ *
  * the resulting output will be:
  * @code
  * 2012-10-17 17:44:56 MY_MODULE-ERROR: CRITICAL ERROR

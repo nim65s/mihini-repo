@@ -18,7 +18,7 @@ p("installscript2:", param)
 
 --install script: there must always have a table param
 if not param then error("installscript2: No param table") end
---in test Manifest : if install(version != nil) -> no extra parameters 
+--in test Manifest : if install(version != nil) -> no extra parameters
 if param.version and param.parameters then error("installscript: parameters inconsistent with Manifest")  end
 --in test Manifest : if uninstall(version) -> extra  parameters
 if not param.version and (not param.parameters or not param.parameters.reason or param.parameters.reason ~= "bye bye") then error("installscript2: parameters inconsistent with Manifest")  end

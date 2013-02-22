@@ -67,13 +67,13 @@ const bs_class_t* bs_classcoll_get( bs_classcoll_t *coll, bs_classid_t classid) 
 }
 
 const bs_class_t* bs_classcoll_byname( bs_classcoll_t *coll, const char *name) {
-	int i;
-	const bs_class_t **classes = coll->classes;
-	for( i=0; i<coll->nclasses; i++) {
-		const bs_class_t *cls = classes[i];
-		if( ! strcmp( name, cls->classname)) {
-			return cls;
-		}
-	}
-	return NULL;
+    int i;
+    const bs_class_t **classes = coll->classes;
+    for( i=0; i<coll->nclasses; i++) {
+        const bs_class_t *cls = classes[i];
+        if( ! strcmp( name, cls->classname)) {
+            return cls;
+        }
+    }
+    return NULL;
 }

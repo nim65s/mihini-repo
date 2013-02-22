@@ -54,7 +54,7 @@ tscript = [[
 ]]
 
 testres = nil
-function autotest() 
+function autotest()
 	local client, err = rpc.newclient(gx_addr)
 	print(string.format("Create RPC client: '%s'", not client and "ERROR" or "OK"))
 

@@ -9,11 +9,13 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-cmake_minimum_required (VERSION 2.6)
-project (LIB_LINUX)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+PROJECT(LIB_MIHINI_LUASIGNAL)
 
-include_directories(${COMMON_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
 
-add_library(luasignal STATIC luasignal.c)
-SET_TARGET_PROPERTIES( luasignal PROPERTIES COMPILE_FLAGS -fPIC) # necessary so that the lib can be used linked in a static code or a shared library
+ADD_LIBRARY(lib_luasignal STATIC luasignal.c)
+SET_TARGET_PROPERTIES(lib_luasignal PROPERTIES
+    OUTPUT_NAME luasignal
+    COMPILE_FLAGS -fPIC) # necessary so that the lib can be used linked in a static code or a shared library
 

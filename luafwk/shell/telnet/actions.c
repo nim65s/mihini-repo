@@ -264,7 +264,7 @@ TeelCmd tl_act_autocomplete(TeelInstance* ti)
 
   if (!nb || !tab) // no auto complete proposals
   {
-	MEM_FREE(path);
+    MEM_FREE(path);
     TL_PUTCHARS("\a"); // ding
     return CMD_NOP;
   }

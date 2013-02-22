@@ -12,191 +12,86 @@
 local mon = require'agent.monitoring'
 local u = require 'unittest'
 local config = require 'agent.config'
+local tm = require 'agent.treemgr'
+local niltoken = require 'niltoken'
 
 
 
 local t=u.newtestsuite("monitoring")
-
-local ran
+local varproxy
 
 function t:setup()
-    if ran then u.abort("This unit test need to restart the environement") end
-    ran = true
-end
-
-function t:test_config()
-    u.assert_table(config.monitoring)
-    u.assert_true(config.monitoring.activate)
-    u.assert(not config.monitoring.debug)
-end
-
-function t:test_regextvarerrors()
-    local stub = function() end
-    u.assert_error(function() mon.registerextvar("system.test1") end)
-    u.assert_error(function() mon.registerextvar("system.test1", stub, stub, stub) end)
-    u.assert_error(function() mon.registerextvar("system", stub, stub) end)
-    u.assert_error(function() mon.registerextvar("system.test1.", stub, nil, stub) end)
-end
-
-function t:test_regextvarok()
-    local stub = function() end
-    u.assert_table(mon.registerextvar("system.tests."))
-    u.assert_table(mon.registerextvar("system.tests.t1", stub))
-    u.assert_table(mon.registerextvar("system.tests.t2", nil, stub))
-    u.assert_table(mon.registerextvar("system.tests.t3", stub, stub))
-    u.assert_table(mon.registerextvar("user.tests."))
-    u.assert_table(mon.registerextvar("user.tests.t1", stub))
-    u.assert_table(mon.registerextvar("user.tests.t2", nil, stub))
-    u.assert_table(mon.registerextvar("user.tests.t3", stub, stub))
-    u.assert_table(mon.registerextvar("sometable.tests."))
-    u.assert_table(mon.registerextvar("sometable.tests.t1", stub))
-    u.assert_table(mon.registerextvar("sometable.tests.t2", nil, stub))
-    u.assert_table(mon.registerextvar("sometable.tests.t3", stub, stub))
-end
-
-function t:test_regextvar_pushenable()
-    local called
-    local function pushenable(path, varname)
-        called = path..(varname or "")
-    end
-    local t = mon.registerextvar("system.tests.t4", pushenable)
-    u.assert_table(t)
-    u.assert_table(mon.install("test", "onchange'system.tests.t4'", "now"))
-    u.assert_equal("system.tests.t4", called)
-
-    t = mon.registerextvar("system.tests.", pushenable)
-    u.assert_table(t)
-    u.assert_table(mon.install("test", "onchange'system.tests.t5'", "now"))
-    u.assert_equal("system.tests.t5", called)
-
-    u.assert_table(mon.install("test", "onchange'system.tests.'", "now"))
-    u.assert_equal("system.tests.", called)
-end
-
-function t:test_regextvar_getvar()
-
-    local function getvar(path, varname) return path..(varname or "") end
-
-    local t = mon.registerextvar("system.tests.t6", nil, getvar)
-    u.assert_table(t)
-    u.assert_equal("system.tests.t6", mon.vars.system.tests.t6)
-
-    t = mon.registerextvar("system.tests.", nil, getvar)
-    u.assert_table(t)
-    u.assert_equal("system.tests.t7", mon.vars.system.tests.t7)
-end
-
-function t:test_regextvar_varlist()
-
-    local function getvar(path, varname) return path..(varname or "") end
-
-    local t = mon.registerextvar("system.tests2.", nil, getvar, {"t1", "t2", "t3"})
-    u.assert_table(t)
-    u.assert_equal(t, mon.vars.system.tests2)
-    local r = {}
-    for k, v in pairs(mon.vars.system.tests2) do r[k] = v end
-    local c = {t1 = "system.tests2.t1", t2 = "system.tests2.t2", t3 = "system.tests2.t3"}
-    u.assert_clone_tables(c, r)
-
-    local called
-    t = mon.registerextvar("system.tests3.", nil, getvar, function(path) called = path return {"t1", "t2", "t3"} end)
-    u.assert_table(t)
-    u.assert_equal(t, mon.vars.system.tests3)
-    for k, v in pairs(mon.vars.system.tests3) do r[k] = v end
-    c = {t1 = "system.tests3.t1", t2 = "system.tests3.t2", t3 = "system.tests3.t3"}
-    u.assert_clone_tables(c, r)
-    u.assert_equal("system.tests3.", called)
-end
-
-function t:test_regextvar_setvar()
-    local r
-    local function setvar(path, var, val) r = {path, var, val} end
-
-    local t = mon.registerextvar("system.tests21.t1", nil, nil, nil, setvar)
-
-    r = nil
-    mon.vars.system.tests21.t2 = 42
-    u.assert_nil(r)
-
-    r = nil
-    mon.vars.system.tests21.t1 = 42
-    u.assert_clone_tables({"system.tests21.", "t1", 42}, r)
-
-    r = nil
-    mon.vars.system.tests21.t1 = "42"
-    u.assert_clone_tables({"system.tests21.", "t1", "42"}, r)
-end
-
-function t:test_regextvar_setvargroup()
-    local r
-    local function setvar(path, var, val) r = {path, var, val} end
-
-    local t = mon.registerextvar("system.tests22.", nil, nil, nil, setvar)
-
-    r = nil
-    mon.vars.system.tests22.t2 = 42
-    u.assert_clone_tables({"system.tests22.", "t2", 42}, r)
-
-    r = nil
-    mon.vars.system.tests22.t1 = 42
-    u.assert_clone_tables({"system.tests22.", "t1", 42}, r)
-
-    r = nil
-    mon.vars.system.tests22.t1 = "42"
-    u.assert_clone_tables({"system.tests22.", "t1", "42"}, r)
+    if not config.get("monitoring.activate") then u.abort("Monitoring not enabled in RA config, cannot run this test suite") end
+    tm.set("ram.testexisting", "test")
+    if tm.get("ram.testexisting") ~= "test" then u.abort("Need a working ramstore in order to do monitoring tests") end
+    varproxy = require'agent.treemgr.table'.ram
 end
 
 
-
+--------------------------------------------------------------------------------
 -- test triggers
 
-function t:test_trigger_onchange()
-    local t = mon.registerextvar("system.tests4.")
-    u.assert_table(t)
+function t:test_trigger_onchange1()
+    u.assert(tm.set("ram.tests4.t1", 0))
+    local vars = varproxy.tests4
     local nvar
     local ngroup
     local function test()
-        connect(onchange("system.tests4.t1"), function(v) nvar = v end)
-        connect(onchange("system.tests4."), function(v) ngroup = v end)
+        connect(onchange("ram.tests4.t1"), function(v) nvar = v end)
+        connect(onchange("ram.tests4"), function(v) ngroup = v end)
     end
-    u.assert_table(mon.install("test", test, "now"))
-
+    u.assert(mon.load("tests4", test))
+    sched.wait()
+    
     nvar, ngroup = nil, nil
-    t.t2 = 1; sched.wait()
+    vars.t2 = 1; sched.wait()
     u.assert_equal(nil, nvar)
-    u.assert_equal("system.tests4.t2", ngroup)
+    u.assert_clone_tables({["ram.tests4.t2"]=1}, ngroup)
 
     nvar, ngroup = nil, nil
-    t.t1 = 1; sched.wait();
-    u.assert_equal("system.tests4.t1", nvar)
-    u.assert_equal("system.tests4.t1", ngroup)
+    vars.t1 = 1; sched.wait();
+    u.assert_clone_tables({["ram.tests4.t1"]=1}, nvar)
+    u.assert_clone_tables({["ram.tests4.t1"]=1}, ngroup)
 
     nvar, ngroup = nil, nil
-    t.t1 = 1; sched.wait()
+    vars.t1 = 1; sched.wait()
     u.assert_equal(nil, nvar)
     u.assert_equal(nil, ngroup)
 
     nvar, ngroup = nil, nil
-    t.t1 = nil; sched.wait()
-    u.assert_equal("system.tests4.t1", nvar)
-    u.assert_equal("system.tests4.t1", ngroup)
+    vars.t1 = nil; sched.wait()
+    u.assert_clone_tables({["ram.tests4.t1"]=niltoken}, nvar)
+    u.assert_clone_tables({["ram.tests4.t1"]=niltoken}, ngroup)
 
     nvar, ngroup = nil, nil
-    t.t1 = 1; sched.wait()
-    u.assert_equal("system.tests4.t1", nvar)
-    u.assert_equal("system.tests4.t1", ngroup)
+    vars.t1 = 1; sched.wait()
+    u.assert_clone_tables({["ram.tests4.t1"]=1}, nvar)
+    u.assert_clone_tables({["ram.tests4.t1"]=1}, ngroup)
 end
 
+
+-- Test registration on a non existing variable
+function t:test_trigger_onchange2()
+    local ok
+    local function test()
+        connect(onchange("ram.tests7.t1"), function() ok=true end)
+    end
+    u.assert(mon.load("tests7", test))
+    u.assert_equal(nil, ok)
+    u.assert(tm.set("ram.tests7.t1", 0))
+    sched.wait()
+    u.assert_equal(true, ok)
+end
 function t:test_trigger_onhold1()
-    local t = mon.registerextvar("system.tests5.")
-    u.assert_table(t)
+    u.assert(tm.set("ram.tests5.t1", 0))
+    local vars = varproxy.tests5
     local nvar
     local ngroup
     local function test()
-        connect(onhold(2, "system.tests5.t1"), function(v) nvar = v or true end)
-        connect(onhold(2, "system.tests5."), function(v) ngroup = v or true end)
+        connect(onhold(2, "ram.tests5.t1"), function(v) nvar = v or true end)
+        connect(onhold(2, "ram.tests5."), function(v) ngroup = v or true end)
     end
-    u.assert_table(mon.install("test", test, "now"))
+    u.assert(mon.load("tests5", test))
 
     nvar, ngroup = nil, nil
     sched.wait(3)
@@ -204,155 +99,136 @@ function t:test_trigger_onhold1()
     u.assert_equal(true, ngroup)
 
     nvar, ngroup = nil, nil
-    t.t2 = 1; sched.wait(3)
+    vars.t2 = 1; sched.wait(3)
     u.assert_equal(nil, nvar)
-    u.assert_equal("system.tests5.t2", ngroup)
+    u.assert_clone_tables({["ram.tests5.t2"]=1}, ngroup)
 
     nvar, ngroup = nil, nil
-    t.t1 = 1; sched.wait(3)
-    u.assert_equal("system.tests5.t1", nvar)
-    u.assert_equal("system.tests5.t1", ngroup)
+    vars.t1 = 1; sched.wait(3)
+    u.assert_clone_tables({["ram.tests5.t1"]=1}, nvar)
+    u.assert_clone_tables({["ram.tests5.t1"]=1}, ngroup)
 
     nvar, ngroup = nil, nil
-    t.t1 = 2; sched.wait(1)
+    vars.t1 = 2; sched.wait(1)
     u.assert_equal(nil, nvar)
     u.assert_equal(nil, ngroup)
-    t.t1 = 3; sched.wait(1)
+    vars.t1 = 3; sched.wait(1)
     u.assert_equal(nil, nvar)
     u.assert_equal(nil, ngroup)
-    t.t1 = 4; sched.wait(1)
+    vars.t1 = 4; sched.wait(1)
     u.assert_equal(nil, nvar)
     u.assert_equal(nil, ngroup)
-    t.t1 = 6; sched.wait(3)
-    u.assert_equal("system.tests5.t1", nvar)
-    u.assert_equal("system.tests5.t1", ngroup)
+    vars.t1 = 6; sched.wait(3)
+    u.assert_clone_tables({["ram.tests5.t1"]=6}, nvar)
+    u.assert_clone_tables({["ram.tests5.t1"]=6}, ngroup)
 end
 
 function t:test_trigger_onhold2()
-    local t = mon.registerextvar("system.tests5.")
-    u.assert_table(t)
+    u.assert(tm.set("ram.tests3.t1", 0))
+    local vars = varproxy.tests3
     local count = 0
     local ngroup
     local function test()
-        connect(onhold(-2, "system.tests5.t3"), function(v) count = count+1 or true end)
+        connect(onhold(-2, "ram.tests3.t3"), function(v) count = count+1 or true end)
     end
-    u.assert_table(mon.install("test", test, "now"))
+    u.assert(mon.load("tests3", test))
 
     u.assert_equal(0, count)
     sched.wait(5)
     u.assert_equal(2, count)
-    t.t3 = 2; sched.wait(1)
-    t.t3 = 3; sched.wait(1)
-    t.t3 = 4; sched.wait(1)
+    vars.t3 = 2; sched.wait(1)
+    vars.t3 = 3; sched.wait(1)
+    vars.t3 = 4; sched.wait(1)
     u.assert_equal(2, count)
+end
 
-    u.assert_nil(mon.install("test", "onperiod(-1)", "now"))
+-- Test multiple holding variables
+function t:test_trigger_onhold3()
 end
 
 
-function t:test_trigger_onperiod()
+function t:test_trigger_onperiod1()
     local count = 0
     local function test()
         connect(onperiod(2), function(v) count = count+1 end)
     end
-    u.assert_table(mon.install("test", test, "now"))
+    u.assert(mon.load("tests_onperiod1", test))
 
     u.assert_equal(0, count)
     sched.wait(5)
     u.assert_equal(2, count)
 end
 
-
-function t:test_trigger_onconnect()
+function t:test_trigger_onperiod2()
     local count = 0
-    local function test()
-        connect(onconnect(), function(v) count = count+1 end)
-    end
-    u.assert_table(mon.install("test", test, "now"))
-
-    local s = require 'agent.srvcon'
-    s.connect()
+    local function test() connect(onperiod(0), function(v) count = count+1 end) end
+    u.assert(mon.load("tests_onperiod2.1", test))
+    sched.wait(2)
     u.assert_equal(1, count)
-    s.connect()
-    u.assert_equal(2, count)
+
+    count = 0
+    local function test() connect(onperiod(-1), function(v) count = count+1 end) end
+    u.assert(mon.load("tests_onperiod2.2", test))
+    u.assert_equal(0, count)
+    sched.wait(2)
+    u.assert_equal(1, count)
 end
 
-if false then
-function t:test_trigger_onrecvcmd()
-    local c
-    local function test()
-        connect(onrecvcmd("Command1"), function(cmd, ...) c = {cmd, ...} end)
-    end
-    u.assert_table(mon.install("test", test, "now"))
+--onconnect trigger is deactivated until a proper srvcon architecture allows a propoer implementation
+-- function t:test_trigger_onconnect()
+--     local count = 0
+--     local function test()
+--         connect(onconnect(), function(v) count = count+1 end)
+--     end
+--     u.assert_table(mon.install("test", test, "now"))
+-- 
+--     local s = require 'agent.srvcon'
+--     s.connect()
+--     u.assert_equal(1, count)
+--     s.connect()
+--     u.assert_equal(2, count)
+-- end
 
-    local d = require 'agent.devman'
-
-    local e = {"Command1", "1", "2", "3"}
-    local m = {
-            otype = "Message",
-            path = "@sys.monitoring",
-            ticketId = 0,
-            type = 2,
-            body = {
-                otype = "Command",
-                name = "Command1",
-                args = {
-                    otype = "List",
-                    elements = { "1", "2", "3" } } } }
-
-     -- fake a new cmd reception
-     sched.signal(d.hl, "Message", m)
-     sched.wait()
-     u.assert_clone_tables(c, e)
-
-     c = nil
-     m.body.name="Command2"
-     sched.signal(d.hl, "Message", m)
-     sched.wait()
-     u.assert_nil(c)
-
-end
-end
 
 --onthreshold(threshold, var, edge)
 function t:test_trigger_onthreshold1()
-    local t = mon.registerextvar("system.tests6.")
-    u.assert_table(t)
+    u.assert(tm.set("ram.tests6.t1", 0)) -- create tests6 sub table
+    local vars = varproxy.tests6
     local c0, c1, c2
     local function test()
-        connect(onthreshold(42, "system.tests6.t1", "down"), function() c0 = true  end)
-        connect(onthreshold(42, "system.tests6.t1", "up"), function() c1 = true end)
-        connect(onthreshold(42, "system.tests6.t1"), function() c2 = true end)
+        connect(onthreshold(42, "ram.tests6.t1", "down"), function() c0 = true  end)
+        connect(onthreshold(42, "ram.tests6.t1", "up"), function() c1 = true end)
+        connect(onthreshold(42, "ram.tests6.t1"), function() c2 = true end)
     end
-    u.assert_table(mon.install("test", test, "now"))
+    u.assert(mon.load("tests6", test))
 
     c0, c1, c2 = nil, nil, nil
-    t.t1 = 10
-    t.t1 = 40
-    t.t1 = 41
+    vars.t1 = 10
+    vars.t1 = 40
+    vars.t1 = 41
     sched.wait()
     u.assert_nil(c0)
     u.assert_nil(c1)
     u.assert_nil(c2)
 
     c0, c1, c2 = nil, nil, nil
-    t.t1 = 42
+    vars.t1 = 42
     sched.wait()
     u.assert_nil(c0)
     u.assert_true(c1)
     u.assert_true(c2)
 
     c0, c1, c2 = nil, nil, nil
-    t.t1 = 44
-    t.t1 = 3215
-    t.t1 = 42
+    vars.t1 = 44
+    vars.t1 = 3215
+    vars.t1 = 42
     sched.wait()
     u.assert_nil(c0)
     u.assert_nil(c1)
     u.assert_nil(c2)
 
     c0, c1, c2 = nil, nil, nil
-    t.t1 = 41
+    vars.t1 = 41
     sched.wait()
     u.assert_true(c0)
     u.assert_nil(c1)
@@ -360,41 +236,41 @@ function t:test_trigger_onthreshold1()
 end
 
 function t:test_trigger_onthreshold2()
-    local t = mon.registerextvar("system.tests6.")
-    u.assert_table(t)
+    u.assert(tm.set("ram.tests1.t1", 0)) -- create tests1 sub table
+    local vars = varproxy.tests1
     local c0, c1, c2
     local function test()
-        connect(onthreshold(-42, "system.tests6.t2", "down"), function() c0 = true  end)
-        connect(onthreshold(-42, "system.tests6.t2", "up"), function() c1 = true end)
-        connect(onthreshold(-42, "system.tests6.t2"), function() c2 = true end)
+        connect(onthreshold(-42, "ram.tests1.t2", "down"), function() c0 = true  end)
+        connect(onthreshold(-42, "ram.tests1.t2", "up"), function() c1 = true end)
+        connect(onthreshold(-42, "ram.tests1.t2"), function() c2 = true end)
     end
-    u.assert_table(mon.install("test", test, "now"))
+    u.assert(mon.load("tests1", test))
 
     c0, c1, c2 = nil, nil, nil
-    t.t2 = -42
+    vars.t2 = -42
     sched.wait()
     u.assert_nil(c0)
     u.assert_nil(c1)
     u.assert_nil(c2)
 
     c0, c1, c2 = nil, nil, nil
-    t.t2 = -43
+    vars.t2 = -43
     sched.wait()
     u.assert_true(c0)
     u.assert_nil(c1)
     u.assert_true(c2)
 
     c0, c1, c2 = nil, nil, nil
-    t.t2 = -44
-    t.t2 = -3215
-    t.t2 = -43
+    vars.t2 = -44
+    vars.t2 = -3215
+    vars.t2 = -43
     sched.wait()
     u.assert_nil(c0)
     u.assert_nil(c1)
     u.assert_nil(c2)
 
     c0, c1, c2 = nil, nil, nil
-    t.t2 = -42
+    vars.t2 = -42
     sched.wait()
     u.assert_nil(c0)
     u.assert_true(c1)
@@ -402,7 +278,7 @@ function t:test_trigger_onthreshold2()
 
 
     c0, c1, c2 = nil, nil, nil
-    t.t2 = 45
+    vars.t2 = 45
     sched.wait()
     u.assert_nil(c0)
     u.assert_nil(c1)
@@ -412,13 +288,13 @@ end
 
 --ondeadband(deadband, var)
 function t:test_trigger_ondeadband()
-    local t = mon.registerextvar("system.tests6.")
-    u.assert_table(t)
+    u.assert(tm.set("ram.tests2.t1", 0)) -- create tests2 sub table
+    local t = varproxy.tests2
     local c
     local function test()
-        connect(ondeadband(5, "system.tests6.t3", "down"), function() c = true  end)
+        connect(ondeadband(5, "ram.tests2.t3", "down"), function() c = true  end)
     end
-    u.assert_table(mon.install("test", test, "now"))
+    u.assert(mon.load("tests2", test))
 
     c = nil
     t.t3 = 1
@@ -457,3 +333,50 @@ function t:test_trigger_ondeadband()
     sched.wait()
     u.assert_nil(c)
 end
+
+
+-- Sub function to make sure all local varaibles are collected when returning i nthe calling function
+local function do_unload_load()
+    -- Add all trigger in the rule in order to test them all
+    local function test()
+         connect(onchange("ram.tests8.t1"), function() end)
+         connect(onhold(1, "ram.tests8.t1"), function() end)
+         connect(onperiod(1), function() end)
+         connect(ondate("* * * * *"), function() end)
+         connect(onboot(), function() end)
+         connect(onthreshold(1, "ram.tests8.t1"), function() end)
+         connect(ondeadband(1, "ram.tests8.t1"), function() end)
+    end
+
+    local count
+    for count = 1, 1000 do u.assert(mon.load("tests8_"..count, test)) end
+    t.t1 = 1; sched.wait(1)
+    for count = 1, 1000 do u.assert(mon.unload("tests8_"..count)) end
+    --sched.wait()
+    --collectgarbage("collect")
+    --print("after1", collectgarbage("count"))
+end
+
+-- Test if there is no memory leek when loading/unloading a large number of scripts
+function t:test_trigger_load_unload()
+    u.assert(tm.set("ram.tests8.t1", 0)) -- create tests8 sub table
+    local t = varproxy.tests8
+
+    
+
+    do_unload_load()
+    sched.wait(1)
+    collectgarbage("collect")
+    local bc_count1 = collectgarbage("count")
+    do_unload_load()
+    do_unload_load()
+    do_unload_load()
+    sched.wait(1)
+    collectgarbage("collect")
+    local bc_count2 = collectgarbage("count")
+    
+    --print(bc_count1, bc_count2)
+    u.assert(bc_count1>=bc_count2*0.99, "Memory leak detected: more than 1% of ram was not freed")
+
+end
+

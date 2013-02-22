@@ -13,22 +13,22 @@
 #include "swi_log.h"
 #include "swi_status.h"
 
-#define INIT_TEST(name)				\
-  static const char *__testname = name;		\
+#define INIT_TEST(name)                \
+  static const char *__testname = name;        \
   swi_log_setlevel(INFO, __testname, NULL)
 
-#define CHECK_TEST(call)			\
-do {			                        \
-  swi_status_t res;				\
-  res = call;					\
+#define CHECK_TEST(call)            \
+do {                                    \
+  swi_status_t res;                \
+  res = call;                    \
   while (res == SWI_STATUS_IPC_BROKEN) {        \
     res = call;                                 \
     sleep(2);                                   \
   }                                             \
   SWI_LOG(__testname, (res == SWI_STATUS_OK) ? INFO : ERROR,  #call "...%s\n", (res == SWI_STATUS_OK) ? "OK" : "FAIL");  \
-  if (res != SWI_STATUS_OK)						                                               \
-  {									\
+  if (res != SWI_STATUS_OK)                                                                       \
+  {                                    \
       SWI_LOG(__testname, ERROR, "Test failed with status code %d\n", res);                                              \
-      return 1;								\
-  }									                                               \
+      return 1;                                \
+  }                                                                                   \
 } while(0)

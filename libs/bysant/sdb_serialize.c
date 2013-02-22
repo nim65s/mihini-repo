@@ -92,7 +92,7 @@ static int get_bsd_value( sdb_read_ctx_t *ctx, double *value) {
 
 /**
  * Floor a value to the integer to serialize for DeltasVector.
- * See dvinteger function in hessian.awtda for details.
+ * See dvinteger function in hessian.m3da for details.
  */
 static int deltasvector_integer(double value, double precision) {
     if( value >= 0) {
@@ -144,7 +144,7 @@ static bss_status_t serialize_column_deltasvector( struct sdb_table_t *tbl) {
                         ctx->previous = value;
                     }
                     case SDB_SS_COLUMN_START_VALUE_SENT:
-                    	// TODO: There might be a better CTXID
+                        // TODO: There might be a better CTXID
                         TRY( bss_list(bss_ctx, nrows-1, BS_CTXID_NUMBER), SDB_SS_COLUMN_SENDING_CELLS); // TODO: can be typed
                         break;
                     default: {
@@ -319,7 +319,7 @@ static int compute_serialization_methods( struct sdb_table_t *tbl) {
     // count columns that needs serialization computation
     for( i=0; i<tbl->ncolumns; i++) {
         struct sdb_column_t *column = tbl->columns + i;
-        if( SDB_SM_SMALLEST == SDB_SM_CONTANER(column->serialization_method)) {
+        if( SDB_SM_SMALLEST == SDB_SM_CONTAINER(column->serialization_method)) {
             // if any data is not numeric, DV and QPV are not able to serialize them
             if( !column->data_analysis.all_numeric) {
                 column->data_analysis.method = SDB_SM_LIST;
@@ -345,8 +345,8 @@ static int compute_serialization_methods( struct sdb_table_t *tbl) {
     // Initialize analysis data
     for( i=0, current_smallest=0; i<tbl->ncolumns; i++) {
         struct sdb_column_t *column = tbl->columns + i;
-        if( SDB_SM_SMALLEST == SDB_SM_CONTANER(column->serialization_method) &&
-                SDB_SM_SMALLEST == SDB_SM_CONTANER(column->data_analysis.method)) {
+        if( SDB_SM_SMALLEST == SDB_SM_CONTAINER(column->serialization_method) &&
+                SDB_SM_SMALLEST == SDB_SM_CONTAINER(column->data_analysis.method)) {
 
             struct data_analysis_t *data = analysis_data + (current_smallest++);
             data->vsize = 0;
@@ -365,8 +365,8 @@ static int compute_serialization_methods( struct sdb_table_t *tbl) {
         int column_index = read_ctx.nreadobjects%tbl->ncolumns;
         struct sdb_column_t *column = tbl->columns + column_index;
         bsd_data_t read_data;
-        int is_smallest = SDB_SM_SMALLEST == SDB_SM_CONTANER(column->serialization_method) &&
-                SDB_SM_SMALLEST == SDB_SM_CONTANER(column->data_analysis.method);
+        int is_smallest = SDB_SM_SMALLEST == SDB_SM_CONTAINER(column->serialization_method) &&
+                SDB_SM_SMALLEST == SDB_SM_CONTAINER(column->data_analysis.method);
 
         int r = sdb_read_data( & read_ctx, & read_data, ! is_smallest);
         if( r<0) {
@@ -404,8 +404,8 @@ static int compute_serialization_methods( struct sdb_table_t *tbl) {
     // Finalize computation
     for( i=0, current_smallest=0; i<tbl->ncolumns; i++) {
         struct sdb_column_t *column = tbl->columns + i;
-        if( SDB_SM_SMALLEST == SDB_SM_CONTANER(column->serialization_method) &&
-                SDB_SM_SMALLEST == SDB_SM_CONTANER(column->data_analysis.method)) {
+        if( SDB_SM_SMALLEST == SDB_SM_CONTAINER(column->serialization_method) &&
+                SDB_SM_SMALLEST == SDB_SM_CONTAINER(column->data_analysis.method)) {
             struct data_analysis_t *data = analysis_data + (current_smallest++);
             if( !column->data_analysis.all_integer) {
                 data->qpvsize = INT_MAX;
@@ -419,7 +419,7 @@ static int compute_serialization_methods( struct sdb_table_t *tbl) {
                    data->vsize, data->dvsize, data->dvfactor, data->qpvsize, data->qpvperiod);
 #endif
 
-            // See also the "--FIXME AWTDA3 QPV" tags in stagedb.lua tests
+            // See also the "--FIXME M3DA QPV" tags in stagedb.lua tests
             // (some tests has been disabled/chaged)
             if( data->qpvsize < data->dvsize && data->qpvsize < data->vsize) {
                 column->arg = data->qpvperiod;
@@ -473,9 +473,9 @@ static bss_status_t serialize_table( struct sdb_table_t *tbl) {
             case SDB_SS_COLUMN_LAST_SHIFT_SENT:
             case SDB_SS_COLUMN_INNER_LIST_CLOSED: {
                 sdb_column_t *column = tbl->columns + ctx->current_column;
-                int sm = (SDB_SM_SMALLEST == SDB_SM_CONTANER(column->serialization_method)) ?
+                int sm = (SDB_SM_SMALLEST == SDB_SM_CONTAINER(column->serialization_method)) ?
                         column->data_analysis.method : column->serialization_method;
-                switch(SDB_SM_CONTANER(sm)) {
+                switch(SDB_SM_CONTAINER(sm)) {
                     case SDB_SM_LIST:
                     case SDB_SM_FASTEST:
                         TRY( serialize_column_list( tbl), SDB_SS_COLUMN_CLOSED);
@@ -530,3 +530,4 @@ bss_status_t sdb_serialize( sdb_table_t *tbl, bss_ctx_t *bss_ctx) {
         return SDB_EBADSTATE;
     }
 }
+

@@ -43,16 +43,16 @@ module(...)
 
 -------------------------------------------------------------------------------
 -- Log levels are strings used to filter logs.
--- Levels are to be used both in log filtering configuration (see @{#log.setlevel}) and each time 
+-- Levels are to be used both in log filtering configuration (see @{#log.setlevel}) and each time
 -- @{#log.trace} function is used to issue a new log.
 --
 -- Levels are ordered by verbosity/severity level.
--- 
+--
 -- While configuring log filtering, if you set a module log level to 'INFO' level for exemple, you
 -- enable all logs *up to* 'INFO', that is to say that logs with 'WARNING' and 'ERROR' severities will
 -- be displayed too.
 --
--- Built-in values (in order from the least verbose to the most): 
+-- Built-in values (in order from the least verbose to the most):
 --    - 'NONE':    filtering only: when no log is wanted
 --    - 'ERROR':   filtering or tracing level
 --    - 'WARNING': filtering or tracing level
@@ -60,7 +60,7 @@ module(...)
 --    - 'DETAIL':  filtering or tracing level
 --    - 'DEBUG':   filtering or tracing level
 --    - 'ALL':     filtering only: when all logs are to be displayed
--- @type levels 
+-- @type levels
 --
 levels = {}
 -- Severity name <-> Severity numeric value translation table (internal purpose only)
@@ -69,12 +69,12 @@ for k,v in pairs{ 'NONE', 'ERROR', 'WARNING', 'INFO', 'DETAIL', 'DEBUG', 'ALL' }
 end
 
 -- -----------------------------------------------------------------------------
--- Default verbosity level.  
--- Default value is `"WARNING"`.
+-- Default verbosity level.
+-- Default value is `"INFO"`.
 -- @field [parent=#log] #levels defaultlevel
 -- See @{#log} for a list of existing levels.
 
-local defaultlevel = defaultlevel or levels.WARNING
+local defaultlevel = defaultlevel or levels.INFO
 
 -- -----------------------------------------------------------------------------
 -- Per module verbosity levels.
@@ -97,7 +97,7 @@ timestampformat = nil
 
 -------------------------------------------------------------------------------
 -- Default logger for instant display.
--- This logger can be replaced by a custom function.   
+-- This logger can be replaced by a custom function.
 -- It is called only if the log needs to be traced.
 --
 -- @function [parent=#log] displaylogger
@@ -110,9 +110,9 @@ displaylogger = displaylogger or function(_, _, ...)
 end
 
 -------------------------------------------------------------------------------
--- Logger function for log storage.   
--- This logger can be replaced by a custom function.   
--- There is no default store logger.   
+-- Logger function for log storage.
+-- This logger can be replaced by a custom function.
+-- There is no default store logger.
 -- It is called only if the log needs to be traced (see @{#log.musttrace}) and after the log has been displayed using {displaylogger}.
 --
 -- @function [parent=#log] storelogger
@@ -123,9 +123,9 @@ end
 storelogger = nil
 
 -------------------------------------------------------------------------------
--- Format is a string used to apply specific formating before the log is outputted.  
+-- Format is a string used to apply specific formating before the log is outputted.
 -- Within a format, the following tokens are available (in addition to standard text)
--- 
+--
 --- %l => the actual log (given in 3rd argument when calling log() function)
 --- %t => the current date
 --- %m => module name
@@ -170,7 +170,7 @@ end
 -- This function uses @{#log.format} and @{#log.timestampformat} to create the
 -- final message string. It calls @{#log.displaylogger} and @{#log.storelogger}.
 --
--- @function [parent=#log] trace 
+-- @function [parent=#log] trace
 -- @param modulename string identifying the module that issues the log.
 -- @param severity string representing the level in @{log#levels}.
 -- @param fmt string format that holds the log text the same way as string.format does.
@@ -178,9 +178,9 @@ end
 -- @usage trace("MODULE", "INFO", "message=%s", "sometext").
 --
 function trace(module, severity, fmt, ...)
-    checks('string', 'string', 'string')   
+    checks('string', 'string', 'string')
     if not musttrace(module, severity) then return end
-    
+
     local c, s = pcall(string.format, fmt, ...)
     if c then
         local t

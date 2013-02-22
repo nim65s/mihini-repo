@@ -11,7 +11,7 @@
  *     Romain Perier      for Sierra Wireless - initial API and implementation
  *******************************************************************************/
 
-#define _GNU_SOURCE
+#define _GNU_SOURCE // this is required for strndup, which might cause warnings depending on the used toolchains
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -97,10 +97,10 @@ static swi_status_t send_asset_registration(swi_av_Asset_t *asset)
   YAJL_GEN_GET_BUF(payload, payloadLen);
 
   res = emp_send_and_wait_response(EMP_REGISTER, 0, payload, payloadLen,
-				   &respPayload, &respPayloadLen);
+                   &respPayload, &respPayloadLen);
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
-  
+
   free(respPayload);
   return res;
 }
@@ -185,9 +185,6 @@ swi_status_t swi_av_ConnectToServer(unsigned int latency)
   SWI_LOG("AV", DEBUG, "%s: latency=%u\n", __FUNCTION__, latency);
   if (latency == SWI_AV_CX_SYNC)
     return SWI_STATUS_OK;
-
-  if (latency < 0 || latency > INT_MAX)
-    return SWI_STATUS_WRONG_PARAMS;
 
   YAJL_GEN_ALLOC(gen);
 
@@ -873,8 +870,8 @@ swi_status_t swi_av_SendUpdateResult(swi_av_Asset_t* asset, const char* componen
   if (res != SWI_STATUS_OK)
   {
 
-    SWI_LOG("AV", ERROR, "%s:  Unable to send the result to the agent, res %d\n", 
-	      __FUNCTION__, res);
+    SWI_LOG("AV", ERROR, "%s:  Unable to send the result to the agent, res %d\n",
+          __FUNCTION__, res);
     return res;
   }
   return SWI_STATUS_OK;
@@ -979,7 +976,7 @@ swi_status_t processResponse(yajl_val body)
 
 /*
  * input : path   - is a remaining path (without asset id, can be ""), this path must be malloc and be freed within the function
- *       : body   - is a the variable which contains the contents of command, the command will be modified in AWTDA3 style
+ *       : body   - is a the variable which contains the contents of command, the command will be modified in M3DA style
  * output: setOut - dset object
  * */
 swi_status_t processCommand(yajl_val body, swi_dset_Iterator_t* setOut, char** path)
@@ -1010,7 +1007,7 @@ swi_status_t processCommand(yajl_val body, swi_dset_Iterator_t* setOut, char** p
 
   int commandNameLength = strlen(commandName);
 
-  /*compute new path for command (AWTDA 3 style) by adding "commands." string*/
+  /*compute new path for command (M3DA style) by adding "commands." string*/
   char* commandPath = NULL;
   int pathLength = strlen(*path);
   int commandPathLength = 0;
@@ -1114,7 +1111,7 @@ swi_status_t readMessage(yajl_val* yval, yajl_val* body, char ** body_class, cha
       continue;
     }
 
-    /*__class: awtda class (must be message here)*/
+    /*__class: m3da class (must be message here)*/
     if (!strcmp((*yval)->u.object.keys[i], "__class"))
     {
       if ((*yval)->u.object.values[i]->type != yajl_t_string)

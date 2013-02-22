@@ -15,6 +15,7 @@ local utils_path    = require 'utils.path'
 local utils_table   = require 'utils.table'
 local niltoken      = require 'niltoken'
 require 'coxpcall'
+require 'print'
 
 local M = { initialized = false }
 
@@ -30,7 +31,7 @@ end
 -- There are 3 ways to handle server data, by decreasing order of preference:
 --
 -- * if there's a function under the same path in the asset tree, call it
---   with these data; for instance, if there is a function in 
+--   with these data; for instance, if there is a function in
 --   `asset_tree.foo.bar`, it will handle `data_tree.foo.bar` and all of its
 --   suffixes such as `data_tree.foo.bar.and.any.subpath.below`.
 --
@@ -166,30 +167,30 @@ local function match_asset_data_trees(asset, asset_tree, data_tree, path, ticket
             local tmpstatus , tmpmsg =  asset_subtree(asset, data_val, subpath, ticket_id)
             log("RACON-ASSET-TREE", "DEBUG", "data handling: specific handler at path %q returns %s",
                 tostring(subpath), tostring(tmpstatus))
-            if is_handler_error(tmpstatus , tmpmsg) then 
+            if is_handler_error(tmpstatus , tmpmsg) then
                 return state.code, state.msg -- stop at first error, report it to caller
             end
 
-        -- Handler is a table of more precise handlers: go down recursively or overwrite 
+        -- Handler is a table of more precise handlers: go down recursively or overwrite
         elseif asset_handler_type == 'table' then
-            if type(data_val) == 'table' then -- go down and treat each part of `data_tree` separately 
+            if type(data_val) == 'table' then -- go down and treat each part of `data_tree` separately
                 local tmpstatus , tmpmsg = match_asset_data_trees(
                     asset, asset_subtree, data_val, subpath, ticket_id, best_default_handler)
-                log("RACON-ASSET-TREE", "DEBUG", 
+                log("RACON-ASSET-TREE", "DEBUG",
                     "data handling: recursive call for path %s returned %s",
                     tostring(subpath), tostring(tmpstatus))
                 if is_handler_error(tmpstatus, tmpmsg) then
                     return state.code, state.msg  -- propagate stop at first error
                 end
             else -- if data isn't a table, just overwrite `asset_tree`
-                -- TODO: why are we sure that no __default handler could have handled it? 
+                -- TODO: why are we sure that no __default handler could have handled it?
                 asset_tree[k] = data_val
             end
 
         -- `asset_subtree` is not a table: call `__default` or write data in `asset_tree`
         else
             if asset_subtree == nil and best_default_handler then
-                -- No more handler, but a __default was found. Write data 
+                -- No more handler, but a __default was found. Write data
                 -- back into __default's future parameter.
                 data_tree[k] = data_val
             else -- No handler, no default: write data into `asset_tree`.
@@ -235,8 +236,8 @@ local function emp_handler_SendData(data)
         log('RACON-ASSET-TREE', 'INFO', "Data: '%s' received (path:'%s')", sprint(record), path)
     end
     if type(record) ~= 'table' then
-    	log('RACON-ASSET-TREE', 'ERROR', "Bad SendData record coming from server: %s", sprint(record))
-    	error 'bad awtda format'
+        log('RACON-ASSET-TREE', 'ERROR', "Bad SendData record coming from server: %s", sprint(record))
+        error 'bad m3da format'
     end
 
     for k, v in pairs(record) do
@@ -244,7 +245,7 @@ local function emp_handler_SendData(data)
     end
     --treeimg is now filled with arborescent data to be given to the asset tree handlers.
     if log.musttrace('RACON-ASSET-TREE', 'DETAIL') then
-        log("RACON-ASSET-TREE", "DETAIL", "Reorganized received data: '%s'", sprint(treeimg))        
+        log("RACON-ASSET-TREE", "DETAIL", "Reorganized received data: '%s'", sprint(treeimg))
     end
     local co_status, hdl_status, hdl_msg
     if type(tree) == "function" then -- Case not handled properly by `match_asset_data_trees`
@@ -253,7 +254,7 @@ local function emp_handler_SendData(data)
     else
         co_status, hdl_status, hdl_msg = copcall(match_asset_data_trees, asset, tree, treeimg, "", ticket~=0 and ticket or nil)
     end
-    --note that treeimg has been modified (mostly emptied) by match_asset_data_trees    
+    --note that treeimg has been modified (mostly emptied) by match_asset_data_trees
 
     local status, msg = co_status and hdl_status, co_status and hdl_msg or hdl_status
     log("RACON-ASSET-TREE", "DETAIL", "tree process end: co_status=%s, hdl_status=%s, hdl_msg=%s, status=%s, msg=%s",
@@ -261,10 +262,10 @@ local function emp_handler_SendData(data)
     if not status then
         log("RACON-ASSET-TREE", "ERROR", "While writing for path '%s' in the tree: msg: '%s'", tostring(path), tostring(msg))
     end
-    if ticket~=0 and status~='async' then -- Immediate acknowledgement, can be OK or KO        
+    if ticket~=0 and status~='async' then -- Immediate acknowledgement, can be OK or KO
         log("RACON-ASSET-TREE", "INFO", "Asset tree acknowledges ticket %d (path:'%s', status:'%s')",
         tostring(ticket), tostring(path), tostring(status))
-        --airvantage.acknowledge deals with status value conversion if needed        
+        --airvantage.acknowledge deals with status value conversion if needed
         require 'racon'.acknowledge(ticket, status, msg)
         status = tonumber(status) or (status and 0 or -1) --emp status, we may want to force 0 or -1 only
     elseif status=='async' then -- Handler will take care of acknowledgement itself

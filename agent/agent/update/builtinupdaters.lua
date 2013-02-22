@@ -25,22 +25,22 @@ local appconinstall
 
 -- run internal installers
 local function dispatch( name, version, path, parameters)
-    local res        
+    local res
     local updatepath , _ = pathutils.split(name, -1)
-    
+
     if not updatepath then
-        log("UPDATE", "INFO", "BUILTIUPDATE for package %s: Update path is not valid", tostring(name))
-        return 473      
+        log("UPDATE", "INFO", "Built-in update for package %s: Update path is not valid", tostring(name))
+        return 473
     end
     --dispatch the update
     if updatepath=="update" then
-        log("UPDATE", "INFO", "BUILTIUPDATE:installscript is running for component %s, path=%s", tostring(name), tostring(path))
+        log("UPDATE", "INFO", "Built-in update: installscript is running for component %s, path=%s", tostring(name), tostring(path))
         res = installscript(name, version, path, parameters)
     elseif updatepath=="appcon" then
-        log("UPDATE", "INFO", "BUILTIUPDATE:appcon is running for component %s, path=%s", tostring(name), tostring(path))
+        log("UPDATE", "INFO", "Built-in update: appcon is running for component %s, path=%s", tostring(name), tostring(path))
         res = appconinstall(name, version, path, parameters)
     else
-        log("UPDATE", "INFO", "BUILTIUPDATE for package %s: Sub path is not valid", tostring(name))
+        log("UPDATE", "INFO", "Built-in update for package %s: Sub path is not valid", tostring(name))
         res = 473
     end
 
@@ -48,27 +48,27 @@ local function dispatch( name, version, path, parameters)
 end
 
 function installscript(name, version, path, parameters)
-    if not path then 
-         log("UPDATE", "DETAIL", "BUILTIUPDATE:running install script with no location given, immediate success")
+    if not path then
+         log("UPDATE", "DETAIL", "Built-in update: running install script with no location given, immediate success")
     return 200 end
-    
+
     local scriptpath = path.."/install.lua"
     if not lfs.attributes(scriptpath) then
-        log("UPDATE", "ERROR", "BUILTIUPDATE:installscript for package %s: file install.lua does not exist", name)
+        log("UPDATE", "ERROR", "Built-in update: installscript for package %s: file install.lua does not exist", name)
         return 474
     end
     local f, err = loadfile(scriptpath)
     if not f then
-        log("UPDATE", "ERROR", "BUILTIUPDATE:installscript for package %s: Cannot load install.lua script, err=%s",name,  err or "nil")
+        log("UPDATE", "ERROR", "Built-in update: installscript for package %s: Cannot load install.lua script, err=%s",name,  err or "nil")
         return 475
     end
-    
+
     --parameters given to the install to ease its work, add other parameters in the param table, so that API is kept.
     local runtimeparams = {cwd = lfs.currentdir(),  script_dir = path, name = name, version = version, parameters = parameters}
-    
+
     local res, err = copcall(f, runtimeparams)
     if not res then
-        log("UPDATE", "ERROR", "BUILTIUPDATE:installscript for package %s: script execution error, err=%s", name, err or "nil");
+        log("UPDATE", "ERROR", "Built-in update: installscript for package %s: script execution error, err=%s", name, err or "nil");
         return 476
     end
 
@@ -77,11 +77,11 @@ end
 
 function appconinstall(name, version, appdata, parameters)
     if not config.get('appcon.activate') then
-        log("UPDATE", "ERROR", "BUILTIUPDATE:ApplicationContainer updater cannot be run because ApplicationContainer is not activated!")
-        return 477 end   
-    local appcon = require"agent.appcon"    
+        log("UPDATE", "ERROR", "Built-in update: ApplicationContainer updater cannot be run because ApplicationContainer is not activated!")
+        return 477 end
+    local appcon = require"agent.appcon"
     --name = appcon.some.thing, let's remove "appcon" from name
-    local _, appname = pathutils.split(name, 1) 
+    local _, appname = pathutils.split(name, 1)
     local res, err
     if version then --filter extra parameters
         local purge = parameters and parameters.purge==true
@@ -90,7 +90,7 @@ function appconinstall(name, version, appdata, parameters)
     else
         res, err = appcon.uninstall(appname)
     end
-    log("UPDATE", "INFO", "BUILTIUPDATE:ApplicationContainer updater result: res=%s, err=%s", tostring(res), tostring(err))
+    log("UPDATE", "INFO", "Built-in update: ApplicationContainer updater result: res=%s, err=%s", tostring(res), tostring(err))
     return res and 200 or 478
 end
 

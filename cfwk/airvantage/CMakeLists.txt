@@ -9,22 +9,12 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-project (airvantage)
+PROJECT(CFWK_AIRVANTAGE)
 
-include_directories (${LUA_SOURCE_DIR}/liblua)
-include_directories(${YAJL_SOURCE_DIR})
-include_directories(${YAJL_SOURCE_DIR}/include)
-include_directories(${YAJL_SOURCE_DIR}/api)
-include_directories(${COMMON_SOURCE_DIR})
-include_directories(${racon_SOURCE_DIR})
-include_directories(${LIBHESSIANPROTOCOL_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+INCLUDE_DIRECTORIES (${CFWK_AIRVANTAGE_SOURCE_DIR})
+ADD_LIBRARY(Swi_AirVantage SHARED swi_airvantage.c)
+ADD_PUBLIC_HEADER(Swi_AirVantage swi_airvantage.h)
+TARGET_LINK_LIBRARIES(Swi_AirVantage Emp lib_yajl lib_swi_log)
 
-set(SRC_SWIAV swi_airvantage.c)
-
-add_library(Swi_AirVantage SHARED ${SRC_SWIAV})
-add_public_header(Swi_AirVantage swi_airvantage.h)
-target_link_libraries(Swi_AirVantage Emp yajl Swi_Log)
-
-add_unit_test(av_test av_test.c RUNTIME_DEPENDENCIES Swi_AirVantage Swi_Log luavm)
+ADD_UNIT_TEST(av_test av_test.c TEST_DEPENDENCY web_server RUNTIME_DEPENDENCIES Swi_AirVantage lib_swi_log lualib)
 

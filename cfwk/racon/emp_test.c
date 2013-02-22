@@ -83,11 +83,11 @@ static swi_status_t emp_init_with_callbacks()
 {
   swi_status_t res;
 
-  res = emp_parser_init(1, empCmds, empHldrs, empReconnectionCallback); 
+  res = emp_parser_init(1, empCmds, empHldrs, empReconnectionCallback);
   if (res != SWI_STATUS_OK)
     return res;
 
-  res = emp_parser_init(1, empCmds, empHldrs, empReconnectionCallback); 
+  res = emp_parser_init(1, empCmds, empHldrs, empReconnectionCallback);
   if (res != SWI_STATUS_OK)
     return res;
   return SWI_STATUS_OK;
@@ -145,7 +145,7 @@ static void * send_cmd(void *arg)
     rbufferLen++;
 
   rbuffer = malloc(rbufferLen);
-  
+
   // Generating random payload with displayable characters
   for (i = 0; i < rbufferLen; i++)
   {
@@ -164,9 +164,9 @@ static void * send_cmd(void *arg)
 
   gen = yajl_gen_alloc(NULL);
   yajl_gen_string(gen, (const unsigned char *)rbuffer, rbufferLen);
-  yajl_gen_get_buf(gen, (const unsigned char **)&payload, &payloadLen); 
+  yajl_gen_get_buf(gen, (const unsigned char **)&payload, &payloadLen);
 
-  while (true) 
+  while (true)
   {
     res = emp_send_and_wait_response(EMP_SEND_CMD, 0, payload, payloadLen, &respPayload, &respPayloadLen);
     if (res != SWI_STATUS_OK && res != SWI_STATUS_IPC_BROKEN)
@@ -178,7 +178,7 @@ static void * send_cmd(void *arg)
     if (payloadLen != respPayloadLen || strncmp(payload, respPayload, payloadLen) != 0)
     {
       SWI_LOG("EMP_TEST", ERROR, "EMP sender thread #%" PRIuPTR " failed: payload mismatched\n"
-	                         "payload = %.*s, payloadLen = %u, respPayload = %.*s, respPayloadLen = %u\n"
+                             "payload = %.*s, payloadLen = %u, respPayload = %.*s, respPayloadLen = %u\n"
                                  , id, payloadLen, payload, payloadLen, respPayloadLen, respPayload, respPayloadLen);
       exit(1);
     }
@@ -211,7 +211,7 @@ static swi_status_t emp_reconnecting()
   // Asking EMP testing server to simulate a crash, in this way EMP
   // can handles reconnecting
   emp_send_and_wait_response(EMP_IPC_BROKEN, 0, NULL, 0, NULL, NULL);
- 
+
   while (reconnected == 0)
     usleep(1000 * 5); // 5ms
   return SWI_STATUS_OK;
@@ -221,7 +221,7 @@ static swi_status_t emp_fail_reconnecting()
 {
   swi_status_t res;
 
-  do 
+  do
   {
     res = emp_send_and_wait_response(EMP_SIMULATE_CRASH, 0, NULL, 0, NULL, NULL);
   } while (res != SWI_STATUS_SERVER_UNREACHABLE);

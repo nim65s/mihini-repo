@@ -23,9 +23,9 @@
 {
   -- Global information
   version = "test_1.0",
-  
+
   -- Packages information
-  components = 
+  components =
   {
     {   name = "@sys.appcon.app1",
         location = "app",

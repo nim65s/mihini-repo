@@ -78,8 +78,8 @@ local api = { }; api.__index = api
 
 local serialize = yajl.to_string
 
-local function deserialize(str) 
-	return str and yajl.to_value('['..str..']')[1] or yajl.null
+local function deserialize(str)
+    return str and yajl.to_value('['..str..']')[1] or yajl.null
 end
 
 -- Create and return a new instance of an EMP Parser
@@ -112,16 +112,16 @@ local function parse(self)
 
             log('EMP', 'DEBUG', "[->RCV] [RSP] #%d %s %s", rid, cmdname, serialized_payload)
 
-	    if self.inprogress[rid] == "TIMEDOUT" then
-	       self.inprogress[rid] = nil
-	       self.inprogress.n = self.inprogress.n-1
+        if self.inprogress[rid] == "TIMEDOUT" then
+           self.inprogress[rid] = nil
+           self.inprogress.n = self.inprogress.n-1
             elseif self.inprogress[rid] then
-	       self.inprogress[rid] = nil -- this finishes an in-progress command
-	       self.inprogress.n = self.inprogress.n-1
+           self.inprogress[rid] = nil -- this finishes an in-progress command
+           self.inprogress.n = self.inprogress.n-1
 
-	       sched.signal(self, cmdname..tostring(rid), status, payload)
+           sched.signal(self, cmdname..tostring(rid), status, payload)
             else
-	       log("EMP", "ERROR", "Received an unexpected response: cmd [%s], payload [%s], rid[%d]", cmdname, payload, rid)
+           log("EMP", "ERROR", "Received an unexpected response: cmd [%s], payload [%s], rid[%d]", cmdname, payload, rid)
             end
 
 
@@ -129,10 +129,10 @@ local function parse(self)
             local serialized_cmd_payload = size>0 and assert(skt:receive(size))
             local cmd_payload = serialized_cmd_payload and deserialize(serialized_cmd_payload)
             if cmd_payload == yajl.null then cmd_payload=nil end
-            
+
             log('EMP', 'DEBUG', "[->RCV] [CMD] #%d %s %s", rid, cmdname, serialized_cmd_payload or '<none>')
             local function execcmd()
-            	log('EMP', 'DEBUG', "payload = %s, type = %s, serialized = %s", tostring(cmd_payload), _G.type(cmd_payload), serialized_cmd_payload)
+                log('EMP', 'DEBUG', "payload = %s, type = %s, serialized = %s", tostring(cmd_payload), _G.type(cmd_payload), serialized_cmd_payload)
                 local copcall_status, cmd_status, resp_payload = copcall(self.cmdhook, cmdname, cmd_payload)
                 if not copcall_status then
                     cmd_status, resp_payload = 11, cmd_status
@@ -158,7 +158,7 @@ function api:run(reconnect_handler)
        s, err = copcall(parse, self)
        self.skt = 517
        sched.signal(self, "ipc broken")
-       
+
        if not reconnect_handler then break end
        status, skt = reconnect_handler()
        -- If the reconnection is impossible, then die

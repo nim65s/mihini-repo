@@ -61,7 +61,7 @@ local checks       = require 'checks'
 local log          = require 'log'
 local upath        = require 'utils.path'
 local asset_tree   = require 'racon.asset.tree'
-local niltoken     = require"niltoken"
+local niltoken     = require "niltoken"
 
 local M = { initialized=false; sem_value = 1}
 
@@ -225,7 +225,7 @@ function MT_ASSET :pushData(path, data, sendpolicy)
        sem_post()
        return s, b
     else
-       return nil, msg 
+       return nil, msg
     end
 end
 
@@ -252,7 +252,7 @@ end
 -- @param self
 -- @param hook the new function to handle software update request.
 --   hook signature: <br> `hook(componentname, version, path, parameters)`
---   
+--
 -- * `componentname` (string) is the identifier of the component to update,
 --    the name is defined in update manifest file, here it is provided
 --    without the assetid at the beginning.
@@ -357,7 +357,7 @@ MT_ASSET.newTable = require 'racon.table'
 
 
 -- Handler for software update requests; will be attached by `init()`.
-local function emp_handler_SoftwareUpdate(payload)    
+local function emp_handler_SoftwareUpdate(payload)
     local path, version, url, parameters = unpack(payload)
 
     --payload is serialized as niltoken in command SoftwareUpdate
@@ -365,7 +365,7 @@ local function emp_handler_SoftwareUpdate(payload)
     if version then version = niltoken(version) end
     if url then url = niltoken(url) end
     if parameters then parameters = niltoken(parameters) end
-       
+
     local assetname, package = upath.split(path, 1)
     local self = M.assets[assetname]
     if not self then
@@ -392,13 +392,13 @@ local function emp_ipc_broken_handler()
    -- This avoids data races between reregistration and other threads which send EMP commands
    M.sem_value = 0
    sched.run(function()
-		for id, asset in pairs(M.assets) do
-		   asset.registered = false
-		   local r, m = asset:start()
-		   if not r then log('RACON-ASSET', 'WARNING', "Failed to register back asset \"%s\"", tostring(asset.id)) end
-		end
-	     end
-	    )
+        for id, asset in pairs(M.assets) do
+           asset.registered = false
+           local r, m = asset:start()
+           if not r then log('RACON-ASSET', 'WARNING', "Failed to register back asset \"%s\"", tostring(asset.id)) end
+        end
+         end
+        )
 end
 
 -- Initialize the module.
@@ -419,7 +419,7 @@ end
 -- @param self
 -- @param componentName a string, this must be the same value as the one
 -- that was given as argument to the update hook (the hook registered with #setUpdateHook). <br>
--- As only one software update is possible for the same component at the same time, 
+-- As only one software update is possible for the same component at the same time,
 -- the couple asset+componentName fully identifies the software update request.
 -- @param updateResult a number, the result of the update, 200 for success,
 -- any other value means error. <br>

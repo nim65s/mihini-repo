@@ -24,7 +24,7 @@ function M.pexec(cmd)
     local fd = io.popen(cmd)
     if not fd then return nil, err end
     local output = fd:read("*a")
-    local status = fd:close()	
+    local status = fd:close()
     return status, output
 end
 

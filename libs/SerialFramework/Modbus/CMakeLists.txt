@@ -9,19 +9,23 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-cmake_minimum_required (VERSION 2.6)
-project (LIBMODBUSCORE)
+# TODO move up one directory
 
-set(LIBMODBUSCORE_SCR
-    ${LIBMODBUSCORE_SOURCE_DIR}/modbus_serializer.c
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+PROJECT(LIB_MODBUS)
+
+SET(LIB_MODBUS_SRC
+    ${LIB_MODBUS_SOURCE_DIR}/modbus_serializer.c
 )
 
-include_directories(
-    ${COMMON_SOURCE_DIR}
-    ${SERIALPROTOCOLS_SOURCE_DIR}/common
-    ${SERIALPROTOCOLS_SOURCE_DIR}/common/oat
-    ${LIBMODBUSCORE_SOURCE_DIR}
+INCLUDE_DIRECTORIES(
+    ${LIB_MIHINI_COMMON_SOURCE_DIR}
+    ${LIB_MIHINI_SERIAL_FRAMEWORK_SOURCE_DIR}/common
+    ${LIB_MIHINI_SERIAL_FRAMEWORK_SOURCE_DIR}/common/oat
+    ${LIB_MODBUS_SOURCE_DIR}
 )
 
-add_library(modbus-core STATIC EXCLUDE_FROM_ALL ${LIBMODBUSCORE_SCR})
-SET_TARGET_PROPERTIES(modbus-core PROPERTIES COMPILE_FLAGS -fPIC) # necessary so that the lib can be used linked in a static code or a shared library
+ADD_LIBRARY(lib_modbus_core STATIC EXCLUDE_FROM_ALL ${LIB_MODBUS_SRC})
+SET_TARGET_PROPERTIES(lib_modbus_core PROPERTIES
+    OUTPUT_NAME modbus_core # TODO not sure of the name
+    COMPILE_FLAGS -fPIC) # necessary so that the lib can be used linked in a static code or a shared library

@@ -9,11 +9,13 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
+PROJECT(AAF_LOADER)
+
 #define default value for loader module
-if(NOT LOADER_PATH_BASE)
-    SET(LOADER_PATH_BASE "${CMAKE_INSTALL_PREFIX}/apps")   
-endif(NOT LOADER_PATH_BASE)
+IF(NOT LOADER_PATH_BASE)
+    SET(LOADER_PATH_BASE "${CMAKE_INSTALL_PREFIX}/apps")
+ENDIF(NOT LOADER_PATH_BASE)
 
-add_definitions(-DLOADER_PATH_BASE="${LOADER_PATH_BASE}")
+ADD_DEFINITIONS(-DLOADER_PATH_BASE="${LOADER_PATH_BASE}")
 
-add_lua_library(loader EXCLUDE_FROM_ALL loader.c)
+ADD_LUA_LIBRARY(loader EXCLUDE_FROM_ALL loader.c)

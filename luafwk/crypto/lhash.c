@@ -24,7 +24,7 @@ static SHash* Pget(lua_State* L, int i) {
 }
 
 static SHash* Pnew(lua_State* L) {
-	SHash* hash = lua_newuserdata(L, sizeof(SHash));
+    SHash* hash = lua_newuserdata(L, sizeof(SHash));
     luaL_getmetatable(L, MYTYPE);
     lua_setmetatable(L, -2);
     return hash;
@@ -33,30 +33,30 @@ static SHash* Pnew(lua_State* L) {
 /** new() */
 static int Lnew(lua_State* L) {
     const char* name = NULL;
-	if (!lua_isnil(L, 1))
-	   name = lua_tostring(L, 1);
-	if (name != NULL && strcmp(name, "md5") == 0) {
-	   register_hash(&md5_desc);
-	} else if (name != NULL && strcmp(name, "sha1") == 0) {
-	   register_hash(&sha1_desc);
-	} else if (name != NULL && strcmp(name, "sha224") == 0) {
-	   register_hash(&sha224_desc);
-	} else if (name != NULL && strcmp(name, "sha256") == 0) {
-	   register_hash(&sha256_desc);
-	}
+    if (!lua_isnil(L, 1))
+       name = lua_tostring(L, 1);
+    if (name != NULL && strcmp(name, "md5") == 0) {
+       register_hash(&md5_desc);
+    } else if (name != NULL && strcmp(name, "sha1") == 0) {
+       register_hash(&sha1_desc);
+    } else if (name != NULL && strcmp(name, "sha224") == 0) {
+       register_hash(&sha224_desc);
+    } else if (name != NULL && strcmp(name, "sha256") == 0) {
+       register_hash(&sha256_desc);
+    }
 /*
-	else if (name != NULL && strcmp(name, "sha384") == 0) {
-	   register_hash(&sha384_desc);
-	}
-	else if (name != NULL && strcmp(name, "sha512") == 0) {
-	   register_hash(&sha512_desc);
-	}
+    else if (name != NULL && strcmp(name, "sha384") == 0) {
+       register_hash(&sha384_desc);
+    }
+    else if (name != NULL && strcmp(name, "sha512") == 0) {
+       register_hash(&sha512_desc);
+    }
 */
-	else {
-	   lua_pushnil(L);
-	   lua_pushstring(L, "'name' should be a known hash");
-	   return 2;
-	}
+    else {
+       lua_pushnil(L);
+       lua_pushstring(L, "'name' should be a known hash");
+       return 2;
+    }
     int hash_id = find_hash(name);
     if (hash_id == -1) {
         lua_pushnil(L);
@@ -71,16 +71,16 @@ static int Lnew(lua_State* L) {
 
 /** clone(userdata) */
 static int Lclone(lua_State* L) {
-	SHash* hash = Pget(L, 1);
-	SHash* hashn = Pnew(L);
+    SHash* hash = Pget(L, 1);
+    SHash* hashn = Pnew(L);
     *hashn = *hash;
     return 1;
 }
 
 /** reset(userdata) */
 static int Lreset(lua_State* L) {
-	SHash* hash = Pget(L, 1);
-	CHECK(hash_descriptor[hash->hash_id].init(&(hash->state)));
+    SHash* hash = Pget(L, 1);
+    CHECK(hash_descriptor[hash->hash_id].init(&(hash->state)));
     lua_settop(L, 1);
     return 1;
 }
@@ -101,43 +101,43 @@ static int Ldigest(lua_State* L) {
     int hashsize = MAXBLOCKSIZE;
     int n = 2;
     if (lua_isuserdata(L, 1)) {
-    	SHash hash = *Pget(L, 1);
-    	hashsize = hash_descriptor[hash.hash_id].hashsize;
+        SHash hash = *Pget(L, 1);
+        hashsize = hash_descriptor[hash.hash_id].hashsize;
         CHECK(hash_descriptor[hash.hash_id].done(&(hash.state), digest));
     } else {
         size_t size;
         const char* name = NULL;
-    	if (!lua_isnil(L, 1))
-    	   name = lua_tostring(L, 1);
-    	if (name != NULL && strcmp(name, "md5") == 0) {
-    	   register_hash(&md5_desc);
-    	} else if (name != NULL && strcmp(name, "sha1") == 0) {
-    	   register_hash(&sha1_desc);
-    	} else if (name != NULL && strcmp(name, "sha224") == 0) {
-    	   register_hash(&sha224_desc);
-    	} else if (name != NULL && strcmp(name, "sha256") == 0) {
-    	   register_hash(&sha256_desc);
-    	}
-    	/*
-		else if (name != NULL && strcmp(name, "sha384") == 0) {
-		   register_hash(&sha384_desc);
-		}
-		else if (name != NULL && strcmp(name, "sha512") == 0) {
-		   register_hash(&sha512_desc);
-		}
-    	*/
-		else {
-		   lua_pushnil(L);
-		   lua_pushstring(L, "'name' should be a known hash");
-		   return 2;
-		}
-		int hash_id = find_hash(name);
-		if (hash_id == -1) {
-			lua_pushnil(L);
-			lua_pushstring (L, "cannot find hash implementation");
-			return 2;
-		}
-		hashsize = hash_descriptor[hash_id].hashsize;
+        if (!lua_isnil(L, 1))
+           name = lua_tostring(L, 1);
+        if (name != NULL && strcmp(name, "md5") == 0) {
+           register_hash(&md5_desc);
+        } else if (name != NULL && strcmp(name, "sha1") == 0) {
+           register_hash(&sha1_desc);
+        } else if (name != NULL && strcmp(name, "sha224") == 0) {
+           register_hash(&sha224_desc);
+        } else if (name != NULL && strcmp(name, "sha256") == 0) {
+           register_hash(&sha256_desc);
+        }
+        /*
+        else if (name != NULL && strcmp(name, "sha384") == 0) {
+           register_hash(&sha384_desc);
+        }
+        else if (name != NULL && strcmp(name, "sha512") == 0) {
+           register_hash(&sha512_desc);
+        }
+        */
+        else {
+           lua_pushnil(L);
+           lua_pushstring(L, "'name' should be a known hash");
+           return 2;
+        }
+        int hash_id = find_hash(name);
+        if (hash_id == -1) {
+            lua_pushnil(L);
+            lua_pushstring (L, "cannot find hash implementation");
+            return 2;
+        }
+        hashsize = hash_descriptor[hash_id].hashsize;
         const char* chunk = luaL_checklstring(L, 2, &size);
         hash_state state;
         CHECK(hash_descriptor[hash_id].init(&state));
@@ -160,20 +160,20 @@ static int Ldigest(lua_State* L) {
 
 /** tostring(userdata) */
 static int Ltostring(lua_State* L) {
-	SHash* hash = Pget(L, 1);
+    SHash* hash = Pget(L, 1);
     lua_pushfstring(L, "%s %p", MYTYPE, (void*)hash);
     return 1;
 }
 
 static int hash_filter(lua_State* L) {
-	SHash* hash = Pget(L, lua_upvalueindex(1));
+    SHash* hash = Pget(L, lua_upvalueindex(1));
     if (lua_isnil(L, 1)) {
         lua_pushnil(L);
     } else  {
         size_t size;
         const char* chunk = lua_tolstring(L, 1, &size);
         if (size > 0) {
-        	CHECK(hash_descriptor[hash->hash_id].process(&(hash->state), (unsigned char*)chunk, (unsigned long)size));
+            CHECK(hash_descriptor[hash->hash_id].process(&(hash->state), (unsigned char*)chunk, (unsigned long)size));
         }
         lua_pushlstring(L, chunk, size);
     }

@@ -23,7 +23,7 @@ local function SoftwareUpdate(asset, data, path, ticketid)
     if not url or not signature then return 551, "Wrong params in SoftwareUpdate command: need package url and package signature" end
 
 
-    local newupdate = {proto= "awtda", url = url, signature=signature, ticketid = ticketid}
+    local newupdate = {proto= "m3da", url = url, signature=signature, ticketid = ticketid}
     local res, errcode, errstr = update.notifynewupdate(newupdate)
 
     if res then

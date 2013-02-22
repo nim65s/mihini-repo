@@ -9,6 +9,8 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(utils DESTINATION utils
-                loader.lua path.lua table.lua loweralias.lua =ltn12/source.lua system.lua)
+PROJECT(MIHINI_UTILS)
+
+ADD_LUA_LIBRARY(utils DESTINATION utils
+    loader.lua path.lua table.lua loweralias.lua =ltn12/source.lua system.lua)
 

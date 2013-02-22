@@ -453,7 +453,7 @@ bss_status_t bss_object( bss_ctx_t *ctx, bs_classid_t classid) {
   START_TRANSACTION;
   TRY( openContainer( ctx, BS_FOBJECT, BS_CTXID_OBJECT, direct ? 0x60+classid : 0x70, & f));
   if( !direct) TRY( writeUnsignedInteger( ctx, classid-0x10));
-  
+
   f->missing = class->nfields + 1; /* will be decremented by commitTransaction() */
   f->content.object.class = class;
   COMMIT_AND_RETURN;

@@ -9,19 +9,20 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-add_lua_library(luafwktests DESTINATION tests EXCLUDE_FROM_ALL
-                luatobin.lua  persist.lua rpc.lua sched.lua socket.lua logstore.lua crypto.lua posixsignal.lua
+PROJECT(TEST_LUAFWK)
+
+ADD_LUA_LIBRARY(test_luafwk DESTINATION tests EXCLUDE_FROM_ALL
+                bysant.lua luatobin.lua  persist.lua rpc.lua sched.lua socket.lua logstore.lua crypto.lua posixsignal.lua
                )
 
-add_lua_library(readyagentconnectortests DESTINATION tests EXCLUDE_FROM_ALL
-    stagedb.lua bysant.lua airvantage.lua devicetree.lua sms.lua system.lua asset_tree.lua
-)
+ADD_DEPENDENCIES(test_luafwk agent_provisioning)
 
-add_unit_test(devicetree devicetree.lua)
-add_unit_test(sms sms.lua TEST_DEPENDENCY messaging_stubs)
-if(SHARKS_DEV_BUILD)
-  add_unit_test(system system.lua TEST_DEPENDENCY system_stubs)
-else()
-  add_unit_test(system system.lua)
-endif()
-add_unit_test(emp emp.lua TEST_DEPENDENCY emp_server)
+ADD_LUA_LIBRARY(test_racon DESTINATION tests EXCLUDE_FROM_ALL
+    stagedb.lua devicetree.lua sms.lua system.lua)
+
+ADD_UNIT_TEST(asset_tree asset_tree.lua TEST_TYPE non-standalone TEST_DEPENDENCY system_stubs,web_server)
+ADD_UNIT_TEST(airvantage airvantage.lua TEST_DEPENDENCY web_server)
+ADD_UNIT_TEST(devicetree devicetree.lua)
+ADD_UNIT_TEST(sms sms.lua TEST_DEPENDENCY messaging_stubs)
+ADD_UNIT_TEST(system system.lua TEST_DEPENDENCY system_stubs)
+ADD_UNIT_TEST(emp emp.lua TEST_DEPENDENCY emp_server)

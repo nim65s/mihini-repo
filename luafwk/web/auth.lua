@@ -63,7 +63,7 @@ function web.authenticate_header (user_table, realm)
             env.response = "HTTP/1.1 401 AUTHORIZATION REQUIRED"
             env.error_msg = "Invalid password"
          else
-            log ("WEB-AUTH", "INFO", "%q logged in successfully", login)         
+            log ("WEB-AUTH", "INFO", "%q logged in successfully", login)
          end
       end
    end
