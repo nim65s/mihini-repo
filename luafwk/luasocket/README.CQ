@@ -1,1 +1,41 @@
-This folder has been contributed in a separate CQ.
+Name
+----
+LuaSocket
+
+Version
+-------
+
+Description
+-----------
+
+Cryptography
+------------
+No
+
+Project Website
+---------------
+http://w3.impa.br/~diego/software/luasocket/
+
+Source URL
+----------
+https://github.com/fire/luasocket
+
+License
+-------
+MIT
+
+Source/Binary
+-------------
+Source
+
+Modified
+--------
+Yes: support for Luasched scheduler.
+
+Apache Project
+--------------
+No
+
+Contributors Agreement
+----------------------
+No
