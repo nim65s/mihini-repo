@@ -21,7 +21,7 @@ INCLUDE_DIRECTORIES(
     ${LIB_MIHINI_COMMON_SOURCE_DIR}
     ${LIB_MIHINI_SERIAL_FRAMEWORK_SOURCE_DIR}/common/
     ${LIB_MODBUS_SOURCE_DIR}
-    ${MIHINI_SERIAL_FRAMEWORK_DIR}/common/
+    ${MIHINI_SERIAL_FRAMEWORK_SOURCE_DIR}/common/
 )
 
 # TODO: move serial parts out of common in modbus.lua

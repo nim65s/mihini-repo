@@ -25,7 +25,7 @@ INCLUDE_DIRECTORIES(
     ${LIB_MODBUS_SOURCE_DIR}
 )
 
-ADD_LIBRARY(lib_modbus_core STATIC EXCLUDE_FROM_ALL ${LIB_MODBUS_SRC})
-SET_TARGET_PROPERTIES(lib_modbus_core PROPERTIES
-    OUTPUT_NAME modbus_core # TODO not sure of the name
+ADD_LIBRARY(lib_modbus STATIC EXCLUDE_FROM_ALL ${LIB_MODBUS_SRC})
+SET_TARGET_PROPERTIES(lib_modbus PROPERTIES
+    OUTPUT_NAME modbus # TODO not sure of the name
     COMPILE_FLAGS -fPIC) # necessary so that the lib can be used linked in a static code or a shared library
