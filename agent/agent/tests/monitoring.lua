@@ -33,6 +33,7 @@ end
 
 function t:test_trigger_onchange1()
     u.assert(tm.set("ram.tests4.t1", 0))
+    u.assert(tm.set("ram.tests4.t2", 0))
     local vars = varproxy.tests4
     local nvar
     local ngroup
@@ -72,39 +73,43 @@ end
 
 -- Test registration on a non existing variable
 function t:test_trigger_onchange2()
+    u.assert(tm.set("ram.tests7.t1", 0))
     local ok
     local function test()
         connect(onchange("ram.tests7.t1"), function() ok=true end)
     end
     u.assert(mon.load("tests7", test))
     u.assert_equal(nil, ok)
-    u.assert(tm.set("ram.tests7.t1", 0))
+    u.assert(tm.set("ram.tests7.t1", 1))
     sched.wait()
     u.assert_equal(true, ok)
 end
+
+
 function t:test_trigger_onhold1()
     u.assert(tm.set("ram.tests5.t1", 0))
+    u.assert(tm.set("ram.tests5.t2", 0))
     local vars = varproxy.tests5
     local nvar
     local ngroup
     local function test()
-        connect(onhold(2, "ram.tests5.t1"), function(v) nvar = v or true end)
-        connect(onhold(2, "ram.tests5."), function(v) ngroup = v or true end)
+        connect(onhold(3, "ram.tests5.t1"), function(v) nvar = v or true end)
+        connect(onhold(3, "ram.tests5."), function(v) ngroup = v or true end)
     end
     u.assert(mon.load("tests5", test))
 
     nvar, ngroup = nil, nil
-    sched.wait(3)
+    sched.wait(4)
     u.assert_equal(true, nvar)
     u.assert_equal(true, ngroup)
 
     nvar, ngroup = nil, nil
-    vars.t2 = 1; sched.wait(3)
+    vars.t2 = 1; sched.wait(4)
     u.assert_equal(nil, nvar)
     u.assert_clone_tables({["ram.tests5.t2"]=1}, ngroup)
 
     nvar, ngroup = nil, nil
-    vars.t1 = 1; sched.wait(3)
+    vars.t1 = 1; sched.wait(4)
     u.assert_clone_tables({["ram.tests5.t1"]=1}, nvar)
     u.assert_clone_tables({["ram.tests5.t1"]=1}, ngroup)
 
@@ -118,32 +123,58 @@ function t:test_trigger_onhold1()
     vars.t1 = 4; sched.wait(1)
     u.assert_equal(nil, nvar)
     u.assert_equal(nil, ngroup)
-    vars.t1 = 6; sched.wait(3)
+    vars.t1 = 6; sched.wait(4)
     u.assert_clone_tables({["ram.tests5.t1"]=6}, nvar)
     u.assert_clone_tables({["ram.tests5.t1"]=6}, ngroup)
 end
 
+-- Test on a periodic onhold
 function t:test_trigger_onhold2()
     u.assert(tm.set("ram.tests3.t1", 0))
     local vars = varproxy.tests3
     local count = 0
-    local ngroup
     local function test()
-        connect(onhold(-2, "ram.tests3.t3"), function(v) count = count+1 or true end)
+        connect(onhold(-3, "ram.tests3.t3"), function(v) count = count+1 end)
     end
     u.assert(mon.load("tests3", test))
 
     u.assert_equal(0, count)
-    sched.wait(5)
+    sched.wait(7)
     u.assert_equal(2, count)
     vars.t3 = 2; sched.wait(1)
     vars.t3 = 3; sched.wait(1)
     vars.t3 = 4; sched.wait(1)
+    vars.t3 = 5; sched.wait(1)
+    vars.t3 = 6; sched.wait(1)
+    vars.t3 = 7; sched.wait(1)
     u.assert_equal(2, count)
 end
 
 -- Test multiple holding variables
 function t:test_trigger_onhold3()
+    u.assert(tm.set("ram.tests9.t1", 0))
+    u.assert(tm.set("ram.tests9.t2", 0))
+    u.assert(tm.set("ram.tests9.t3", 0))
+    u.assert(tm.set("ram.tests9.t4", 0))
+    local vars = varproxy.tests9
+    local count = 0
+    local function test()
+        connect(onhold(3, "ram.tests9.t1", "ram.tests9.t2", "ram.tests9.t3", "ram.tests9.t4"), function(v) count = count+1 end)
+    end
+    u.assert(mon.load("tests9", test))
+
+    u.assert_equal(0, count)
+    sched.wait(5)
+    u.assert_equal(1, count)
+    vars.t1 = 2; sched.wait(1)
+    vars.t2 = 3; sched.wait(1)
+    vars.t3 = 4; sched.wait(1)
+    vars.t4 = 5; sched.wait(1)
+    vars.t1 = 6; sched.wait(1)
+    vars.t2 = 7; sched.wait(1)
+    vars.t3 = 8; sched.wait(1)
+    vars.t4 = 9; sched.wait(1)
+    u.assert_equal(1, count)
 end
 
 
@@ -289,6 +320,7 @@ end
 --ondeadband(deadband, var)
 function t:test_trigger_ondeadband()
     u.assert(tm.set("ram.tests2.t1", 0)) -- create tests2 sub table
+    u.assert(tm.set("ram.tests2.t3", 0))
     local t = varproxy.tests2
     local c
     local function test()
@@ -373,10 +405,14 @@ function t:test_trigger_load_unload()
     do_unload_load()
     sched.wait(1)
     collectgarbage("collect")
+    sched.wait(1)
+    collectgarbage("collect")
+    sched.wait(1)
+    collectgarbage("collect")
     local bc_count2 = collectgarbage("count")
     
     --print(bc_count1, bc_count2)
-    u.assert(bc_count1>=bc_count2*0.99, "Memory leak detected: more than 1% of ram was not freed")
+    u.assert(bc_count1>=bc_count2*0.95, string.format("Memory leak detected: more than 1%% of ram was not freed: before %d, after %d", bc_count1, bc_count2))
 
 end
 
