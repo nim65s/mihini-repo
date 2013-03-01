@@ -62,6 +62,7 @@ IF(EXISTS "${PROJECT_SOURCE_DIR}/non-free/CMakeLists.txt")
 ADD_SUBDIRECTORY (non-free)
 ENDIF()
 
-ADD_CUSTOM_TARGET(mihini DEPENDS agent cfwk luafwk)
+ADD_CUSTOM_TARGET(mihini)
+ADD_DEPENDENCIES(mihini agent cfwk luafwk)
 
 
