@@ -9,8 +9,12 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
+IF(NOT TARGET messaging)
+
 PROJECT(MIHINI_MESSAGING)
 
+ADD_LUA_LIBRARY(messaging messaging.lua messaginghal.lua)
 ADD_LUA_LIBRARY(smspdu smspdu.c)
-ADD_LUA_LIBRARY(messaging messaging.lua)
 ADD_DEPENDENCIES(messaging smspdu)
+
+ENDIF()
