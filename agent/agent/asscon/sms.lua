@@ -32,22 +32,9 @@ local assetpatterns = {}
 local initialized
 
 local function new_sms_handler(_, sms)
-   -- Check that this is a AWTDA protocol message:
-   if sms.message:sub(1, 6) == "AWTDA2" then
-      log("SMS", "INFO", "New AWTDA SMS from %s", sms.address)
-      local message
-      if sms.message:sub(7, 7) == "T" then --Text SMS
-          -- Remove the AWTDA SMS header, and decode base64 content.
-          message = mime.unb64(sms.message:sub(8))
-      else -- Binary SMS
-          -- Remove the AWTDA SMS header
-          message = sms.message:sub(7)
-      end
-      -- Send the data in the pipe !
-      if message then
-          local srvcon = require "agent.srvcon"
-          sched.run(srvcon.parseonewaypackage, message)
-      end
+   -- Check that this is a M3DA protocol message:
+   if sms.message:sub(1, 3) == "DA3" then
+      log("SMS", "ERROR", "Unsupported M3DA SMS")
    end
    -- notify clients
    for assetname, patterns in pairs(assetpatterns) do
