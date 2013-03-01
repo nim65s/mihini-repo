@@ -81,7 +81,7 @@ end
 local function main()
     color_logs()
     log.setlevel("ALL")
-    log.setlevel("INFO", "sched", "flash", "BYSANT-M3DA")
+    log.setlevel("INFO", "SCHED", "FLASH", "BYSANT-M3DA")
     if options.d~=nil then
         print "*** Connecting to debugger ***"
         require 'debugger' (options.h, tonumber(options.p), options.k)

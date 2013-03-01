@@ -322,7 +322,7 @@ local function sdb2srv(path, sdb, policy_to_kill, key_to_kill, dont_reset)
             sdb :serialize_cancel() -- just to be sure
             log('DATAMGR', 'ERROR', "Server emission error: %s", errmsg)
         elseif policy_to_kill then -- destroy the (undeclared) table altogether
-            sdb :close() -- no need to wait for gC for resource release
+            sdb :close() -- no need to wait for GC for resource release
             policy_to_kill[key_to_kill] = nil
         elseif not dont_reset then -- empty the table, but leave it there
             sdb :reset()
@@ -338,7 +338,7 @@ local function sdb2srv(path, sdb, policy_to_kill, key_to_kill, dont_reset)
     end
 end
 
--- simplier wrapper for sdb2srv to be consistent with consolidate for predeclared tables.
+-- simpler wrapper for sdb2srv to be consistent with consolidate for predeclared tables.
 local function tbl2srv(t, dont_reset)
     return sdb2srv(t.path, t.sdb, nil, nil, dont_reset)
 end

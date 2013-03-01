@@ -36,7 +36,7 @@ do
     C)    BUILD_DIR="$OPTARG"
           echo ">>> Set BUILD DIRECTORY to $OPTARG"
                 ;;
-    *)    printf "Usage: %s: [-d] [-t target]\n" $(basename $0) >&2
+    *)    printf "Usage: %s: [-d] [-t target] [-C target_dir]\n" $(basename $0) >&2
             exit 2
                 ;;
     esac

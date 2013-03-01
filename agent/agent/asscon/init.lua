@@ -60,7 +60,7 @@ end
 
 local function getassetids(id)
     if not assets[id] then
-        return "Unknown asset it"
+        return "Unknown asset id"
     elseif not next(assets[id]) then
         return "{Unregistered asset ["..tostring(id).."]}"
     else
