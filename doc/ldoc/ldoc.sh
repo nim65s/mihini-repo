@@ -145,7 +145,7 @@ require 'sched'
 require 'shell.telnet'
 
 -- Start a telnet server on port 1234
--- Once this program is started , you can start a Lua VM throught telnet
+-- Once this program is started , you can start a Lua VM through telnet
 -- using the following command: telnet localhost 1234
 local function run_server()
   shell.telnet.init {
