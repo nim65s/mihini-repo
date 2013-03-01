@@ -16,13 +16,13 @@ local M = {}
 
 -- internal data, persisted and read from server
 -- data table is just a proxy to enable to have update data load/unloaded as a cache (see cache functions below for more desc)
--- data table organisation:
+-- data table organization:
 -- data.swlist (table) contains software status
 -- data.currentupdate (table) contains current update description if any
 --
 -- data.swlist.lastupdatestatus= (integer) result code of last update job
 -- data.swlist.lastupdateerrstr= (string) description of the error (if any) for last update
--- data.swlist.components: (table) contains "installed"/"provisionned" software components
+-- data.swlist.components: (table) contains "installed"/"provisioned" software components
 -- data.swlist.components[uid] (table) contains the description of a component
 -- data.swlist.components[uid].name: string
 -- data.swlist.components[uid].uid: unique id of the component. see getcmpuid.

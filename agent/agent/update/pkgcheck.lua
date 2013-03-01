@@ -135,8 +135,6 @@ end
 
 local function checkman(manifest)
 
-    --p("checkman", data.swlist)
-
     --type checking fct for depends and provides fields
     --provides table values must be valid version strings
     local function testtabletypes(t, checkvalue)

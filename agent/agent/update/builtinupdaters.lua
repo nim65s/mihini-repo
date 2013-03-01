@@ -9,6 +9,13 @@
 --     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
+--
+-- This file provides the installation of components from an update package sending the update to the agent (@sys).
+-- For now two types of update are accepted:
+--  - @sys.appcon: manage (install/uninstall) an application in the ApplicationContainer module
+--  - @sys.update: `install script`: run a simple Lua script embedded in the update package
+--
+
 local config = require"agent.config"
 local pathutils = require"utils.path"
 local lfs=require"lfs"

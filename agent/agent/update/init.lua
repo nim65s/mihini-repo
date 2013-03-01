@@ -9,31 +9,52 @@
 --     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
--- Update module
--- - deals with update package with dependency checking (no update can be run without a package)
--- - "abstract component"(i.e. component that does)
--- - update package can come from M3DA or be copied locally on the device.
---   The update process itself is not dependant on the way to get the package, so it is easy to add a new way to
---   download the package.
+
+-- ------------------------------------------------------------------------------
+-- The main goals of the agent update module are:
+--
+-- * maintain the software state: installed software components, with their version, dependencies, etc;
+--
+-- * process update package so that software components can be updated/installed/removed;
+--
+-- * communicate with external applications using swi_update API: <br>
+--   -- send events about update process <br>
+--   -- pause/resume update process upon requests coming from the applications.
 --
 -- Internal data management and explanation are in update.common sub module.
 --
--- During the update, currentupdate table keeps the state of the update:
+-- Update package process
+-- ----------------------
 --
--- manifest: the table returned by the Manifest of the update package
+-- The main steps are:
 --
--- Resume / retry support:
+-- * update start: gathering update info either by: <br>
+--   -- M3DA Software Update command <br>
+--   -- local update: mainly triggered at boot or on demand (by calling appropriate API);
 --
--- If an update is interrupted by the reboot of the ReadyAgent, the update will be resumed. The number of retry is set in ReadyAgent update config.
+-- * package download: retrieving the package data: <br>
+--   -- M3DA command download through HTTP <br>
+--   -- no need to download anything when using local update;
 --
--- There are several "check point" where an update can be resumed from:
--- -Download resume needs to be supported by each protocol
--- -- OMADM download resume is OK
--- -- M3DA download resume is NOT done yet
--- - Once the package has been *totally* successfully checked, the check process will not be restarted on each retry.
--- - Once an component has reported status, if the reboot occurs after that information is saved, then this component will not be notified again.
--- Only the components that haven't reported yet the update status will be notified on resume.
+-- * package checking: extracting the archive, loading the manifest, checking the manifest, checking the components;
 --
+-- * update dispatch: sending the notification to software components that must use the files contained in the package to realize;
+--
+-- * update end: cleaning files, persisted states, and sending acknowledge.
+--
+-- The update process itself is not dependent on the protocol used to retrieve the package / trigger the update, so it is easy to add a new protocol to
+-- download the package.
+--
+-- Resume / retry support
+-- ----------------------
+--
+-- The main behavior is:  until the current step is not marked as finished, any reboot or pause/resume request will make the current step start again.
+--
+-- The rule of thumb here is to let each step to support progressive resume or only resume from beginning of the step.
+--
+--
+-- @module agent.update
+--------------------------------------------------------------------------------
 
 require 'print'
 
@@ -69,13 +90,13 @@ local notifystatus
 local notifypause
 
 -- Returns the status of the last update done or the status of current update if an update is in progress.
---
--- @param sync optional boolean, to request blocking behavior to wait for the end of the whole update process, only applies if an update is in progress.
--- remark: please note that update process may provoke system/ReadyAgent reboot, if so you can call again getstatus after ReadyAgent reboot to get the result.
+-- @function [parent=#agent.update] getstatus
+-- @param sync optional boolean, to request blocking behavior to wait for the end of the whole update process, only applies if an update is in progress. <br>
+-- remark: please note that update process may provoke system/agent reboot, if so you can call again getstatus after ReadyAgent reboot to get the result.
 --
 -- @return "in_progress" if an update is in progress but blocking behavior was not requested
 -- @return "ok" in case of success of the last update process
--- @return nil, error string describing the error that appened during processing the last update.
+-- @return nil, error string describing the error that happened during processing the last update.
 local function getstatus(sync)
     if data.currentupdate then
         if sync then
@@ -94,15 +115,17 @@ end
 
 
 -- Triggers an update using a local file as update package.
+-- @function [parent=#agent.update] localupdate
+-- @param path, optional string, if given it must be the absolute path to a valid update file.<br>
+-- If path parameter is not given then the function will look in the drop directory to find a update file, using predefined file name (relative to drop folder): <br>
+-- - if agent config parameter `update.localpkgname` is set, then is will be used as update file name <br>
+-- - otherwise default name is `updatepackage.tar` <br>
+-- (default drop location is: agent_runtime/update/drop)
 --
--- @param path, optional string, if given it must be the absolute path to a valid update file.
--- If path parameter is not given then the function will search in the drop directory to find a valid file.
--- (default drop location is: RAruntime/update/drop)
---
--- @param sync optional boolean, to request blocking behavior to wait for the result of the whole update process.
--- If not set, the function will return after the package analysis.
--- Remark: please note that update process may provoke system/ReadyAgent reboot, obviously in that case, you can't get the update status even if you requested a blocking behavior.
--- If such a reboot occurs, you can still call getstatus API after the ReadyAgent reboot to get status of the local update.
+-- @param sync optional boolean, to request blocking behavior to wait for the result of the whole update process. <br>
+-- If not set, the function will return after the package analysis. <br>
+-- Remark: please note that update process may provoke system/agent reboot, obviously in that case, you can't get the update status even if you requested a blocking behavior.
+-- If such a reboot occurs, you can still call getstatus API after the agent reboot to get status of the local update.
 --
 -- @return "in_progress" if the package was accepted (package analysis returned no error) but blocking behavior was not requested
 -- @return "ok" in case of success of the whole update process if blocking behavior was requested
@@ -169,9 +192,11 @@ local stepstart
 
 local function start_update()
     --just call stepfinished to start the state machine.
+    --it will got the first automatically, notifying the start of the first step
     stepfinished("success")
 end
 
+--finish the update: clean state, send last notification to swi_update API user, send update job ack (if needed).
 local function finish_update()
     --if no result(i.e. no error) is set when we get here, then the update is successful
     data.currentupdate.result = data.currentupdate.result or 200
@@ -182,9 +207,9 @@ local function finish_update()
     local proto = data.currentupdate.infos.proto
     if proto == "m3da" then
         if not data.currentupdate.infos.ticketid then
-            log("UPDATE", "INFO", "sendresult for M3DA: no ticketid saved, no acknowledge to send")
+            log("UPDATE", "INFO", "Acknowledging M3DA update: no ticketid saved, no acknowledge to send")
         else
-            log("UPDATE", "INFO", "acknowledging update command to M3DA server")
+            log("UPDATE", "INFO", "Acknowledging update command to M3DA server")
             local m3dacode = result==200 and 0 or result --0 is M3DA success code
             --send the ack to srv: use default policy for ack, but request the ack to be persisted in flash
             local res, err = airvantage.acknowledge(data.currentupdate.infos.ticketid, m3dacode, resultdetails or "no description", nil, true)
@@ -197,7 +222,7 @@ local function finish_update()
             end
         end
     elseif proto=="localupdate" then
-        log("UPDATE", "INFO", "local update finished with resultcode=%s, errstr=%s", tostring(result), tostring(resultdetails))
+        log("UPDATE", "INFO", "Local update finished with resultcode=%s, errstr=%s", tostring(result), tostring(resultdetails))
     else
         log("UPDATE", "INFO", "Update: can't send update result using %s: unsupported protocol", proto);
     end
@@ -216,23 +241,30 @@ local function finish_update()
 
 end
 
+-- this list does the mapping between event names (used internally in update module), and event id to be send using EMP to user connected by swi_update API.
 local step_events = {update_new = 0, download_in_progress = 1, download_ok = 2, crc_ok = 3, update_in_progress = 4, update_failed = 5, update_successful = 6, update_paused = 7}
 
+-- update steps: each step has:
+-- - a name (to be displayed in logs)
+-- - an entry point: function used to start or *resume* the step (each step routine is responsible to deal with needed data to do start/resume actions
+-- - a start event: event to be send *at the beginning* of the step through EMP to swi_update API users, the event name has to conform to step_events list previously defined.
+-- - a progress event: *optional* event to be sent during the step (if the step routine calls stepprogress internal API.
 STEPS = {
     { name = "start_update",       start = start_update,          start_event = "update_new"},
     { name = "download_package",   start = downloader.start,      start_event = "download_in_progress", progress_event = "download_in_progress"},
     { name = "check_package",      start = pkgcheck.checkpackage, start_event = "download_ok", },
-    { name = "dispatch_update",     start = updatemgr.dispatch,   start_event = "crc_ok", progress_event = "update_in_progress"},
-    { name = "finish_update",      start = finish_update,         start_event = nil} --special event sent throug step pgress api. variable event (success / failure)
+    { name = "dispatch_update",    start = updatemgr.dispatch,    start_event = "crc_ok", progress_event = "update_in_progress"},
+    { name = "finish_update",      start = finish_update,         start_event = nil} --special event sent through step progress api. variable event (success / failure)
 }
 --used to go directly to last step: i.e update result reporting
 last_step = #STEPS;
 
+--to be called either at startup or when resume request is received.
 local function resumeupdate()
 
     if data.currentupdate.request then
-        --for now we deal update request at the moment we receive it
-        log("UPDATE", "WARNING", "Unprocessed request at resume, unsupported")
+        --for now we process update request at the moment we receive it
+        log("UPDATE", "INFO", "Unprocessed request at resume, discarded")
     end
 
     if data.currentupdate.status == "paused" then
@@ -242,36 +274,36 @@ local function resumeupdate()
         notifypause()
         return
     end
+    --resume by running current step entry point
     stepstart()
 end
 
 
 
 
---This isthe function that will be called when a new update is available
---the new update can come from M3DA SoftwareUpdate command or local update
---@param newupdate a table describing the update to start, with subfields:
--- - proto:
---     mandatory string to define the protocol used to receive the update and to be used to report update status.
---     Can be "m3da", "localupdate".
---     This value determines the other fields of info
--- - url:
---     string, url to use to download the update, usually http url (m3da job only)
--- - updatefile:
---     string, absolute path to the update file to use (an archive file),
---     i.e. the archive is already on the file system (local update only)
--- - ticketid:
---     a userdata used to acknowledge the software update result (m3da job)
---@return nil, errorcode, errstr: update cannot be launched
---@return false, errorcode, errstr: update was started but update package verification failed.
---@return "async" if update package is accepted and being dispatched to assets
---@note when returning nil or false as first result, this is the responsibility of the service that is calling this API
--- to correctly report the error synchronously, otherwise the update status will be reported asynchronously by this module
--- at the end of the update
--- (the way to report the status will depend on protocol used to deliver the update)
+-- This is the function that must be called when a new update is available
+-- the new update can come from M3DA SoftwareUpdate command or local update.
+-- @function [parent=#agent.update] notifynewupdate
+-- @param newupdate a table describing the update to start, with subfields: <br>
+-- - proto: <br>
+--    Mandatory string to define the protocol used to receive the update and to be used to report update status. <br>
+--    Can be "m3da", "localupdate". <br>
+--    This value determines the other fields of info. <br>
+-- - url: <br>
+--    string, url to use to download the update, usually http url (m3da job only) <br>
+-- - updatefile: <br>
+--    string, absolute path to the update file to use (an archive file), i.e. the archive is already on the file system (local update only) <br>
+-- - ticketid: <br>
+--    a userdata used to acknowledge the software update result (m3da job) <br>
+-- @return nil, errorcode, errstr: update cannot be launched
+-- @return false, errorcode, errstr: update was started but update package verification failed.
+-- @return "async" if update package is accepted and being dispatched to assets
+-- @note when returning nil or false as first result, this is the responsibility of the service that is calling this API
+--  to correctly report the error synchronously, otherwise the update status will be reported asynchronously by this module
+--  at the end of the update
+--  (the way to report the status will depend on protocol used to deliver the update)
 function notifynewupdate(newupdate)
-    if not newupdate or "table" ~= type(newupdate) or not newupdate
-    or "table"  ~= type(newupdate) or not newupdate.proto then
+    if not newupdate or "table" ~= type(newupdate) or not newupdate.proto then
         return nil, 505, "Malformed update data" end
     if data.currentupdate then
         return nil, 506, "Other update was already in progress"
@@ -293,9 +325,10 @@ function notifynewupdate(newupdate)
 end
 
 -- table to store "asset" (may be anonymous asset, no matter) that are
--- insterested into receiving update process notifications.
+-- interested into receiving update process notifications (swi_update API).
 local assets_registered_to_notif={}
 
+-- EMP command handlers to provide swi_update APIs.
 
 local function EMPRegisterUpdateListener(assetid, x)
     log("UPDATE", "DETAIL", "EMPRegisterUpdateListener: %s: %s", tostring(assetid), sprint(assetid));
@@ -392,7 +425,7 @@ function notifypause()
     notifystatus( 7, string.format("current step=[%s]", STEPS[data.currentupdate.step].name));
 end
 
-
+--send update status to all registred assets
 function notifystatus(status, details)
     local asscon = require 'agent.asscon'
     local payload= {}
@@ -408,7 +441,7 @@ function notifystatus(status, details)
         if not res or res~=0 then
             log("UPDATE", "ERROR", "Error while notifying update status to client:[%s],err=[%s]", tostring(assetid), tostring(err))
             if err == "unknown assetid" then
-                --clearing fields within for pairs is ok
+                --clearing fields within `for pairs` is ok
                 assets_registered_to_notif[assetid]=nil
                 log("UPDATE", "INFO", "Deregistering asset %s from update status notification because of previous error", tostring(assetid))
             end
@@ -419,17 +452,17 @@ function notifystatus(status, details)
 end
 
 
-
+--start current step: by calling step entry point
 function stepstart()
 
     if data.currentupdate.status ~= "in_progress" then
         log("UPDATE", "WARNING", "stepstart while not in progress")
     end
-
+    --send step start event
     if STEPS[data.currentupdate.step].start_event then
         log("UPDATE", "DETAIL", "Step start: [%d][%s], event: [%s]", data.currentupdate.step, STEPS[data.currentupdate.step].name, STEPS[data.currentupdate.step].start_event )
         notifystatus(step_events[STEPS[data.currentupdate.step].start_event], "")
-        --apply request
+        --apply request if any
         if data.currentupdate.request == "resume" then
             --do nothing more than clearing the request
             log("UPDATE", "DETAIL", "Discarding resume while starting step")
@@ -437,7 +470,7 @@ function stepstart()
             common.savecurrentupdate();
         elseif data.currentupdate.request == "abort" then
             abortupdate();
-            --continue: abortupdate will have set the correct step
+            --continue: abortupdate will have set the correct current step
         elseif data.currentupdate.request == "pause" then
             pauseupdate();
             return -- don't do anything more
@@ -446,10 +479,12 @@ function stepstart()
     end
 
     log("UPDATE", "DETAIL", "Step: starting step %s", STEPS[data.currentupdate.step].name)
-    --TBD sched.run ok not ?
+    --finally run the step routine
     sched.run(STEPS[data.currentupdate.step].start)
 end
 
+--end of a step: store in persisting store the progress
+--and start next step
 function stepfinished(result, resultcode, resultdetails)
     local success = result == "success"
     local currentstep =  data.currentupdate.step
@@ -465,7 +500,7 @@ function stepfinished(result, resultcode, resultdetails)
         data.currentupdate.step = last_step;
     end
     common.savecurrentupdate();
-
+    --start next step
     stepstart()
 end
 
