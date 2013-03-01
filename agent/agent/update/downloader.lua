@@ -308,7 +308,7 @@ function start_m3da_download()
                 log("UPDATE", "WARNING", "Download: unexpected 200 status after resumed requested, refusing data")
                 m3da_dwl_retry_state.resume_error = true
                 need_retry=true
-            elseif result_http.statuscode>200 and result_http.statuscode < 300 then
+            elseif result_http.statuscode>=200 and result_http.statuscode < 300 then
                log("UPDATE", "DETAIL", "Download: status code indicates success %s", tostring(result_http.statuscode))
             elseif result_http.statuscode == 416 then
                --HTTP 416: Requested Range Not Satisfiable
