@@ -1,3 +1,3 @@
 [submodule "non-free"]
 	path = non-free
-	url = ssh://fabien@git.airvantage.sierrawireless.local/srv/git/anyware-platform-embedded/readyagent-non-free.git
+	url = http://git.airvantage.sierrawireless.local/anyware-platform-embedded/readyagent-non-free.git
