@@ -9,17 +9,12 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-# CMakeLists for the lua linux version
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-PROJECT(LIB_EXTVARS_COMMON)
-
 INCLUDE_DIRECTORIES(
     ${LIB_MIHINI_COMMON_SOURCE_DIR}
-    ${LIB_EXTVARS_COMMON_SOURCE_DIR}
+    # ${LIB_ALEOSVARS_SOURCE_DIR}
+    ${LIB_EXTVARS_SOURCE_DIR}
     ${LIB_MIHINI_LUASIGNAL_SOURCE_DIR}
 )
 
-
-ADD_LIBRARY(lib_extvars SHARED EXCLUDE_FROM_ALL extvars.c)
-TARGET_LINK_LIBRARIES(lib_extvars lib_pointerlist lib_luasignal pthread)
-SET_TARGET_PROPERTIES(lib_extvars PROPERTIES OUTPUT_NAME extvars)
+ADD_LUA_LIBRARY(treehdlsample EXCLUDE_FROM_ALL DESTINATION agent/devman/extvars treehdlsample.c)
+TARGET_LINK_LIBRARIES(treehdlsample lib_extvars lib_swi_log)

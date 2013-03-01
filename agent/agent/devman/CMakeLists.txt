@@ -17,5 +17,4 @@ ADD_DEPENDENCIES(agent_devman
     agent_devman_cmds
     racon)
 
-ADD_SUBDIRECTORY(extvars)
 ADD_SUBDIRECTORY(cmds)
