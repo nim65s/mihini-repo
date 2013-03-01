@@ -16,7 +16,8 @@ local ftp = require "socket.ftp"
 local skturl = require "socket.url"
 
 local function LogUpload(sys_asset, args)
-    local url, logtype = unpack(args)
+    local url = args and (args.url or args[1])
+    local logtype = args and (args.logtype or args[2])
     assert(url and (logtype == "ram" or logtype == "flash"), "COMMANDS.LogUpload Invalid params")
     assert(config.log.policy, "Log policies not activated")
     local type = string.match(url, "(%a*)://")

@@ -53,6 +53,8 @@ end
 local function ReadNode(sys_asset, paths)
     local error_messages = { }
     local err_msg=""
+    -- ReadNode parameters are put in a list, every parameter is a path to read
+    -- No point in using parameter indexes/map keys
     for _, path in pairs(paths) do recsend(path, error_messages) end
     if next(error_messages) then
        -- Concatenate all error messages into a single one.

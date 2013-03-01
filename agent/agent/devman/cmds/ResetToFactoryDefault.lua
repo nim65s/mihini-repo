@@ -17,7 +17,7 @@ local persist = require 'persist'
 local function ResetToFactoryDefault(asset, params, command, ticket)
     checks("?", "?table", "?", "?")
 
-    local restart = params and params[1] or params['restart'] or nil
+    local restart = params and (params['restart'] or params[1])
 
     --ResetToFactoryDefault is done with a list a directories to remove
     --Removing the whole LUA_AF_RW_PATH directory is not possible for
@@ -58,9 +58,9 @@ local function ResetToFactoryDefault(asset, params, command, ticket)
 
         --this also depends on ReadyAgent integration:
         -- if it is started using AppmonDaemon, making ReadyAgent exiting with code !=0 may be enough
-        -- (however the application installed in ApplicationContainer are likely to be still running)
+        -- (however applications installed in ApplicationContainer are likely to be still running)
         -- anyway, rebooting the whole device operating system is recommended.
-        log("DEVMAN", "INFO", "Requesting Agent to be restarted in "..tostring(delay).." seconds")
+        log("DEVMAN", "INFO", "Requesting device to be restarted in "..tostring(delay).." seconds to complete settings reset")
         system.reboot(delay, "request from server")
     else
         --if user doesn't want to reboot device, the ack is left to tree handler

@@ -18,7 +18,8 @@ local config = require "agent.config"
 local loader = require "utils.loader"
 
 local function ExecuteScript(sys_asset, args)
-    local url, signature = unpack(args)
+    local url = args and (args.url or args[1])
+    local signature = args and (args.signature or args[2])
     assert(url and signature, "wrong param")
 
     local script={}

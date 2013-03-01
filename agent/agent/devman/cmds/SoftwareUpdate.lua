@@ -19,7 +19,8 @@ local function SoftwareUpdate(asset, data, path, ticketid)
 
     log("UPDATE", "DETAIL", "SoftwareUpdate cmd: %s, %s, %s, %s", tostring(asset), tostring(data), tostring(path), tostring(ticketid))
 
-    local url, signature = unpack(data)
+    local url = data and (data.url or data[1])
+    local signature = data and (data.signature or data[2])
     if not url or not signature then return 551, "Wrong params in SoftwareUpdate command: need package url and package signature" end
 
 
