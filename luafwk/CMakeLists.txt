@@ -50,9 +50,7 @@ ADD_LUA_LIBRARY(mihini_misc
     print.lua strict.lua timer.lua unittest.lua niltoken.lua)
 
 # TODO move to platform
-ADD_LUA_LIBRARY(mihini_linux
-    fdwrapper.lua messaginghal.lua posixsignal.lua
-)
+ADD_LUA_LIBRARY(mihini_linux fdwrapper.lua posixsignal.lua)
 
 ADD_DEPENDENCIES(mihini_linux sched_posixsignal)
 
@@ -63,6 +61,5 @@ ADD_SUBDIRECTORY(stagedb)
 
 ADD_LUA_LIBRARY(debugger debugger.lua debugintrospection.lua)
 
-ADD_CUSTOM_TARGET(luafwk DEPENDS
-    mihini_misc mihini_linux
-    bit32 luasignalcmd appmon_daemon serial racon_aliases)
+ADD_CUSTOM_TARGET(luafwk)
+ADD_DEPENDENCIES(luafwk  mihini_misc mihini_linux bit32 luasignalcmd appmon_daemon serial racon_aliases)

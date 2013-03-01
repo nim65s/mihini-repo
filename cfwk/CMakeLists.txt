@@ -26,5 +26,6 @@ ADD_SUBDIRECTORY(system)
 ADD_SUBDIRECTORY(update)
 ADD_SUBDIRECTORY(devicetree)
 
-ADD_CUSTOM_TARGET(cfwk DEPENDS
+ADD_CUSTOM_TARGET(cfwk)
+ADD_DEPENDENCIES(cfwk
     Emp Swi_DSet Swi_AirVantage Swi_Sms Swi_System Swi_Update Swi_DeviceTree)
