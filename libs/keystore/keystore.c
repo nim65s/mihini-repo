@@ -14,6 +14,7 @@
  ******************************************************************************/
 
 #include "keystore.h"
+#include "stdlib.h"
 
 /* Define this to get verbose traces and sanity-checks when writing.
  * Warning: traces leak sensitive informations! */
@@ -24,9 +25,6 @@
 #else
 #define DBG_TRACE( args)
 #endif
-
-#define KEY_FILE "crypto.key"
-#define KEY_PATH  "crypto/" KEY_FILE
 
 static int get_obfuscation_bin_key( int key_index, unsigned char *key);
 static unsigned char htod(char hex);
@@ -83,7 +81,7 @@ int get_cipher_key(unsigned char* nonce, int size_nonce, int idx_K, unsigned cha
      * put both in keytmp. */
     if(( get_plain_bin_key( idx_K, key_K))) goto failure;
 
-    DBG_TRACE(( "\nget_cipher_key()\nPlain cipher key K: %s\n", k2s( key_K)));
+    DBG_TRACE(( "\nget_cipher_key()\nPlain cipher key K =\t%s\n", k2s( key_K)));
 
     /* Part common to 128 and 256 bits keys: CK[0...15] = MD5(K, nonce). */
     hmac_state hmac;
@@ -94,9 +92,9 @@ int get_cipher_key(unsigned char* nonce, int size_nonce, int idx_K, unsigned cha
     if(( hmac_process( & hmac, nonce, size_nonce))) goto failure;
     if(( hmac_done( & hmac, key_CK, & sixteen))) goto failure;
 
-    DBG_TRACE(( "nonce (size=%d): %s\n", size_nonce, k2s( nonce)));
+    DBG_TRACE(( "nonce (size=%d) =\t%s\n", size_nonce, k2s( nonce)));
 
-    DBG_TRACE(( "Plain salted key CK = hmac(K, nonce): %s\n", k2s( key_CK)));
+    DBG_TRACE(( "hmac(K, nonce) =\t%s\n", k2s( key_CK)));
 
     /* Part specific to 256 bits keys: CK[16...31] = MD5(K, nonce..nonce). */
     if(256/8 == size_CK) {
@@ -268,6 +266,22 @@ static unsigned char htod(char hex) {
 }
 
 
+static FILE *get_file( const char *modes){
+    char buffer[256];
+    const char *rw_path;
+    rw_path = getenv("LUA_AF_RW_PATH");
+    if( rw_path) {
+        int len = strlen( rw_path);
+        strncpy( buffer, rw_path, sizeof( buffer)-sizeof( KEYSTORE_FILE_NAME));
+        if( buffer[len-1] != '/') { strcpy( buffer+len, "/"); len++; }
+        strncpy(buffer+len, KEYSTORE_FILE_NAME, sizeof( buffer)-len);
+    } else {
+        strcpy( buffer, "./");
+        strncpy( buffer+2, KEYSTORE_FILE_NAME, sizeof( buffer)-3);
+    }
+    return fopen( buffer, modes);
+}
+
 /* Retrieves obfuscated key from file. To be used by `read_plain_bin_key`.
  *
  * *WARNING*: In Lua, key indexes are 1-based, whereas in C they are 0-based.
@@ -279,9 +293,9 @@ static unsigned char htod(char hex) {
  * @param obfuscated_bin_key where the key will be written.
  * @return CRYPT_OK or CRYPT_ERROR.
  */
-int get_obfuscated_bin_key(int key_index, unsigned char* obfuscated_bin_key) {
+static int get_obfuscated_bin_key(int key_index, unsigned char* obfuscated_bin_key) {
     if( ! obfuscated_bin_key) return CRYPT_ERROR;
-    FILE* file = fopen( KEY_PATH, "r");
+    FILE* file = get_file( "rb");
     if ( ! file) return CRYPT_ERROR;
     if( fseek( file, 33 * key_index, SEEK_SET)) { fclose( file); return CRYPT_ERROR; }
 
@@ -317,7 +331,7 @@ static int set_obfuscated_bin_keys( int first_index, int n_keys, unsigned const 
 
     /* Determine the file's size. */
     if( ! obfuscated_bin_keys) return CRYPT_ERROR;
-    FILE* file = fopen( KEY_PATH, "rb");
+    FILE* file = get_file( "rb");
     if ( ! file) { content=NULL; sz=0; } /* empty file. */
     else { /* file found, return content and size. */
         if( fseek( file, 0, SEEK_END)) goto cleanup;
@@ -364,7 +378,7 @@ static int set_obfuscated_bin_keys( int first_index, int n_keys, unsigned const 
     }
 
     /* Write back file content */
-    file = fopen( KEY_PATH, "wb");
+    file = get_file( "wb");
     if( ! file) goto cleanup;
     n = fwrite( content, 1, sz, file);
     if( n == sz) status = CRYPT_OK;
