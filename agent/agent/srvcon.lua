@@ -108,6 +108,7 @@ function M.dosession()
     for callback, _ in pairs(M.pendingcallbacks) do
         callback(r, errmsg)
     end
+    M.pendingcallbacks = { }
     lock.unlock(M)
     return "ok"
 end
@@ -158,26 +159,6 @@ function M.init()
     -- EMP callbacks
     asscon.registercmd("ConnectToServer", EMPConnectToServer)
 
-    -- Apply agent.config's settings
-    if type(config.server.autoconnect) == "table" then
-        log("SRVCON", "DETAIL", "Setting up connection policy")
-        for policy, p in pairs(config.server.autoconnect) do
-            if policy == "period" then
-                if tonumber(p) then
-                    timer.new(tonumber(p)*(-60), M.connect, 0)
-                else
-                    log("SRVCON", "ERROR", "Ignoring unknown period: '%s'", tostring(p))
-                end
-            elseif policy == "cron" then
-                timer.new(p, M.connect, 0)
-            elseif policy == "onboot" then
-                M.connect(tonumber(p) or 30)
-            else
-                log("SRVCON", "ERROR", "Ignoring unknown policy: '%s'", tostring(policy))
-            end
-        end
-    end
-
     -- Make sure a device ID will be set before the agent starts.
     local function setdevid()
         if (not config.agent.deviceId or config.agent.deviceId == "") then
@@ -214,6 +195,28 @@ function M.init()
         encryption     = cs.encryption
     }
     if not M.session then return nil, errmsg end
+
+    -- Apply agent.config's settings
+    if type(config.server.autoconnect) == "table" then
+        log("SRVCON", "DETAIL", "Setting up connection policy")
+        for policy, p in pairs(config.server.autoconnect) do
+            if policy == "period" then
+                if tonumber(p) then
+                    timer.new(tonumber(p)*(-60), M.connect, 0)
+                else
+                    log("SRVCON", "ERROR", "Ignoring unknown period: '%s'", tostring(p))
+                end
+            elseif policy == "cron" then
+                timer.new(p, M.connect, 0)
+            elseif policy == "onboot" then
+                M.connect(tonumber(p) or 30)
+            else
+                log("SRVCON", "ERROR", "Ignoring unknown policy: '%s'", tostring(policy))
+            end
+        end
+    end
+
+
     return "ok"
 end
 
