@@ -36,11 +36,16 @@ end
 function M.password_md5(K)
     local serverid = assert(agent.config.server.serverId, "Missing server.serverId in config")
     local deviceid = assert(agent.config.agent.deviceId,  "Missing agent.deviceId in config")
+    x("Setting authentication and encryption key")
+    x("K ="..k2s(K))
     local KS = hash.new 'md5' :update (serverid) :update (K) :digest(true)
+    x("KS="..k2s(KS))
     local KD = hash.new 'md5' :update (deviceid) :update (K) :digest(true)
+    x("KD="..k2s(KD))
     assert(security.IDX_AUTH_KS == security.IDX_CRYPTO_K + 1)
     assert(security.IDX_AUTH_KD == security.IDX_CRYPTO_K + 2)
     assert(cipher.write(security.IDX_CRYPTO_K, { K, KS, KD }))
+    x("Keys written in store")
 end
 
 -------------------------------------------------------------------------------
