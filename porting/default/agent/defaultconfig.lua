@@ -22,7 +22,7 @@
     server.retryperiod = 60
 
     -- Determines the protocol, host, port, and optionally other things such
-    -- as path, user, passoword
+    -- as path, user, password
     server.url = "tcp://localhost:8070"
     --server.url = "http://localhost:8070/device/com"
     --server.url = "http://webplt-qa.anyware-tech.com/device/com"
@@ -33,8 +33,15 @@
     --server.proxy must be a URL starting by "http://".
     --server.proxy = "http://some.proxy.server:port"
 
+    -- Security: authentication is one of "hmac-sha1" or "hmac-md5" (or nil)
+    -- Encryption cannot be enabled without authentication. It's of the form
+    -- "<cipher>-<chaining>-<length>", where cipher must be "aes", chaining is
+    -- either "ctr" or "cbc", length is either "128" or "256".
+    -- server.authentication = 'hmac-sha1'
+    -- server.encryption = 'aes-cbc-128'
+
     -- Agent auto connection policy
-    server.autoconnect = {}
+    server.autoconnect = { }
     -- server.autoconnect.onboot = true -- connect a few seconds after the ReadyAgent started
     -- server.autoconnect.period = 5 -- period in minute (connect every 5 minutes)
     -- server.autoconnect.cron = "0 0 * * *" -- cron entry (connect once a day at midnight)
@@ -47,19 +54,8 @@
     --agent.assetaddress = "*"
     agent.deviceId = "012345678901234"
 
-    agent.persistlatency = 60 -- (nil to disable)
-    --agent.persistsize = 10*1024
     agent.signalport = 18888 -- port used for LUASIGNAL fwk (Linux only)
 
-
-    -- Connection settings to the mediation server
-    mediation = {}
-    mediation.activate = false
-    mediation.timeout = 5
-    mediation.pollingperiod = { ETH = 30, GPRS = 60}
-    mediation.retrydelay = 1800
-    mediation.servers = {{addr = "webplt-m2m.anyware-tech.com", port = 2048}}
-    mediation.servers.retries = 5
 
     -- Shell related settings
     shell = {}
@@ -113,10 +109,10 @@
     log = {}
     log.defaultlevel = "INFO" -- default log level: can be one of NONE, ERROR, WARNING, INFO, DETAIL, DEBUG, ALL. See log.lua for details
     log.moduleslevel = { }
-    --log.moduleslevel.GENERAL = "ALL"   -- per module log level
-    --log.moduleslevel.SERVER  = "INFO"  -- per module log level
-    log.moduleslevel.sched     = "INFO"     -- per module log level
-    log.moduleslevel.TREEMGR   = "DETAIL"     -- per module log level
+    --log.moduleslevel.GENERAL = "ALL"    -- per module log level
+    --log.moduleslevel.SERVER  = "INFO"   -- per module log level
+    log.moduleslevel.SCHED     = "INFO"   -- per module log level
+    log.moduleslevel.TREEMGR   = "DETAIL" -- per module log level
     log.enablecolors = true
 
     -- change default format for all logs
@@ -125,16 +121,6 @@
     -- timestampformat is useful only if %t% is in formater string
     log.timestampformat = "%F %T"
 
-    -- Log store loggers config
-    --log.policy = {}
-    --log.policy.name = "sole"
-    --log.policy.params = {}
-    --log.policy.params.ramlogger={size = 2048}
-    --log.policy.params.flashlogger={size=15*1024, path="logs/"}
-    --log.policy.params.level="WARNING"
-    -- Parameter for Log upload command
-    --log.policy.ftpuser = ""
-    --log.policy.ftppwd = ""
 
     update = {}
     update.activate = true
@@ -159,7 +145,6 @@
     -- Monitoring system
     monitoring = {}
     monitoring.activate = false
-    --monitoring.debug = true -- gives access to the global environment into the monitoring scripts
 
     -- Lua RPC server
     rpc = {}
