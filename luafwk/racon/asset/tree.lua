@@ -232,8 +232,8 @@ local function emp_handler_SendData(data)
     if record.__class == "Response" then -- Receive an acknowledgement from server
         log("RACON-ASSET-TREE", "INFO", "Server acknowledged ticket %d (path:'%s', status:'%s')", record.ticketid, path, record.status)
         return 0
-    elseif log.musttrace('RACON-ASSET-TREE', 'INFO') then
-        log('RACON-ASSET-TREE', 'INFO', "Data: '%s' received (path:'%s')", sprint(record), path)
+    elseif log.musttrace('RACON-ASSET-TREE', 'DETAIL') then
+        log('RACON-ASSET-TREE', 'DETAIL', "Data: '%s' received (path:'%s')", sprint(record), path)
     end
     if type(record) ~= 'table' then
         log('RACON-ASSET-TREE', 'ERROR', "Bad SendData record coming from server: %s", sprint(record))
@@ -244,8 +244,8 @@ local function emp_handler_SendData(data)
         utils_path.set(treeimg, utils_path.concat(path, tostring(k)), v)
     end
     --treeimg is now filled with arborescent data to be given to the asset tree handlers.
-    if log.musttrace('RACON-ASSET-TREE', 'DETAIL') then
-        log("RACON-ASSET-TREE", "DETAIL", "Reorganized received data: '%s'", sprint(treeimg))
+    if log.musttrace('RACON-ASSET-TREE', 'DEBUG') then
+        log("RACON-ASSET-TREE", "DEBUG", "Reorganized received data: '%s'", sprint(treeimg))
     end
     local co_status, hdl_status, hdl_msg
     if type(tree) == "function" then -- Case not handled properly by `match_asset_data_trees`
