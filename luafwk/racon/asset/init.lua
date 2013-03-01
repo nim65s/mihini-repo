@@ -429,7 +429,7 @@ end
 -- @return: "ok" on success
 -- @return `nil` + error message otherwise.
 function MT_ASSET :sendUpdateResult(componentName, updateResult)
-    checks("string")
+    checks("racon.asset","string")
     sem_wait()
     updateResult = tonumber(updateResult) or 471 --error ##21
     local r , msg = common.sendcmd("SoftwareUpdateResult", { upath.concat(self.id, componentName), updateResult })
