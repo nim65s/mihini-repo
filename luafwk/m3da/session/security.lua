@@ -156,8 +156,16 @@ function M :sendmsg(msg_src, current_nonce, next_nonce)
     else
         envelopes = ltn12.filter.chain(inner_envelope, auth:filter(), auth_envelope)
     end
-    local src = ltn12.source.chain(msg_src, envelopes)
-    assert(self.transport :send (src))
+    
+    local env_src = ltn12.source.chain(msg_src, envelopes)
+    if false then -- Log a copy of the data sent through transport; terrible RAM preformances!
+        local snk, acc = ltn12.sink.table{ }
+        ltn12.pump.all(env_src, snk)
+        local env_str = table.concat(acc)
+        env_src = ltn12.source.string(env_str)
+        log('M3DA-SESSION', 'DEBUG', "Sending data %s", sprint(env_str))
+    end
+    assert(self.transport :send (env_src))
 end
 
 -------------------------------------------------------------------------------
@@ -193,7 +201,7 @@ function M :receive()
     self.waitingresponse = false
     if      ev == 'envelope_received' then return envelope
     elseif ev == 'timeout' then failwith(self, 408, 'reception timeout')
-    elseif ev == 'reception_error' then failwith(self, 500, envelope) -- envelope is an error msg
+    elseif ev == 'reception_error' then failwith(self, 'NOREPORT', envelope) -- envelope is an error msg
     else assert(false, 'internal error') end
 end
 
@@ -217,23 +225,37 @@ local partial = nil
 --
 function M :newsink()
     checks('m3da.session')
-    return function (data)
+    return function (src_data, src_error)
         --log('M3DA-SESSION', 'DEBUG', "Received some data")
-        if not data then return 'ok' end
-        pending_data = pending_data .. data
-        local envelope, offset
-        envelope, offset, partial = m3da_deserialize (pending_data, partial)
-        if offset=='partial' then return 'ok' -- incomplete msg, retry nex time
-        elseif envelope then -- got a complete envelope
-            if self.waitingresponse then -- response to a request
-                sched.signal(self, 'envelope_received', envelope)
-            else -- unsollicited incoming message
-                sched.run(self.parse, self, envelope)
+        if src_data then
+            pending_data = pending_data .. src_data
+            local status, envelope, offset
+            status, envelope, offset, partial = pcall(m3da_deserialize, pending_data, partial)
+            if not status then
+                local err_msg = envelope
+                if err_msg=='BADCONTEXT' then
+                    local x
+                    if #pending_data>80 then x=pending_data:sub(1, 75).."..."
+                    else x=pending_data end
+                    log('M3DA-SESSION', 'ERROR', "Received non-M3DA DATA: %s", sprint(x))
+                    sched.signal(self, 'reception_error', "Received non-M3DA data")
+                else sched.signal(self, 'reception_error', err_msg) end -- offset is an error msg
+                return nil, err_msg
+            elseif offset=='partial' then
+                return 'ok' -- incomplete msg, retry nex time
+            else -- got a complete envelope
+                assert(envelope)
+                if self.waitingresponse then -- response to a request
+                    sched.signal(self, 'envelope_received', envelope)
+                else -- unsollicited incoming message
+                    sched.run(self.parse, self, envelope)
+                end
+                pending_data = pending_data :sub (offset, -1)
+                return 'ok'
             end
-            pending_data = pending_data :sub (offset, -1)
-            return 'ok'
-        else sched.signal(self, 'reception_error', offset) end -- offset is an error msg
-        return 'ok'
+        elseif src_error then -- no src_data
+            sched.signal(self, 'reception_error', src_error)
+        end
     end
 end
 
@@ -308,10 +330,20 @@ function M :unprotectedsend (src_factory, current_nonce)
     -- change the nonce and resend my message.
     if incoming.header.challenge then
         log('M3DA-SESSION', 'WARNING', "Server issued a challenge, resending with a new nonce")
+        if log.musttrace('M3DA-SESSION', 'DEBUG') then -- WARNING: this log unstreams the source!
+            local function k2h(k) return string.format("%02x", k:byte()) end
+            local bad_nonce = current_nonce :gsub('.', k2h)
+            local new_nonce = incoming.header.nonce :gsub('.', k2h)
+            log('M3DA-SESSION', 'DEBUG', " | Refused nonce  = %q", bad_nonce)
+            log('M3DA-SESSION', 'DEBUG', " | New nonce      = %q", new_nonce)
+            log('M3DA-SESSION', 'DEBUG', " | Auth & crypto  = %s, %s",
+                self.authentication, tostring(self.encryption))
+        end
         current_nonce = assert(incoming.header.nonce)
         self :sendmsg (src_factory(), current_nonce, next_nonce)
         incoming = assert(self :receive())
-        if incoming.header.challenge then failwith (self, 407, 'multiple challenges') end
+        if incoming.header.challenge then failwith (self, 407, 'multiple challenges')
+        else log('M3DA-SESSION', 'INFO', "Resynchronized message accepted by server") end
     end
 
     log('M3DA-SESSION', 'DEBUG', "Received a response to message sent.")

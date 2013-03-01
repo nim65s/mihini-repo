@@ -80,7 +80,7 @@ function M.downloadkeys(session)
     local env_2d_outer = m3da.envelope({ id=session.localid }, footer_2d)
     local chain  = ltn12.filter.chain(env_2d_inner, filter_2d, env_2d_outer)
     local env_2d = ltn12.source.chain(ltn12.source.empty(), chain)
-    if true then
+    if false then
         local str = require 'utils.ltn12.source'.tostring(env_2d)
         env_2d = assert(ltn12.source.string(str))
         local ext = m3da_deserialize(str)

@@ -36,6 +36,7 @@ function M :getsocket()
     local errmsg
     self.socket, errmsg = socket.connect(self.servername, self.port)
     if self.socket then sched.run(M.monitor, self) end
+    log('M3DA-TRANSPORT', 'DEBUG', "Opening socket")
     return self.socket, errmsg
 end
 
@@ -45,11 +46,13 @@ end
 function M :monitor()
     checks('m3da.transport')
     assert(self.sink, "missing session sink in transport layer")
+    local src, snk = socket.source(self.socket), self.sink
     repeat
         local data, err = self.socket :receive '*'
-        if data then self.sink(data) end
+        self.sink(data, err)
     until not data
     if self.socket then
+        log('M3DA-TRANSPORT', 'DEBUG', "Closing socket")
         self.socket :close()
         self.socket = false
     end
