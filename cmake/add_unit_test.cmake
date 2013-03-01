@@ -64,7 +64,8 @@ function(add_unit_test target sourceFile)
 
     if (SHARKS_BUILD)
       add_custom_target(unittest_${target}_upload
-	COMMAND sshpass -p v3r1fym3 scp ${EMBEDDED_BINARY_DIR}/runtime/lua/tests/${sourceFile} root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}/lua/tests
+	COMMAND sshpass -p v3r1fym3 ssh root@${SHARKS_IP_ADDR} mkdir -p ${EMBEDDED_REMOTE_TARGET_DIR}/lua/tests
+	COMMAND sshpass -p v3r1fym3 scp ${EMBEDDED_BINARY_DIR}/runtime/lua/tests/${sourceFile} root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}/lua/tests/${sourceFile}
 	DEPENDS unittest_${target}
       )
     endif(SHARKS_BUILD)
@@ -90,13 +91,14 @@ function(add_unit_test target sourceFile)
     file(APPEND ${EMBEDDED_BINARY_DIR}/DartTestfile.txt "${test_command}\n")
   else (TARGET test)
     add_custom_target(test
-      COMMAND ctest -j`getconf _NPROCESSORS_ONLN` --output-on-failure --timeout 30
+      COMMAND ctest -j`getconf _NPROCESSORS_ONLN` --output-on-failure --timeout 10
       WORKING_DIRECTORY ${EMBEDDED_BINARY_DIR}
     )
     if (SHARKS_BUILD)
       add_custom_target(start_dev_test_upload
       COMMAND sshpass -p v3r1fym3 scp ${CMAKE_INSTALL_PREFIX}/racontestwrapper.lua root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}
       COMMAND sshpass -p v3r1fym3 scp -r ${CMAKE_INSTALL_PREFIX}/testwrapperfwk root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}
+      COMMAND sshpass -p v3r1fym3 scp ${CMAKE_INSTALL_PREFIX}/bin/lua root@${SHARKS_IP_ADDR}:${EMBEDDED_REMOTE_TARGET_DIR}/bin
       )
       add_dependencies(test start_dev_test_upload)
     endif (SHARKS_BUILD)
