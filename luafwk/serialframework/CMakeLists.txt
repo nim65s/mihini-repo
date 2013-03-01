@@ -27,20 +27,21 @@ INCLUDE_DIRECTORIES(
 # TODO: move serial parts out of common in modbus.lua
 
 # Transport-independent part
-ADD_LUA_LIBRARY(modbus_common EXCLUDE_FROM_ALL ${MODBUS_SRC})
-TARGET_LINK_LIBRARIES(modbus_common lib_modbus)
-ADD_DEPENDENCIES(modbus_common sched serial)
+ADD_LUA_LIBRARY(modbus_serializer DESTINATION modbus EXCLUDE_FROM_ALL ${MODBUS_SRC})
+SET_TARGET_PROPERTIES(modbus_serializer PROPERTIES OUTPUT_NAME serializer)
+TARGET_LINK_LIBRARIES(modbus_serializer lib_modbus)
+ADD_DEPENDENCIES(modbus_serializer sched serial)
 
 # Modbus over UART
 ADD_LUA_LIBRARY(modbus_serial EXCLUDE_FROM_ALL modbus/modbus.lua)
-ADD_DEPENDENCIES(modbus_serial modbus_common)
+ADD_DEPENDENCIES(modbus_serial modbus_serializer)
 
 # Modbus over TCP
 ADD_LUA_LIBRARY(modbus_tcp EXCLUDE_FROM_ALL modbus/modbustcp.lua)
-ADD_DEPENDENCIES(modbus_tcp modbus_common socket_sched pack)
+ADD_DEPENDENCIES(modbus_tcp modbus_serializer socket_sched pack)
 
 # Test
 ADD_LUA_LIBRARY(test_modbusserializer DESTINATION tests EXCLUDE_FROM_ALL
                 test/modbusserializer.lua)
-ADD_DEPENDENCIES(test_modbusserializer modbus_common)
+ADD_DEPENDENCIES(test_modbusserializer modbus_serializer)
 
