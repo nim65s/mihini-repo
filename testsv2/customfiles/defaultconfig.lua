@@ -46,19 +46,8 @@
     --agent.assetaddress = "*"
     agent.deviceId = "012345678901234"
 
-    agent.persistlatency = 60 -- (nil to disable)
-    --agent.persistsize = 10*1024
     agent.signalport = 18888 -- port used for LUASIGNAL fwk (Linux only)
 
-
-    -- Connection settings to the mediation server
-    mediation = {}
-    mediation.activate = false
-    mediation.timeout = 5
-    mediation.pollingperiod = { ETH = 30, GPRS = 60}
-    mediation.retrydelay = 1800
-    mediation.servers = {{addr = "webplt-m2m.anyware-tech.com", port = 2048}}
-    mediation.servers.retries = 5
 
     -- Shell related settings
     shell = {}
@@ -121,16 +110,6 @@
     -- timestampformat is useful only if %t% is in formater string
     log.timestampformat = "%F %T"
 
-    -- Log store loggers config
-    --log.policy = {}
-    --log.policy.name = "sole"
-    --log.policy.params = {}
-    --log.policy.params.ramlogger={size = 2048}
-    --log.policy.params.flashlogger={size=15*1024, path="logs/"}
-    --log.policy.params.level="WARNING"
-    -- Parameter for Log upload command
-    --log.policy.ftpuser = ""
-    --log.policy.ftppwd = ""
 
     update = {}
     update.activate = true
@@ -155,7 +134,6 @@
     -- Monitoring system
     monitoring = {}
     monitoring.activate = true
-    --monitoring.debug = true -- gives access to the global environment into the monitoring scripts
 
     -- Lua RPC server
     rpc = {}
