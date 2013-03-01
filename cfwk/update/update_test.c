@@ -16,7 +16,6 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <time.h>
-#include <assert.h>
 #include "swi_update.h"
 #include "swi_log.h"
 #include "lua.h"
@@ -184,7 +183,6 @@ static void exec_lua_code()
 static void generate_package()
 {
   FILE *file;
-  int ret;
 
   file = fopen("/tmp/Manifest", "w");
   fwrite(manifest_content, 1, strlen(manifest_content), file);
@@ -194,8 +192,11 @@ static void generate_package()
   fwrite("test update", 1, strlen("test update"), file);
   fclose(file);
 
-  ret = system("cd /tmp; tar czpf update_package.tar.gz Manifest update.txt 2>/dev/null");
-  assert(ret != -1);
+  int ret = system("cd /tmp; tar czpf update_package.tar.gz Manifest update.txt 2>/dev/null");
+  if (ret != -1) {
+    SWI_LOG("UPDATE_TEST", ERROR, "%s: unpacking package failed\n", __FUNCTION__);
+    abort();
+  }
 }
 
 int main(void)

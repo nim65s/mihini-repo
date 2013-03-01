@@ -14,7 +14,6 @@
 #include <arpa/inet.h>
 #include "swi_devicetree.h"
 #include "swi_log.h"
-#include "swi_trace.h"
 #include "swi_status.h"
 #include "dset_internal.h"
 #include "emp.h"

@@ -18,10 +18,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <strings.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "emp.h"
 #include "swi_log.h"
-#include "swi_trace.h"
 
 /*
  * EMP is the Embedded Micro Protocol, it is used to communicate to the agent
@@ -138,8 +140,6 @@ static swi_status_t emp_sendmessage(EmpCommand command, uint8_t type, uint8_t* r
   unsigned char header[8];
   swi_status_t res;
   uint8_t *buffer;
-
-  assert(parser);
 
   if (parser->sockfd == -1)
     return SWI_STATUS_SERVER_UNREACHABLE;
@@ -725,6 +725,9 @@ swi_status_t emp_send_and_wait_response(EmpCommand command, uint8_t type, const 
   uint8_t rid = 0;
   struct timeval  tv;
   struct timespec timeout = {0, 0};
+
+  if (parser == NULL)
+    return SWI_STATUS_RESOURCE_NOT_INITIALIZED;
 
   // Construct the message and send it through IPC to the agent
   res = emp_sendmessage(command, type, &rid, payload, payloadsize);
