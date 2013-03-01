@@ -145,7 +145,7 @@ end
 --
 -- @function [parent=#airvantage] newAsset
 -- @param id string defining the assetid identifying the instance of this new asset.
--- @return @{airvantage.asset#asset} instance on success.
+-- @return airvantage.asset#asset instance on success.
 -- @return `nil` followed by an error message otherwise.
 --
 M.newAsset = asset.newasset
