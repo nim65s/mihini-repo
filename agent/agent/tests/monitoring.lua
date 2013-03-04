@@ -99,17 +99,17 @@ function t:test_trigger_onhold1()
     u.assert(mon.load("tests5", test))
 
     nvar, ngroup = nil, nil
-    sched.wait(4)
+    sched.wait(5)
     u.assert_equal(true, nvar)
     u.assert_equal(true, ngroup)
 
     nvar, ngroup = nil, nil
-    vars.t2 = 1; sched.wait(4)
+    vars.t2 = 1; sched.wait(5)
     u.assert_equal(nil, nvar)
     u.assert_clone_tables({["ram.tests5.t2"]=1}, ngroup)
 
     nvar, ngroup = nil, nil
-    vars.t1 = 1; sched.wait(4)
+    vars.t1 = 1; sched.wait(5)
     u.assert_clone_tables({["ram.tests5.t1"]=1}, nvar)
     u.assert_clone_tables({["ram.tests5.t1"]=1}, ngroup)
 
@@ -123,7 +123,7 @@ function t:test_trigger_onhold1()
     vars.t1 = 4; sched.wait(1)
     u.assert_equal(nil, nvar)
     u.assert_equal(nil, ngroup)
-    vars.t1 = 6; sched.wait(4)
+    vars.t1 = 6; sched.wait(5)
     u.assert_clone_tables({["ram.tests5.t1"]=6}, nvar)
     u.assert_clone_tables({["ram.tests5.t1"]=6}, ngroup)
 end
@@ -134,19 +134,25 @@ function t:test_trigger_onhold2()
     local vars = varproxy.tests3
     local count = 0
     local function test()
-        connect(onhold(-3, "ram.tests3.t3"), function(v) count = count+1 end)
+        connect(onhold(-4, "ram.tests3.t3"), function(v) count = count+1 end)
     end
     u.assert(mon.load("tests3", test))
 
     u.assert_equal(0, count)
-    sched.wait(7)
+    sched.wait(9)
     u.assert_equal(2, count)
-    vars.t3 = 2; sched.wait(1)
-    vars.t3 = 3; sched.wait(1)
-    vars.t3 = 4; sched.wait(1)
-    vars.t3 = 5; sched.wait(1)
-    vars.t3 = 6; sched.wait(1)
-    vars.t3 = 7; sched.wait(1)
+    vars.t3 = 2;  sched.wait(1)
+    vars.t3 = 3;  sched.wait(1)
+    vars.t3 = 4;  sched.wait(1)
+    vars.t3 = 5;  sched.wait(1)
+    vars.t3 = 6;  sched.wait(1)
+    vars.t3 = 7;  sched.wait(1)
+    vars.t3 = 8;  sched.wait(1)
+    vars.t3 = 9;  sched.wait(1)
+    vars.t3 = 10; sched.wait(1)
+    vars.t3 = 11; sched.wait(1)
+    vars.t3 = 12; sched.wait(1)
+    vars.t3 = 13; sched.wait(1)
     u.assert_equal(2, count)
 end
 
