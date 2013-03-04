@@ -56,7 +56,7 @@ local function tree_cmd_default(asset, data, path, ticket)
             log('DEVMAN', 'DEBUG', "Ran command %s successfully (status=%s)", cmdname, tostring(status))
         end
     end
-    if err_msg~="" then return nil, err_msg else return status end
+    if err_msg~="" then return status, err_msg else return status end
 end
 
 -- Handle access to non-command tree nodes.
