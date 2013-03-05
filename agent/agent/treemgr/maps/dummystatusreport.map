@@ -29,6 +29,13 @@ system.cellular.link.pkts_rcvd = pkts_rcvd
 system.cellular.link.pkts_sent = pkts_sent
 system.cellular.link.rssi = rssi
 system.cellular.link.service = service
+system.cellular.hw_info.imei = hw_info_imei
+system.cellular.sim.iccid = sim_iccid
+system.cellular.sim.imsi = sim_imsi
+system.cellular.subscriber.phone_num = subscriber_phone_num
+system.hw_info.product_str = product_str
+system.sw_info.fw_ver = fw_ver
+system.sw_info.fw_name = fw_name
 
 system.io.powerin = powerin
 
