@@ -14,6 +14,7 @@
 --TODO: we currently use low level functions, modify it when the higher level API will be
 --implemented (accumulator)
 require 'm3da.bysant.core'
+local niltoken = require 'niltoken'
 
 require 'pack' -- used only to get a specific value of NaN for floating point values
 
@@ -26,7 +27,7 @@ function bysant_wrapper:serialize()  return table.concat(self.buffer) end
 function bysant_wrapper:value(value)
     local tvalue = type(value)
     if self.ctx[tvalue] then return self[tvalue](self, value)
-    elseif value == nil or value == m3da.niltoken then return self:null()
+    elseif value == nil or value == niltoken then return self:null()
     end
 end
 
@@ -132,7 +133,7 @@ function globals :test_simpletypes()
     bysants_assert(false,           '02')
     --bysants_assert({ 1, 2, 3 },     '2da0a1a2')
     --bysants_assert({ x = 1 },       '4202"x"81')
-    bysants_assert(m3da.niltoken, '00')
+    bysants_assert(niltoken, '00')
 
     --u.assert_equal (bysants(), encode'00')
     --u.assert_nil   (bysants(function() end))
@@ -338,7 +339,7 @@ local globald = u.newtestsuite 'Bysant Deserializer - Global context'
 
 ---[[
 function globald :test_simpletypes()
-    bysantd_assert('00', nil)
+    bysantd_assert('00', niltoken)
     bysantd_assert('01', true)
     bysantd_assert('02', false)
 end
@@ -369,18 +370,18 @@ function globald :test_map()
     end
 
     -- null values
-    bysantd_assert('423b00', {})   -- fixed
-    bysantd_assert('4c3b0000', {}) -- variable
+    bysantd_assert('423b00', {[0]=niltoken})   -- fixed
+    bysantd_assert('4c3b0000', {[0]=niltoken}) -- variable
 
     -- value overwrite
     bysantd_assert('4304"foo"06"bar"04"foo"06"baz"', {foo="baz"})
-    bysantd_assert('4304"foo"06"bar"04"foo"00', {})
+    bysantd_assert('4304"foo"06"bar"04"foo"00', {foo=niltoken})
 end
 --]]
 
 function globald :test_instance()
     -- just a class declaration
-    bysantd_assert('714f08"myclass"3d05"time"0106"value"0200', nil)
+    bysantd_assert('714f08"myclass"3d05"time"0106"value"0201', true) -- class declaration followed by a boolean because class declaration returns nothing
     bysantd_assert('723b3e000102609fce44d402', { 0, 2000, -100, __class = 0 })
     bysantd_assert('714f08"myclass"3d05"time"0106"value"02703fce44d402', { time = 2000, value = -100, __class = "myclass" })
     -- class declaration in middle of other objects
@@ -670,7 +671,7 @@ local function bysantd_assert_int32(v, exp) bysantd_assert('3603'..v, {exp}) end
 function int32d :test()
     bysantd_assert_int32('00000000', 0)
     bysantd_assert_int32('8000000001', -2147483648)
-    bysantd_assert_int32('8000000000', nil)
+    bysantd_assert_int32('8000000000', niltoken)
 end
 
 --------------------------------------------------------------------------------
@@ -706,11 +707,11 @@ function floatd :test()
     bysantd_assert_float('3f800000', 1)
     bysantd_assert_float('3e800000', 0.25)
     bysantd_assert_float('6f788d47', select(2, string.unpack(encode('478d786f'), 'f'))) -- 32bit representation of 1e30/13
-    bysantd_assert_float('ffffffff00', nil)
+    bysantd_assert_float('ffffffff00', niltoken)
     u.assert_true(isnan(bysantd('3604ffffffff01')[1]))
 
     bysantd_assert_double('3fd0000000000000', 0.25)
     bysantd_assert_double('45ef11a8e476d4d1', 1e30/13)
-    bysantd_assert_double('ffffffffffffffff00', nil)
+    bysantd_assert_double('ffffffffffffffff00', niltoken)
     u.assert_true(isnan(bysantd('3605ffffffffffffffff01')[1]))
 end

@@ -21,6 +21,13 @@
 #define MT_NAME "m3da.bysant.core.dctx"
 #define CKSTACK(L, x) luaL_checkstack( L, x, "M3DA Bysant deserializer")
 
+//store shortcut in reference system, containing niltoken, set at init
+static int niltoken_reg = 0;
+//push onto the stack the niltoken set at init
+static void push_niltoken(lua_State *L){
+    lua_rawgeti(L, LUA_REGISTRYINDEX, niltoken_reg);
+}
+
 /* Converts the deserialized data in `x` into a Lua value on the stack.
  * Pushes an error msg string on the stack in case of failure.
  * return 0 in case of success, non-zero in case of failure.
@@ -43,7 +50,7 @@ static int bysant2lua( lua_State *L, const bsd_data_t *x) {
     /* pushnumber is used instead of pushinteger because of possible overflows:
      * lua_Integer is likely defined as ptrdiff_t which is a 32 bit integer. */
     case BSD_INT:     lua_pushnumber( L, x->content.i);     break;
-    case BSD_NULL:    lua_pushnil( L);                      break;
+    case BSD_NULL:    push_niltoken( L);                    break; //handle M3DA null coming from server
     case BSD_BOOL:    lua_pushboolean( L, x->content.bool); break;
     case BSD_DOUBLE:  lua_pushnumber( L, x->content.d);     break;
     case BSD_STRING:  lua_pushlstring( L, x->content.string.data, x->content.string.length); break;
@@ -326,6 +333,8 @@ static int api_addClass( lua_State *L) {
 int luaopen_m3da_bysant_core_deserialize( lua_State *L) {
     luaL_findtable( L, LUA_GLOBALSINDEX, "m3da.bysant.core", 14); // m3da.bysant.core
 
+    //TODO: check if this m3da.niltoken 'global' is still needed! -> likely to be removed
+    //same remark apply for serializer lua_open function.
     /* set m3da.niltoken if absent */
     lua_getglobal( L, "m3da");        // m3da.bysant.core, m3da
     lua_getfield( L, -1, "niltoken");   // m3da.bysant.core, m3da, ?niltoken
@@ -338,6 +347,23 @@ int luaopen_m3da_bysant_core_deserialize( lua_State *L) {
     }
     else lua_pop( L, 1); // m3da.bysant.core, m3da
     lua_pop( L, 1);       // m3da.bysant.core
+
+    /* set niltoken in registry as shortcut*/
+    //Note: maybe to be moved into bysant.core.c
+    lua_getglobal( L, "require");     // m3da.bysant.core, require
+    lua_pushstring( L, "niltoken");   // m3da.bysant.core, require, "niltoken"
+    int pcall_res = lua_pcall( L, 1, 1, 0);               // m3da.bysant.core, niltoken or errmsg
+    if (pcall_res){ //require niltoken failed
+        //pop error message
+        lua_pop( L, 1); // m3da.bysant.core
+        //push nil as m3da.bysant 'default' niltoken
+        lua_pushnil(L); // m3da.bysant.core, nil
+        //Note: at some point we may want to inform somebody, somehow that we couln't use
+        //'real' niltoken as this implies some limitations: M3DA null coming from server is likely to be poorly handled in this case
+    }
+    //store niltoken as reference in reference system, to be used by push_niltoken later on.
+    niltoken_reg = luaL_ref(L, LUA_REGISTRYINDEX); // m3da.bysant.core
+
 
     luaL_newmetatable( L, MT_NAME);        // m3da.bysant.core, mt
     lua_pushcfunction( L, api_collect); lua_setfield( L, -2, "__gc");
