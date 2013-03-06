@@ -13,7 +13,7 @@
 
 local utils_path    = require 'utils.path'
 local utils_table   = require 'utils.table'
-local niltoken      = require 'niltoken'
+
 require 'coxpcall'
 require 'print'
 

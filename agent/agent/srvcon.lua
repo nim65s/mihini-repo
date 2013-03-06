@@ -55,12 +55,17 @@ local function dispatch_message(envelope_payload)
         if msg==nil and tonumber(offset) or msg=='' then
             log('SRVCON', 'DETAIL', 'Empty message from server')
         elseif msg.__class == 'Message' then
-            local name = upath.split(msg.path, 1)
-            local r, errmsg = asscon.sendcmd(name, "SendData", msg)
-            if not r then
-                --build and send a NAK to the server through a session+transport
-                log("SRVCON", "ERROR", "Failed to dispatch server message %s", sprint(msg))
-                if msg.ticketid and msg.ticketid ~= 0 then require('airvantage').acknowledge(msg.ticketid, false, errmsg, "now", false) end
+            if not msg.body or not next(msg.body) then
+                log("SRVCON", "ERROR", "invalid message: message body is nil or empty, message is rejected")
+                if msg.ticketid and msg.ticketid ~= 0 then require('airvantage').acknowledge(msg.ticketid, false, "invalid message: message body is nil or empty", "now", false) end
+            else
+                local name = upath.split(msg.path, 1)
+                local r, errmsg = asscon.sendcmd(name, "SendData", msg)
+                if not r then
+                    --build and send a NAK to the server through a session+transport
+                    log("SRVCON", "ERROR", "Failed to dispatch server message %s", sprint(msg))
+                    if msg.ticketid and msg.ticketid ~= 0 then require('airvantage').acknowledge(msg.ticketid, false, errmsg, "now", false) end
+                end
             end
          elseif msg.__class == 'Response' then
             log('SRVCON', 'WARNING', "Received a response %d: %s to ticket %d",
