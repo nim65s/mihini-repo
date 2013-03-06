@@ -740,9 +740,11 @@ swi_status_t swi_av_table_PushRow(swi_av_Table_t* table)
   YAJL_GEN_STRING(table->identifier, "tableId");
 
   YAJL_GEN_STRING("row", "row");
-  yajl_gen_array_open(gen);
+  yajl_gen_map_open(gen);
   for (i = 0; i < table->row.len; i++)
   {
+    YAJL_GEN_STRING(table->column[i], table->column[i]);
+
     switch (table->row.data[i].type)
     {
       case SWI_AV_TABLE_ENTRY_STRING:
@@ -758,7 +760,7 @@ swi_status_t swi_av_table_PushRow(swi_av_Table_t* table)
         break;
     }
   }
-  yajl_gen_array_close(gen);
+  yajl_gen_map_close(gen);
 
   yajl_gen_map_close(gen);
 
@@ -976,7 +978,7 @@ swi_status_t processResponse(yajl_val body)
 
 /*
  * input : path   - is a remaining path (without asset id, can be ""), this path must be malloc and be freed within the function
- *       : body   - is a the variable which contains the contents of command, the command will be modified in M3DA style
+ *       : body   - is a variable which contains the contents of command, the command will be modified in M3DA style
  * output: setOut - dset object
  * */
 swi_status_t processCommand(yajl_val body, swi_dset_Iterator_t* setOut, char** path)
