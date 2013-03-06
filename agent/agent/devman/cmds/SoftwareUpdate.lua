@@ -31,7 +31,7 @@ local function SoftwareUpdate(asset, data, path, ticketid)
         -- if update accepted the job, return "async" to indicate asynchronous update status acknowledge
         return "async"
     else
-        errcode = tonumber(errcode) or 559 --error ##26, update rejected by update module
+        errcode = tonumber(errcode) or 558 -- update rejected by update module
         return errcode, errstr or "update rejected by update module"
     end
 end
