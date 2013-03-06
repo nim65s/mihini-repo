@@ -22,10 +22,10 @@ end
 
 require 'modbustcp'
 m1,err=modbustcp.new({timeout=1,maxsocket=2}) slog(err)
-host='10.41.51.20'
+host='10.41.51.36'
 slave = 1
 
-data,err=m1:request('ReadInputRegisters',host,nil,slave,0,2);if err then slog(n.." - "..err) end
+data,err=m1:request('ReadInputRegisters',host,nil,slave,0,2);if err then slog("ReadInputRegisters init - "..err) end
 if data then
   res={string.unpack(data,"<H2")}
   res={string.unpack(data,"{H2")}
@@ -38,6 +38,14 @@ if data then
   res={string.unpack(data,"b4")}
   table.remove(res,1) slog(res)
 end
+
+
+------------------------------------
+--Infinite test:
+--(Copy paste this in Lua shell) 
+------------------------------------
+
+
 
 function slog(buff)
   if not buff then return end
@@ -52,7 +60,7 @@ end
 
 require 'modbustcp'
 m1,err=modbustcp.new({timeout=1,maxsocket=2}) slog(err)
-host='10.41.51.20'
+host='10.41.51.36'
 slave = 1
 
 function poll2(n)
