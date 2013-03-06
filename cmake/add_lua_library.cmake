@@ -9,6 +9,8 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
+include(CMakeParseArguments)
+
 # Build a Lua library either from C files or Lua files.
 # When Lua files are given they are actually only copied
 # add_lua_library(libaryname [DESTINATION destdir] [EXCLUDE_FROM_ALL] filelist...)

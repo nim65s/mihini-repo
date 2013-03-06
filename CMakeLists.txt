@@ -27,6 +27,12 @@ SET(CMAKE_PUBLIC_HEADERS_OUTPUT_DIRECTORY ${EMBEDDED_BINARY_DIR}/runtime/itf)
 # remove the lib prefix on unix systems...
 SET(CMAKE_SHARED_MODULE_PREFIX "")
 
+# handle build version.
+# First try to get it from git. If not found look for a build_version file in the root source tree
+# If not found set the build to unknown
+SET(BUILD_VERSION_FILE "${PROJECT_SOURCE_DIR}/build_version")
+
+
 # Set the git revision if it exists
 IF(EXISTS "${PROJECT_SOURCE_DIR}/.git/")
     find_package(Git)
@@ -35,11 +41,17 @@ IF(EXISTS "${PROJECT_SOURCE_DIR}/.git/")
         execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE GIT_REVISION)
         string(REPLACE "\n" "" GIT_REVISION "${GIT_REVISION}")
         ADD_DEFINITIONS(-DGIT_REV=\"${GIT_REVISION}\")
+        FILE(WRITE ${BUILD_VERSION_FILE} "${GIT_REVISION}\n")
         unset(ENV{GIT_DIR})
     ENDIF(GIT_FOUND)
-ELSE(EXISTS "${PROJECT_SOURCE_DIR}/.git/")
-    ADD_DEFINITIONS(-DGIT_REV=\"Unknown\")
-ENDIF(EXISTS "${PROJECT_SOURCE_DIR}/.git/")
+ELSE()
+    IF(EXISTS ${BUILD_VERSION_FILE})
+        FILE (STRINGS ${BUILD_VERSION_FILE} BUILD_VERSION)
+        ADD_DEFINITIONS(-DGIT_REV=\"${BUILD_VERSION}\")
+    ELSE()
+        ADD_DEFINITIONS(-DGIT_REV=\"Unknown\")
+    ENDIF()
+ENDIF()
 
 IF(EXISTS "${PROJECT_SOURCE_DIR}/non-free/porting/${PLATFORM}/CMakeLists.txt")
     ADD_SUBDIRECTORY(non-free/porting/${PLATFORM})
