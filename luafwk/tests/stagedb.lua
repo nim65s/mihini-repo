@@ -287,7 +287,7 @@ cont_ts.test_deltas_vector_with_doubles  = test_deltasvector_factory(1, nil, 100
 
 function cont_ts.test_deltasvector_nil()
     local db = stagedb("ram:foo.db", { { name="col", serialization="deltasvector", factor=10 } })
-    p("handler",db:row{ col=12 }:row{ col="foo" }:row{ col=0 })  -- we give a different type
+    db:row{ col=12 }:row{ col="foo" }:row{ col=0 }  -- we give a different type
     u.assert_nil(flush_data(db))  -- we expected a nil or a error??
     --u.assert_error(function() flush_data(db) end)
 end
