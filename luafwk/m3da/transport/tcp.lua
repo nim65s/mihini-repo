@@ -27,7 +27,7 @@ M.port        = false
 M.servername  = false
 M.socket      = false
 M.sink        = false
-M.defaultport = 2100
+M.defaultport = 44900
 
 --- Create or recreate the TCP connection to the server.
 function M :getsocket()
