@@ -11,8 +11,8 @@
 
 // Define the version of the ReadyAgent here:
 
-#define READYAGENT_MAJOR_VERSION        "8"
-#define READYAGENT_MINOR_VERSION        "0"
+#define READYAGENT_MAJOR_VERSION        "9"
+#define READYAGENT_MINOR_VERSION        "0-DEV"
 
 
 
