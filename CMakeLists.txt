@@ -66,7 +66,7 @@ ADD_SUBDIRECTORY (cfwk)
 ADD_SUBDIRECTORY (tools/appmon_daemon)
 ADD_SUBDIRECTORY (tools/luasignalcmd)
 #ADD_SUBDIRECTORY (porting)
-ADD_SUBDIRECTORY (testsv2)
+ADD_SUBDIRECTORY (tests)
 ADD_SUBDIRECTORY (tools/LuaPlatformServer)
 ADD_SUBDIRECTORY (doc)
 
