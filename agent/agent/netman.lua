@@ -161,22 +161,19 @@ function connect(bearername, check_route)
     return ok, err
 end
 
-------------------------------------------------------------------------------------------------------------------------------------------------------
--- tryaction(action, ...) returns action(...) results when the network is working and nil followed by an error on network error
---      More precisely it returns the results of the function action() if its first result is non nil, otherwise try to verify/remount the network
---      connection:
---              If the network connection was not successfully remounted, just return the connection error.
---              If the network connection is remounted and working, return the result of a new action(...) call.
---      Note:   tryaction function uses the current bearer or select the best (if current is not available)
---              action must be a function that return non nil when it succeeded and nil followed by an error when it failed.
---              look at the code if your are still in doubt...
-------------------------------------------------------------------------------------------------------------------------------------------------------
-base.tryaction = function (action, ...)
-    log("NETMAN", "DETAIL", "Trying to connect...")
+------------------------------------------------------------------------------
+-- `withnetwork(action, action_params...)` ensures that the network is available
+-- while `action(action_params...)` is running. It returns `action`'s result,
+-- or `nil` + error message if the network was down and it couldn't switch it on.
+-- `action` is expected to be a function returning either a non-`nil` first
+-- result, or `nil` + error message.
+------------------------------------------------------------------------------
+function withnetwork(action, ...)
+    log("NETMAN", "DETAIL", "Network-dependent action: trying to connect...")
     local s, err
     local r = { action(...) }
     if not r[1] then
-        log("NETMAN", "WARNING", "Try action: action error, %q", r[2] or "unknown")
+        log("NETMAN", "WARNING", "Network-dependent action: action error, %q", r[2] or "unknown")
         lock.lock(_M)
         if defaultbearer then
             s, err = tcpping()

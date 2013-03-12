@@ -103,7 +103,7 @@ function M.dosession()
     local pending_factories
     M.sourcefactories, pending_factories = { }, M.sourcefactories
     local source_factory = concat_factories(pending_factories)
-    local r, errmsg = M.session :send (source_factory)
+    local r, errmsg = agent.netman.withnetwork(M.session.send, M.session, source_factory)
     if not r then
         log('SRVCON', 'ERROR', "Error while sending data to server: %s", errmsg)
         restore_factories(pending_factories);
@@ -118,15 +118,12 @@ function M.dosession()
     return "ok"
 end
 
--- TODO: document what this does.
+-- Obsolete: former support for data sending through SMS.
 function M.parseonewaypackage(message)
     error "SMS support disabled"
-    local payload = {}
-    session.parseonewaypackage(ltn12.source.string(message), ltn12.sink.table(payload))
-    return  dispatch_message(table.concat(payload))
 end
 
---- Give data to the server connector and force it to be flushed to server.
+--- Gives data to the server.
 --
 --  @param factory an optional function, returning an ltn12 data source. The factory might be called
 --    more than once, in case of failure or authentication issue.
@@ -138,7 +135,7 @@ function M.pushtoserver(factory, callback)
     if callback then M.pendingcallbacks[callback] = true end
 end
 
---- Force data fed through @{#pushtoserver} to be actually flushed to the server.
+--- Forces data fed through @{#pushtoserver} to be actually flushed to the server.
 --
 --  @param factory an optional function, returning an ltn12 data source. The factory might be called
 --    more than once, in case of failure or authentication issue.

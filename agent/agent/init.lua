@@ -39,9 +39,6 @@ psignal.signal("SIGTERM", function()
     system.stop(2)
     end)
 
---tryaction
-tryaction = nil
-
 --check if migration if needed----------------------------
 local function setupmigration()
     local persist = require "persist"
@@ -273,7 +270,7 @@ local function initialize()
 
     -- Create the socket that is used for communication with all local clients
     scheduleinit{name="AssetConnector", mod="asscon", initflag=true, params=c"agent"}
-    scheduleinit{name="ServerConnector", mod="srvcon", initflag=true, reqdep="AssetConnector"}
+    scheduleinit{name="ServerConnector", mod="srvcon", initflag=true, reqdep="AssetConnector", optdep="NetworkManager" }
     scheduleinit{name="Modem", mod="modem", initflag=c"modem.activate"}
 
     -- Start the shell if activated in the configuration
@@ -329,8 +326,12 @@ function simplemodules.rpc(config)
     return rpc.newmultiserver(config.address, config.port)
 end
 
+-- Placeholder for the network manager, when it isn't activated because network
+-- connection is handled out of the agent.
 function simplemodules.dummynetman()
-    tryaction = function(action, ...) return action(...) end
+    local sched = require 'sched'
+    module 'agent.netman'
+    function withnetwork(action, ...) return action(...) end
     sched.sigonce("ReadyAgent", "InitDone", function() sched.signal("NETMAN", "CONNECTED", "Default") end)
     return "ok"
 end

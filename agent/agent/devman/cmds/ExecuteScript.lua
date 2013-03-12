@@ -34,7 +34,8 @@ local function ExecuteScript(sys_asset, args)
         }
         return b, c
     end
-    if tryaction then tryaction(httpgetscript) else httpgetscript() end
+    local wnet = agent.netman.withnetwork
+    if wnet then wnet(httpgetscript) else httpgetscript() end
     assert(b and type(c)=='number' and c>=200 and c<300, string.format("error while doing http request, error: %s", b and s or tostring(c)))
 
     local md5 = hash.new("md5")
