@@ -11,5 +11,8 @@
 #!/bin/sh
 AGENT_DIR=$(dirname $0)
 
+export LUA_PATH="lua/?.lua;lua/?/init.lua"
+export LUA_CPATH="lua/?.so"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib
+
 cd $AGENT_DIR && bin/agent
