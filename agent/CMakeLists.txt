@@ -29,11 +29,7 @@ ADD_SUBDIRECTORY(agent)
 ADD_CUSTOM_TARGET(agent ALL)
 ADD_DEPENDENCIES(agent agent_exec agent_modules)
 
-SET(SYS_DIR ${MIHINI_AGENT_SOURCE_DIR}/system)
 ADD_CUSTOM_COMMAND(TARGET agent POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/start.sh ${CMAKE_INSTALL_PREFIX}/start.sh
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/GPRS ${CMAKE_INSTALL_PREFIX}/bin/GPRS
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/ETH ${CMAKE_INSTALL_PREFIX}/bin/ETH
     COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/crypto
 )
 
