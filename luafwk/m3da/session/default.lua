@@ -33,18 +33,24 @@ M.last_session_id = 0
 
 -------------------------------------------------------------------------------
 -- Creates an ltn12 sink to receive transport data as a bytes, and turn them
--- into complete M2DA envelopes pushed in the `self.incoming` pipe.
+-- into complete M3DA envelopes pushed in the `self.incoming` pipe.
 function M :newsink()
     local pending_data = ''
     local partial = nil
     return function (data)
-        if not data then return 'ok' end
+        if not data then
+            sched.signal(self, 'connection_closed')
+            return 'ok'
+        end
         pending_data = pending_data .. data
         local envelope, offset
         envelope, offset, partial = m3da_deserialize (pending_data, partial)
         if offset=='partial' then return 'ok'
         elseif envelope then
-            self.incoming :send (niltoken(envelope.payload))
+            sched.signal(self, 'status', envelope.header.status)
+            local payload = envelope.payload
+            if payload==nil then payload=niltoken end
+            self.incoming :send (payload)
             pending_data = pending_data :sub (offset, -1)
             return 'ok'
         else
@@ -70,9 +76,16 @@ function M :send(src_factory)
     env_wrapper, errmsg = assert(m3da.envelope { id = self.localid })
     local source = ltn12.source.chain(src_factory(), env_wrapper)
     r, errmsg = self.transport :send (source)
-    if not r then return r, errmsg end
-    log("M3DA-SESSION", "INFO", "Closing default session #%d with status %s.", M.last_session_id, tostring(r))
-    return r
+    if not r then return nil, errmsg end
+    log("M3DA-SESSION", "DEBUG", "Waiting for server response...")
+    local ev, r = sched.wait(self, { 'status', 'connection_closed', 60 })
+    if ev~='status' then
+        log('M3DA-SESSION', 'ERROR', "Closed session #%d with error %s", M.last_session_id, ev)
+        return nil, ev
+    else
+        log("M3DA-SESSION", "INFO", "Closing default session #%d with status %s.", M.last_session_id, tostring(r))
+        return r
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -80,8 +93,9 @@ end
 function M :monitor (handler)
     checks('m3da.session', 'function')
     while true do
-        local msg = niltoken(self.incoming :receive()) -- TODO: handle timeouts ?
-        handler(msg or '')
+        local msg = niltoken(self.incoming :receive()) or ''-- TODO: handle timeouts ?
+        log('M3DA-SESSION', 'DEBUG', "Received a %d bytes message", #msg)
+        handler(msg)
     end
 end
 
