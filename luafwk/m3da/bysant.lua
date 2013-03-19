@@ -129,7 +129,7 @@ local function serialize_object(self, x)
     if not status then return status, err_msg end
     for i, fieldname in ipairs(class) do
         status, err_msg = serialize_value(self, x[fieldname])
-        if not status then return status, err_msg end
+        if not status then return nil, err_msg end
     end
     status, err_msg = core.close(self)
     if not status then return status, err_msg end
@@ -151,7 +151,7 @@ end
 
 local function serialize_map(self, x)
     local status, err_msg
-    status, err_msg = core.map(self) -- TODO: consider opportunity of precomupting size
+    status, err_msg = core.map(self) -- TODO: consider opportunity of precomputing size
     if not status then return status, err_msg end
     for k, v in pairs(x) do
         status, err_msg = serialize_value(self, k)
