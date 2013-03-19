@@ -70,13 +70,12 @@ function M.new(url)
     checks('string')
     local self = { }
     local cfg = socket.url.parse(url)
-    if cfg.scheme ~= 'tcp' then
-        log('M3DA-TRANSPORT', 'ERROR',
-            "Transport scheme changed from tcp to %q", tostring(cfg.scheme))
+    assert(cfg.scheme == 'tcp')
+    if cfg.path or cfg.query then
+        log('M3DA-TRANSPORT', 'ERROR', "TCP transport doesn't support paths or queries in URL")
         return nil, "invalid config"
-    else
-        self.servername, self.port = cfg.host, tonumber(cfg.port) or M.defaultport
     end
+    self.servername, self.port = cfg.host, tonumber(cfg.port) or M.defaultport
     return setmetatable(self, MT)
 end
 
