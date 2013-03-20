@@ -141,16 +141,16 @@ typedef struct bs_integer_encoding_t {
 } bs_integer_encoding_t;
 
 
-const bs_coll_encoding_t BS_GLOBAL_LIST;
-const bs_coll_encoding_t BS_GLOBAL_MAP;
-const bs_coll_encoding_t BS_LISTMAP_LIST;
-const bs_coll_encoding_t BS_LISTMAP_MAP;
+extern const bs_coll_encoding_t BS_GLOBAL_LIST;
+extern const bs_coll_encoding_t BS_GLOBAL_MAP;
+extern const bs_coll_encoding_t BS_LISTMAP_LIST;
+extern const bs_coll_encoding_t BS_LISTMAP_MAP;
 
-const bs_string_encoding_t BS_GLOBAL_STRING;
-const bs_string_encoding_t BS_UIS_STRING;
+extern const bs_string_encoding_t BS_GLOBAL_STRING;
+extern const bs_string_encoding_t BS_UIS_STRING;
 
-const bs_integer_encoding_t BS_GLOBAL_INTEGER;
-const bs_integer_encoding_t BS_NUMBER_INTEGER;
+extern const bs_integer_encoding_t BS_GLOBAL_INTEGER;
+extern const bs_integer_encoding_t BS_NUMBER_INTEGER;
 
 /*
  * Internal class collection handling
