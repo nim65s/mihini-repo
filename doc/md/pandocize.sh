@@ -13,6 +13,7 @@
 
 markdown_list="
     agent/ConfigStore.md
+    ../../README.md
 "
 
 if [ $# != 1 ]; then
