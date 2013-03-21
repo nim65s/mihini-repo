@@ -13,6 +13,7 @@
 
 markdown_list="
     agent/ConfigStore.md
+    agent/Appmon_Daemon.md
     ../../README.md
 "
 
