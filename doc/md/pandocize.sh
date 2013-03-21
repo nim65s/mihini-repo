@@ -23,5 +23,7 @@ fi
 
 for md in $markdown_list; do
     output=$(echo $md | sed 's:\.md::')
+    output_dir=$(echo $md | sed 's:/.*::')
+    test -d $output_dir || mkdir $output_dir
     pandoc --standalone --highlight-style=tango ${source_dir}/$md -o ${output}.html || exit 1
 done
