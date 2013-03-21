@@ -24,7 +24,12 @@ fi
 
 for md in $markdown_list; do
     output=$(echo $md | sed 's:\.md::')
-    output_dir=$(echo $md | sed 's:/.*::')
-    test -d $output_dir || mkdir $output_dir
+    category_dir=$(echo $md | sed 's:/.*::')
+    test -d $category_dir || mkdir $category_dir
+
+    if [ -d ${source_dir}/${category_dir}/images ]  && [ ! -e ${category_dir}/images ]; then
+	ln -s ${source_dir}/${category_dir}/images ${category_dir}/images
+    fi
+
     pandoc --standalone --highlight-style=tango ${source_dir}/$md -o ${output}.html || exit 1
 done
