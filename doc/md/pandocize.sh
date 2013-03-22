@@ -15,6 +15,7 @@ markdown_list="
     agent/ConfigStore.md
     agent/Appmon_Daemon.md
     agent/security.md
+    agent/Logging_framework.md
     ../../README.md
 "
 
