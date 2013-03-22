@@ -16,6 +16,7 @@ markdown_list="
     agent/Appmon_Daemon.md
     agent/security.md
     agent/Logging_framework.md
+    agent/Migration.md
     utilitary_libraries/Lua_RPC.md
     ../../README.md
 "
