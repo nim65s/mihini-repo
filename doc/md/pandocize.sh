@@ -20,6 +20,7 @@ markdown_list="
     agent/Network_Manager.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
+    utilitary_libraries/Serialize_Deserialize_Lua_objects.md
     ../../README.md
 "
 
