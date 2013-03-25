@@ -17,6 +17,7 @@ markdown_list="
     agent/security.md
     agent/Logging_framework.md
     agent/Migration.md
+    agent/Network_Manager.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     ../../README.md
