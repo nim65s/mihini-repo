@@ -38,5 +38,9 @@ for md in $markdown_list; do
 	ln -s ${source_dir}/${category_dir}/images ${category_dir}/images
     fi
 
-    pandoc --standalone --highlight-style=tango ${source_dir}/$md -o ${output}.html || exit 1
+    if [ ! -e default.css ]; then
+        ln -s ${source_dir}/default.css default.css
+    fi
+
+    pandoc --standalone --css="../default.css" --highlight-style=tango ${source_dir}/$md -o ${output}.html || exit 1
 done
