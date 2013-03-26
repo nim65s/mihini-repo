@@ -18,6 +18,7 @@ markdown_list="
     agent/Logging_framework.md
     agent/Migration.md
     agent/Network_Manager.md
+    agent/Software_Update_Framework.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
