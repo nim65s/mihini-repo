@@ -22,6 +22,7 @@ markdown_list="
     agent/Software_Update_Module.md
     agent/Software_Update_Package.md
     agent/TCP_Remote_Connection.md
+    agent/Time_services.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
