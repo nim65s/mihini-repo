@@ -20,6 +20,7 @@ markdown_list="
     agent/Network_Manager.md
     agent/Software_Update_Framework.md
     agent/Software_Update_Module.md
+    agent/Software_Update_Package.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
