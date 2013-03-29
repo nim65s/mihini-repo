@@ -47,12 +47,21 @@ function M :monitor()
     checks('m3da.transport')
     assert(self.sink, "missing session sink in transport layer")
     local src, snk = socket.source(self.socket), self.sink
+    local data, err
     repeat
-        local data, err = self.socket :receive '*'
-        self.sink(data, err)
+        data, err = self.socket :receive '*'
+        if data then
+            log('M3DA-TRANSPORT', 'DEBUG', "Received %d bytes from server", #data)
+        end
+        local status_snk, err_snk = self.sink(data, err)
+        if not status_snk then
+            log('M3DA-TRANSPORT', 'ERROR', "Error when consuming incoming data: %s", err_snk)
+            err = err_snk
+            break
+        end
     until not data
     if self.socket then
-        log('M3DA-TRANSPORT', 'DEBUG', "Closing socket")
+        log('M3DA-TRANSPORT', err=='closed' and 'DEBUG' or 'ERROR', "Closing socket: %s", err)
         self.socket :close()
         self.socket = false
     end

@@ -105,7 +105,7 @@ function M.dosession()
     local source_factory = concat_factories(pending_factories)
     local r, errmsg = agent.netman.withnetwork(M.session.send, M.session, source_factory)
     if not r then
-        log('SRVCON', 'ERROR', "Error while sending data to server: %s", errmsg)
+        log('SRVCON', 'ERROR', "Error while sending data to server: %s", tostring(errmsg))
         restore_factories(pending_factories);
         lock.unlock(M)
         return nil, errmsg
