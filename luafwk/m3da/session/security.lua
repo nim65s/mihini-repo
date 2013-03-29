@@ -113,8 +113,8 @@ end
 -- @param current_nonce the nonce to be used for encryption+authentication
 -- @param next_nonce the nonce to be used next time, and to be sent to the peer.
 --
-function M :sendmsg(msg_src, current_nonce, next_nonce)
-    checks( 'm3da.session', 'function', 'string', 'string')
+function M :sendmsg(msg_src, inner_headers, current_nonce, next_nonce)
+    checks( 'm3da.session', 'function', '?table', 'string', 'string')
 
     if log.musttrace('M3DA-SESSION', 'DEBUG') then
         -- WARNING: this detailled logging will unravel the whole incoming
@@ -130,7 +130,11 @@ function M :sendmsg(msg_src, current_nonce, next_nonce)
             #messages, sprint(messages) :sub(2, -2))
     end
 
-    local inner_envelope = m3da.envelope{ nonce=next_nonce, status=200 }
+    inner_headers = inner_headers or { }
+    inner_headers.status = inner_headers.status or 200
+    inner_headers.nonce = next_nonce
+
+    local inner_envelope = m3da.envelope(inner_headers)
 
     -- Authentication envelope.
     -- Authentication filter will transparently compute the mac of everything
@@ -315,15 +319,15 @@ end
 --   responds with a challenge.
 -- @return the nonce to be used next time.
 --
-function M :unprotectedsend (src_factory, current_nonce)
-    checks('m3da.session', 'function', 'string')
+function M :unprotectedsend (current_nonce, src_factory, inner_headers)
+    checks('m3da.session', 'string', 'function', '?table')
     local next_nonce = M.getnonce()
 
     log("M3DA-SESSION", "INFO", "Sending data through authenticated%s session",
         self.encryption and ' and encrypted' or '')
 
     -- Send request and wait for response.
-    self :sendmsg (src_factory(), current_nonce, next_nonce)
+    self :sendmsg (src_factory(), inner_headers, current_nonce, next_nonce)
     local incoming = assert(self :receive())
 
     -- If the peer isn't happy with my auth/encryption,
@@ -340,7 +344,7 @@ function M :unprotectedsend (src_factory, current_nonce)
                 self.authentication, tostring(self.encryption))
         end
         current_nonce = assert(incoming.header.nonce)
-        self :sendmsg (src_factory(), current_nonce, next_nonce)
+        self :sendmsg (src_factory(), inner_headers, current_nonce, next_nonce)
         incoming = assert(self :receive())
         if incoming.header.challenge then failwith (self, 407, 'multiple challenges')
         else log('M3DA-SESSION', 'INFO', "Resynchronized message accepted by server") end
@@ -349,7 +353,7 @@ function M :unprotectedsend (src_factory, current_nonce)
     log('M3DA-SESSION', 'DEBUG', "Received a response to message sent.")
 
     -- Check and dispatch the incoming message.
-    return self :unprotectedparse (incoming, next_nonce)
+    return self :unprotectedparse (next_nonce, incoming)
 end
 
 -------------------------------------------------------------------------------
@@ -367,8 +371,8 @@ end
 -- @param nonce the nonce which the incoming message is expected to have used.
 -- @return the nonce to be used next time.
 --
-function M :unprotectedparse(outer_env, nonce)
-    checks('m3da.session', 'table', 'string')
+function M :unprotectedparse(nonce, outer_env)
+    checks('m3da.session', 'string', 'table')
 
     if not self :verifymsg (outer_env, nonce) then -- bad message, send a challenge and retry
         nonce = M.getnonce()
@@ -421,12 +425,12 @@ end
 -- TODO: reorder parse args to improve factoring (self, nonce, ...)
 local function protector_factory (unprotected_func)
     --arg1: src_factory for send, outer env for parse
-    return function(self, arg1)
+    return function(self, ...)
         checks('m3da.session')
         self.last_status = false -- to be filled in case of error
         local current_nonce = persist.load("security.nonce") or M.getnonce()
-        local success, next_nonce = copcall(unprotected_func, self, arg1, current_nonce)
-        --local success, next_nonce = coxpcall(function() return unprotected_func(self, arg1, current_nonce) end, debug.traceback)
+        local success, next_nonce = copcall(unprotected_func, self, current_nonce, ...)
+        --local success, next_nonce = coxpcall(function() return unprotected_func(self, current_nonce, ...) end, debug.traceback)
         if success then -- success
             persist.save("security.nonce", next_nonce)
             return 'ok'
