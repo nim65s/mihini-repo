@@ -23,7 +23,7 @@
 
     -- Determines the protocol, host, port, and optionally other things such
     -- as path, user, password
-    server.url = "tcp://localhost:8070"
+    server.url = "tcp://localhost:44900"
     --server.url = "http://localhost:8070/device/com"
     --server.url = "http://webplt-qa.anyware-tech.com/device/com"
     --server.url = "http://webplt-m2m.anyware-tech.com/device/com"

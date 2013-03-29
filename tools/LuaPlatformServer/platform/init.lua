@@ -16,7 +16,7 @@ WORKING_DIR='/tmp/'
 
 local config = {
     --url='httpserver://*/device/com',
-    url='tcpserver://*:1357',
+    url='tcpserver://*:44900',
     --authentication = 'hmac-sha1',
     localid = 'fakesrv'
 }
