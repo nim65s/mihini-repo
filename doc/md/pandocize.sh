@@ -25,6 +25,7 @@ markdown_list="
     agent/Time_services.md
     agent/Application_Container.md
     agent/Device_Management.md
+    agent/Tree_Manager.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
