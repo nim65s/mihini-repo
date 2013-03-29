@@ -24,6 +24,7 @@ markdown_list="
     agent/TCP_Remote_Connection.md
     agent/Time_services.md
     agent/Application_Container.md
+    agent/Device_Management.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
