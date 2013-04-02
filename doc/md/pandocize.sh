@@ -33,6 +33,7 @@ markdown_list="
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
+    index.md
     ../../README.md
 "
 
