@@ -28,6 +28,7 @@ markdown_list="
     agent/Tree_Manager.md
     agent/Using_treemgr_handlers_for_asset_management.md
     agent/Remote_Script.md
+    agent/Monitoring.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
