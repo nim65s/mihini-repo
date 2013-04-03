@@ -256,9 +256,10 @@ local function emp_handler_SendData(data)
     end
     --note that treeimg has been modified (mostly emptied) by match_asset_data_trees
 
-    local status, msg = co_status and hdl_status, co_status and hdl_msg or hdl_status
-    log("RACON-ASSET-TREE", "DETAIL", "tree process end: co_status=%s, hdl_status=%s, hdl_msg=%s, status=%s, msg=%s",
-    tostring(co_status), tostring(hdl_status), tostring(hdl_msg), tostring(status), tostring(msg))
+	local status, msg
+	if co_status then status, msg = hdl_status, hdl_msg -- status/msg returned by handler
+	else status, msg = -1, tostring(hdl_status or "unspecified error") end -- copcall error msg; TODO:
+	 
     if not status then
         log("RACON-ASSET-TREE", "ERROR", "While writing for path '%s' in the tree: msg: '%s'", tostring(path), tostring(msg))
     end
