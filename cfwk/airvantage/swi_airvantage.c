@@ -858,7 +858,16 @@ swi_status_t swi_av_SendUpdateResult(swi_av_Asset_t* asset, const char* componen
 
   yajl_gen_array_open(gen);
 
-  YAJL_GEN_STRING(componentNamePtr, "componentNamePtr");
+  //concatenate assetId + componentName before sending SoftwareUpdateResult EMP message
+  char* assetIdComponentName = malloc(sizeof(char)*( strlen(asset->assetId) + strlen(componentNamePtr)) + 2);
+  strcpy(assetIdComponentName, asset->assetId);
+  if (strcmp(componentNamePtr, ""))
+  {
+    strcat(assetIdComponentName, ".");
+    strcat(assetIdComponentName, componentNamePtr);
+  }
+
+  YAJL_GEN_STRING(assetIdComponentName, "assetIdComponentName");
   YAJL_GEN_INTEGER(updateResult, "updateResult");
 
   yajl_gen_array_close(gen);
@@ -1292,8 +1301,6 @@ swi_status_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload)
   CHECK_RETURN(swi_dset_GetIntegerByName(assetList, asset_id, &addr));
   pthread_mutex_unlock(&assets_lock);
   asset = (swi_av_Asset_t *) (intptr_t) addr;
-  free(asset_id);
-  free(remaining_path);
 
   if (asset->updCb)
   {
@@ -1322,9 +1329,12 @@ swi_status_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload)
     }
 
     /*finally call user callback!*/
-    asset->updCb(asset, componentName, componentVersion, componentFile, parameters_set, asset->updCbUd);
+    asset->updCb(asset, remaining_path, componentVersion, componentFile, parameters_set, asset->updCbUd);
     swi_dset_Destroy(parameters_set);
   }
+
+  free(asset_id);
+  free(remaining_path);
   yajl_tree_free(yval);
   return res;
 }

@@ -100,7 +100,7 @@ static void exec_lua_code(const char* cmd)
 static void updateNotificationCb(swi_av_Asset_t *asset, const char* componentNamePtr, const char* versionPtr,
     const char *updateFilePathPtr, swi_dset_Iterator_t* customParams, void *userDataPtr)
 {
-  if (strcmp("TOTO.my_pkg", componentNamePtr) || strcmp("my_version", versionPtr)
+  if (strcmp("my_pkg", componentNamePtr) || strcmp("my_version", versionPtr)
       || strcmp(updateFilePathPtr, "/toto/my_file") || strcmp((const char *) userDataPtr, "userData"))
   {
     result = 81;
