@@ -870,8 +870,8 @@ swi_status_t swi_av_SendUpdateResult(swi_av_Asset_t* asset, const char* componen
   YAJL_GEN_STRING(assetIdComponentName, "assetIdComponentName");
   YAJL_GEN_INTEGER(updateResult, "updateResult");
 
+  free(assetIdComponentName);
   yajl_gen_array_close(gen);
-
   YAJL_GEN_GET_BUF(payload, payloadLen);
 
   res = emp_send_and_wait_response(EMP_SOFTWAREUPDATERESULT, 0, payload, payloadLen, &respPayload, &respPayloadLen);
