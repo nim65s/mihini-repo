@@ -20,7 +20,7 @@
 
 
 
-#ROOT_DIR: location of ReadyAgent sources location
+#ROOT_DIR: location of Agent sources location
 ROOT_DIR=$(cd $(dirname $0)/.. && pwd)
 #EXEC_DIR: working directory where this script is executed
 EXEC_DIR=$(pwd)

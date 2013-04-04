@@ -27,7 +27,7 @@ fi
 INITIAL_WD=$(pwd)
 cd $(dirname $0)
 
-#store the SVN directory of ReadyAgent
+#store the SVN directory of the Agent
 RA_SVNDIRTEST=$(pwd)
 RA_SVNDIR=$RA_SVNDIRTEST/..
 
@@ -45,7 +45,7 @@ cd $DESTDIR
 #cmake ReadyAgent
 cmake -DPLATFORM=default $RA_SVNDIR
 
-#Build ReadyAgent and tests suites
+#Build Agent and tests suites
 make testsauto lua all
 makeret=$?
 if [ $makeret -ne 0 ]; then

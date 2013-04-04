@@ -170,7 +170,7 @@ inferior or equal to "3.0".\
     
     {   name = "@sys.appcon.my_app",
         location = "app/", --location is a folder in this case        
-        depends = { ReadyAgent=">7.0", my_app = "=1.1" },
+        depends = { Agent=">0.7", my_app = "=1.1" },
         provides =  { my_app = "1.2" },
         -- ApplicationContainer specifics attributes
         parameters = { purge=true, autostart=true },
@@ -418,7 +418,7 @@ update packages, ...
         
         {
             name = "@sys.appcon.my_app",
-            depends = { ReadyAgent = ">7.0", my_app = "=1.1" },
+            depends = { Agent = ">0.7", my_app = "=1.1" },
             provides =  { my_app = "1.2" } ,
             parameters = {purge=true, autostart=true },
             version = "1.2"

@@ -86,8 +86,8 @@ function shutdown(delay, reason)
     os.execute("halt") end)
 end
 
----Stops the ReadyAgent
---@param delay number of seconds before stopping the ReadyAgent.
+---Stops the Agent
+--@param delay number of seconds before stopping the Agent.
 --Default: 1 second.
 --@return nothing
 function stop(delay)

@@ -30,14 +30,14 @@ function compile(config, svndir, targetdir)
   print("\tCompiling")
   assertconfig(config)
 
-  -- Compile the ReadyAgent using the default toolchain
+  -- Compile the Agent using the default toolchain
   local result = os.execute(svndir.."/bin/build.sh -C " ..targetdir)
   if result ~= 0 then error("Compilation error for module: "..config.ConfigModule) end
 
   --result = os.execute("cd " .. targetdir.. " && make all embeddedtestsluafwk luafwktests readyagenttests lua embeddedteststools modbusserializertests readyagentconnectortests")
   -- Compiling Ready Agent
   result = os.execute("cd " .. targetdir.. " && make all lua")
-  if result ~= 0 then error("Make ReadyAgent error for module: "..config.ConfigModule) end
+  if result ~= 0 then error("Make Agent error for module: "..config.ConfigModule) end
 
   -- Remove defaultconfig
   result = os.execute("rm -f " .. targetdir.. "/runtime/lua/agent/defaultconfig.lua")
@@ -55,7 +55,7 @@ function compile(config, svndir, targetdir)
 end
 
 -- Function: install
--- Description: install a fresh firmware/ReadyAgent on the DuT
+-- Description: install a fresh firmware+Agent on the DuT
 -- Return: "success" if the RA is correctly installed in the VM. nil, error otherwise
 function install(config, svndir, targetdir)
    assert(targetdir)
@@ -68,13 +68,13 @@ end
 
 
 -- Function: start
--- Description: start the ReadyAgent software/DuT
+-- Description: start the Agent software/DuT
 function start(config, svndir, targetdir)
   assertconfig(config)
   assert(targetdir)
   sched.run(function() os.execute("cd ".. targetdir .."/runtime && bin/agent") end)
 
-  print("\tReadyAgent Started")
+  print("\tAgent Started")
   wait(5)
 end
 

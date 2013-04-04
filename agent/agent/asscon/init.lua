@@ -43,7 +43,7 @@ module (...)
 -- The table has a reverse entry (i.e assets[name] = id and assets[id] = name).
 assets = { }
 
--- Commands table: holds the EMP commands that can be processed by the ReadyAgent
+-- Commands table: holds the EMP commands that can be processed by the agent
 local commands = { }
 
 -- Allows other modules to register extra EMP commands.

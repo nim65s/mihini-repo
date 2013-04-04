@@ -21,9 +21,9 @@
  *  - receive data
  *  - receive asset update request
  *
- *  This module relies on an internal background service known as the AirVantage ReadyAgent, which is responsible for queuing data,
+ *  This module relies on Mihini's Agent process, which is responsible for queuing data,
  *  managing the flush timers and sending the data to the remote AirVantage server.
- *  Many of the APIs in this module relay the data to the ReadyAgent; the ReadyAgent then manages the data as described.
+ *  Many of the APIs in this module relay the data to the Agent; the Agent then manages the data as described.
  *
  *  Two methods are supported for sending data to the AirVantage servers:
  *   - The swi_av_asset_Push* functions are this is a simple API for managing how to send data, this is the recommended method for most use cases.
@@ -58,7 +58,7 @@
 * A call to swi_av_Init is mandatory to enable AirVantage library APIs.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
 */
 swi_status_t swi_av_Init();
 
@@ -85,7 +85,7 @@ swi_status_t swi_av_Destroy();
 *  - 0 value means the connection will be asynchronous, but will be done as soon as possible.
 *
 *  @return SWI_STATUS_OK on success
-*  @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
+*  @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
 */
 swi_status_t swi_av_ConnectToServer
 (
@@ -106,11 +106,11 @@ swi_status_t swi_av_ConnectToServer
 * See #swi_av_ConnectToServer for complementary function.
 *
 * For a description of how policies allow to manage data reporting from the assets to the server,
-* see the ReadyAgent product documentation.
+* see Mihini Agent product documentation.
 *
 * @return SWI_STATUS_OK on success
 * @return SWI_STATUS_UNKNOWN_COMMAND if the requested policy name is not found.
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
 */
 swi_status_t swi_av_TriggerPolicy
 (
@@ -137,7 +137,7 @@ typedef struct swi_av_Asset swi_av_Asset_t;
 * See #swi_av_asset_Start to start the newly created instance.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
 * @return SWI_STATUS_WRONG_PARAMS if the supplied parameters are invalid
 *
 */
@@ -161,7 +161,7 @@ swi_status_t swi_av_asset_Create
 * Allows the asset instance to send and receive messages to/from the servers.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
 */
 swi_status_t swi_av_asset_Start
 (
@@ -205,7 +205,7 @@ typedef enum swi_av_timestamp{
 /**
 * Pushes a string value to the agent.
 * The data are not necessarily moved forward from the agent to the server immediately:
-* agent-to-server data transfers are managed through policies, as described in the ReadyAgent product documentation.
+* agent-to-server data transfers are managed through policies, as described in the Mihini Agent product documentation.
 * This API is optimized for ease of use: it will internally try to reformat data in the most sensible,
 * server-compatible way. Applications requiring a tight control over how data are structured, buffered,
 * consolidated and reported should consider the more advanced Table API,
@@ -214,7 +214,7 @@ typedef enum swi_av_timestamp{
 * String parameters can be released by user once the call has returned.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
 */
 swi_status_t swi_av_asset_PushString
 (
@@ -232,7 +232,7 @@ swi_status_t swi_av_asset_PushString
 /**
 * Pushes an integer value to the agent.
 * The data are not necessarily moved forward from the agent to the server immediately:
-* agent-to-server data transfers are managed through policies, as described in the ReadyAgent product documentation.
+* agent-to-server data transfers are managed through policies, as described in the Mihini Agent product documentation.
 * This API is optimized for ease of use: it will internally try to reformat data in the most sensible,
 * server-compatible way. Applications requiring a tight control over how data are structured, buffered,
 * consolidated and reported should consider the more advanced Table API,
@@ -241,7 +241,7 @@ swi_status_t swi_av_asset_PushString
 * String parameters can be released by user once the call has returned.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
 */
 swi_status_t swi_av_asset_PushInteger
 (
@@ -258,7 +258,7 @@ swi_status_t swi_av_asset_PushInteger
 /**
 * Pushes a float value to the agent.
 * The data are not necessarily moved forward from the agent to the server immediately:
-* agent-to-server data transfers are managed through policies, as described in the ReadyAgent product documentation.
+* agent-to-server data transfers are managed through policies, as described in the Mihini Agent product documentation.
 * This API is optimized for ease of use: it will internally try to reformat data in the most sensible,
 * server-compatible way. Applications requiring a tight control over how data are structured, buffered,
 * consolidated and reported should consider the more advanced Table API,
@@ -267,7 +267,7 @@ swi_status_t swi_av_asset_PushInteger
 * String parameters can be released by user once the call has returned.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
 */
 swi_status_t swi_av_asset_PushFloat
 (
@@ -312,8 +312,8 @@ typedef enum
 * String parameters can be released by user once the call has returned.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
-* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the ReadyAgent)
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the Agent)
 */
 swi_status_t swi_av_table_Create
 (
@@ -338,8 +338,8 @@ swi_status_t swi_av_table_Create
 * Partial data not pushed yet to the agent will be lost.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
-* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the ReadyAgent)
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the Agent)
 */
 swi_status_t swi_av_table_Destroy
 (
@@ -351,7 +351,7 @@ swi_status_t swi_av_table_Destroy
 * Pushes a float value in the current row of the table.
 *
 * swi_av_table_Push* functions have be called in the correct order to match the table definition created in swi_av_table_Create.
-* Until a row is complete and sent to the ReadyAgent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
+* Until a row is complete and sent to the Agent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
 *
 * @return SWI_STATUS_OK on success
 * @return SWI_STATUS_VALUE_OUT_OF_BOUND maximum len for the current row has been reached, the value cannot be pushed
@@ -368,7 +368,7 @@ swi_status_t swi_av_table_PushFloat
 * Pushes an integer value in the current row of the table.
 *
 * swi_av_table_Push* functions have be called in the correct order to match the table definition created in swi_av_table_Create.
-* Until a row is complete and sent to the ReadyAgent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
+* Until a row is complete and sent to the Agent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
 *
 * @return SWI_STATUS_OK on success
 * @return SWI_STATUS_VALUE_OUT_OF_BOUND maximum len for the current row has been reached, the value cannot be pushed
@@ -383,7 +383,7 @@ swi_status_t swi_av_table_PushInteger
 * Pushes a string value in the current row of the table.
 *
 * swi_av_table_Push* functions have be called in the correct order to match the table definition created in swi_av_table_Create.
-* Until a row is complete and sent to the ReadyAgent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
+* Until a row is complete and sent to the Agent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
 *
 * @return SWI_STATUS_OK on success
 * @return SWI_STATUS_VALUE_OUT_OF_BOUND maximum len for the current row has been reached, the value cannot be pushed
@@ -396,14 +396,14 @@ swi_status_t swi_av_table_PushString
 
 
 /**
-* Pushes the current row of the database to the ReadyAgent.
+* Pushes the current row of the database to the Agent.
 *
-* Once the current row has been pushed to the ReadyAgent, it is totally freed in the database,
+* Once the current row has been pushed to the Agent, it is totally freed in the database,
 * And the table is ready to received new pushed data using swi_av_table_Push*() functions.
 *
 * @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the ReadyAgent cannot be accessed.
-* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the ReadyAgent)
+* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the Agent)
 */
 swi_status_t swi_av_table_PushRow
 (

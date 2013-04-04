@@ -381,7 +381,7 @@ local function list()
     return res
 end
 
---- Init function to be called by ReadyAgent initializer module.
+--- Init function to be called by the agent's initializer module.
 -- Loads the installed application list, inits each application and starts all applications
 --  with autostart parameter set to true.
 -- @return "ok" string in case of success, nil+error of message otherwise
@@ -406,7 +406,7 @@ local function init()
         end
     end
     persist.save("ApplicationList", application_list);
-    sched.sigrunonce("ReadyAgent", "InitDone",  initapps )
+    sched.sigrunonce("Agent", "InitDone",  initapps )
     return "ok"
 end
 

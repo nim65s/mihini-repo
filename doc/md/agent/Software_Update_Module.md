@@ -147,7 +147,7 @@ Here is a small sample:
          force = true,
          provides = {
             RadioHardware = "MC8705",
-            ReadyAgent = "7.0 - Build: 7063",
+            Agent = "0.7 - Build: 7063",
             AleosSoftware = "4.2.5.005",
             AleosHardware = "12180306000700000000000000000000",
             RadioSoftware = "T1_0_4_3CAP R460 CNSZXD00000128 2011/11/15 10:22:30" },

@@ -273,7 +273,7 @@ local function runagenttests(testmgt, target)
   print("	Running agent tests")
   target:install()
 
-  -- start the ReadyAgent on the target
+  -- start the Agent on the target
   target:start()
 
   sched.wait(10)

@@ -29,7 +29,7 @@ local function ResetToFactoryDefault(asset, params, command, ticket)
         --Lua Fwk:
         --persist file are not deleted but reset.
 
-        --ReadyAgent modules:
+        --Agent modules:
         updatedir   =(LUA_AF_RW_PATH or "./").."update/",
         appcondir   =(LUA_AF_RW_PATH or lfs.currentdir().."/").."apps/",
         --config is using persist dir
@@ -56,8 +56,8 @@ local function ResetToFactoryDefault(asset, params, command, ticket)
             status = "async"
         else status = "ok" end
 
-        --this also depends on ReadyAgent integration:
-        -- if it is started using AppmonDaemon, making ReadyAgent exiting with code !=0 may be enough
+        --this also depends on agent integration:
+        -- if it is started using AppmonDaemon, making the agent exit with code !=0 may be enough
         -- (however applications installed in ApplicationContainer are likely to be still running)
         -- anyway, rebooting the whole device operating system is recommended.
         log("DEVMAN", "INFO", "Requesting device to be restarted in "..tostring(delay).." seconds to complete settings reset")

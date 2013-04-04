@@ -40,7 +40,7 @@ end
 function compile(config, svndir, targetdir)
   assertconfig(config)
 
-  -- Compile the ReadyAgent using the toolchain for QEmu x68 machine
+  -- Compile the Agent using the toolchain for QEmu x68 machine
   --print(svndir.."/bin/build.sh -t ".. config.compil.toolchain.." -C " ..targetdir)
   local result = os.execute(svndir.."/bin/build.sh -t ".. config.compil.toolchain.." -C " ..targetdir)
   if result ~= 0 then error("Compilation error for module: "..config.ConfigModule) end
@@ -52,7 +52,7 @@ function compile(config, svndir, targetdir)
 end
 
 -- Function: install
--- Description: install a fresh ReadyAgent on the DuT
+-- Description: install a fresh Agent on the DuT
 -- Return: "success" if the RA is correctly installed in the VM. nil, error otherwise
 function install(config, svndir, targetdir)
   assert(targetdir)
@@ -77,7 +77,7 @@ end
 
 
 -- Function: start
--- Description: start the ReadyAgent software/DuT
+-- Description: start the Agent software/DuT
 function start(config, svndir, targetdir)
   assertconfig(config)
   --local fd, err = os.execute("cd ".. config.path .."/runtime && bin/agent")

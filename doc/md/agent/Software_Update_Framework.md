@@ -17,5 +17,5 @@ Small Description of each element:
 -   [Application Container](Application_Container.html): controls
     loading and monitoring of start-up applications
 -   [Remote Script](Remote_Script.html): enables the execution of Lua
-    script on the device, with full access to ReadyAgent features
+    script on the device, with full access to Agent features
 

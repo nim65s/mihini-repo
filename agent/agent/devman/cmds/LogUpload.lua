@@ -26,7 +26,7 @@ local function LogUpload(sys_asset, args)
     if type == "http" then
         return -1, "HTTP Post method is not supported yet to upload logs !"
     elseif type == "ftp" then
-        local logfilename = string.format("ReadyAgent_%s_%s_%d.log", config.agent.deviceId, logtype, os.date("%s") )
+        local logfilename = string.format("Agent_%s_%s_%d.log", config.agent.deviceId, logtype, os.date("%s") )
         local parsed_url = skturl.parse(url)
         res, err = ftp.put{
             host = parsed_url.host,

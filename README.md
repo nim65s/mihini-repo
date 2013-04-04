@@ -119,8 +119,8 @@ You should see the logs of the Mihini Agent, something similar to:
 
 ```bash
 2013-03-12 16:14:48 GENERAL-INFO: ************************************************************
-2013-03-12 16:14:48 GENERAL-INFO: Starting ReadyAgent ...
-2013-03-12 16:14:48 GENERAL-INFO:      ReadyAgent: 9.0-DEV - Build: b660318
+2013-03-12 16:14:48 GENERAL-INFO: Starting Agent ...
+2013-03-12 16:14:48 GENERAL-INFO:      Agent: 0.9-DEV - Build: b660318
 2013-03-12 16:14:48 GENERAL-INFO:      Lua VM: Lua 5.1.4 (+meta pairs/ipairs) (+patch-lua-5.1.4-3)
 2013-03-12 16:14:48 GENERAL-INFO:      System: Linux arch 3.7.10-1-ARCH #1 SMP PREEMPT Thu Feb 28 09:50:17 CET 2013 x86_64
 2013-03-12 16:14:48 GENERAL-INFO: ************************************************************
@@ -137,7 +137,7 @@ You should see the logs of the Mihini Agent, something similar to:
 2013-03-12 16:14:48 GENERAL-INFO: Module [DeviceManagement] initialized
 2013-03-12 16:14:48 GENERAL-INFO: Module [ApplicationContainer] initialized
 2013-03-12 16:14:48 GENERAL-INFO: Module [Update] initialized
-2013-03-12 16:14:48 GENERAL-INFO: ReadyAgent successfully initialized
+2013-03-12 16:14:48 GENERAL-INFO: Agent successfully initialized
 ```
 
 > **INFO** 

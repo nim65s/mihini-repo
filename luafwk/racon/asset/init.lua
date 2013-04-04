@@ -15,8 +15,8 @@
 -- Application Services server. Instances of this object should be created
 -- through @{airvantage#(airvantage).newAsset}.
 --
--- This module relies on an internal background service known as the AirVantage
--- ReadyAgent, which is responsible for queuing data, managing the flush timers
+-- This module relies on an internal background service known as the Mihini
+-- Agent, which is responsible for queuing data, managing the flush timers
 -- and sending the data to the remote AirVantage server. Many of the APIs in
 -------------------------------------------------------------------------------
 -- Copyright (c) 2012 Sierra Wireless and others.
@@ -33,7 +33,7 @@
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
--- this module relay the data to the ReadyAgent; the ReadyAgent then manages
+-- this module relay the data to the Agent; the Agent then manages
 -- the data as described.
 --
 -- For information regarding supported policies, see the @{airvantage#airvantage} module

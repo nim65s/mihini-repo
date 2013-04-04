@@ -172,7 +172,7 @@ function M.init()
             end
         end
     end
-    sched.sigrunonce("ReadyAgent","InitDone", setdevid)
+    sched.sigrunonce("Agent","InitDone", setdevid)
 
     -- Choose and load the appropriate session and transport modules, depending on config.
     local cs, session_name = config.server, 'default'

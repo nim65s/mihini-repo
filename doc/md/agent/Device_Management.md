@@ -46,10 +46,10 @@ ResetToFactoryDefault          "restart" -> once cleared the agent              
                                or defaults to 6 seconds if this param               \
                                is equal to "true" or "1"                            \
                                (boolean, number)                                    **Impacted** modules/functionalities: \
-                                                                                    - ReadyAgent persisted **config** is reset to **defaultconfig
+                                                                                    - Agent persisted **config** is reset to **defaultconfig
                                                                                       **( depending on the differences between defaultconfig.lua and
                                                                                       persisted config, this operation may impact: server url,
-                                                                                      hearbeat, ..., or any ReadyAgent config parameter) \
+                                                                                      hearbeat, ..., or any Agent config parameter) \
                                                                                     - Treemgr mapping are reset: it will be regenerated from .map
                                                                                       files on next boot \
                                                                                     -  **Persisted M3DA data**: asset and device data are reset \
@@ -107,7 +107,7 @@ LogUpload                   "url" | "1" -> url (string) \                       
                             "logtype" | "2" -> log type                           string equal to: "ram" to retrieve logs in ram (i.e. only from current
                             (string in {"ram" or "flash"})                        Agent execution), or "flash" to get the logs from flash space
                                                                                   Note: The content of flash or ram buffer depends on the log policy
-                                                                                  defined in ReadyAgent Config
+                                                                                  defined in Agent Config
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
