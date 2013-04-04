@@ -14,6 +14,7 @@ local config = require"agent.config"
 local utable = require"utils.table"
 local socket = require"socket"
 local log    = require"log"
+local systemutils = require"utils.system"
 
 local data   = common.data
 local escapepath = common.escapepath
@@ -45,15 +46,22 @@ local function checkpkg()
 
     -- create a directory with the same name that the updatefile
     -- where the update package will be extracted
-    local dirname = string.match(data.currentupdate.updatefile, ".*/(.*)%.tar.-")
-    if not dirname then
+    local pkgname = string.match(data.currentupdate.updatefile, ".*/(.*)%.tar.-")
+    if not pkgname then
         --report FUMO_RESULT_CLIENT_ERROR (previous check must avoid that)
        return state.stepfinished("failure", 451, "Cannot parse the update file name correctly")
     end
 
-    dirname = common.tmpdir.."/"..dirname
-    data.currentupdate.update_directory = dirname
+    local dirname = common.tmpdir .."/"..pkgname
     updatefile = data.currentupdate.updatefile
+    
+    --Get absolute path if we can get it for callback user
+    local err, output = systemutils.pexec("readlink -f -n " .. common.tmpdir )
+    if err ~= 0 then 
+        log("UPDATE", "WARNING", "Cannot get the absolu path : err=%s, the relatif path compared to runtime directory, is used for update package", tostring(output))     
+        output= nil
+    end
+    data.currentupdate.update_directory = (output or common.tmpdir) .."/"..pkgname
 
     --preventive directory removal before mkdir
     res, err  = os.execute("rm -rf "..escapepath(dirname))
