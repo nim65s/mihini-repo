@@ -32,7 +32,7 @@ p(instance)
 end
 
 -- Function: compile
--- Description: compile the ReadyAgent and the tests for the target
+-- Description: compile the Agent and the tests for the target
 -- Return: the status of the compilation process
 function targetmanagerapi:compile()
   local tar = self.target
@@ -40,7 +40,7 @@ function targetmanagerapi:compile()
 end
 
 -- Function: install
--- Description: install the ReadyAgent on the target
+-- Description: install the Agent on the target
 -- Return: the status of installation, nil and error if any error occurs
 function targetmanagerapi:install()
   local tar = self.target
@@ -48,7 +48,7 @@ function targetmanagerapi:install()
 end
 
 -- Function: start
--- Description: start the ReadyAgent on the target
+-- Description: start the Agent on the target
 -- Return: the status of the run, ie the number of errors that occured during the run
 function targetmanagerapi:start()
   self.target.start(self.config, self.svndir, self.targetdir)

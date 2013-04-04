@@ -65,13 +65,16 @@ Session modules must have a function `new(cfg)`, which returns `nil`
 + error message upon failure, or an object with the following
 properties:
 
-* a `:send(src_factory)` method, whose parameter is a function
+* a `:send(src_factory, headers)` method, whose parameter is a function
   returning an LTN12 source. The source must stream a serialized M3DA
   message, and if `src_factory` is called more than once, it must be
   able to serve the source more than once. If `src_factory` is called
   a second time, returning a second source, the first source will not
   be used anymore. `:send()` return non-`nil`, or `nil` + error
-  message.
+  message.  `headers` is an optional table of key/value pairs, which will
+  be passed as the envelope header (inner envelope header in case of
+  secured connection). This table will be modified by `:send()`: it will
+  add an `id` field in it.
 
 * a `:newsink()` method, which returns an LTN12 sink. This sink will
   receive data from the transport layer; those data represent
@@ -107,3 +110,56 @@ The server connector has the following public APIs:
 * `connect(delay)` ensures that all data accumulated with
   `pushtoserver()` and not yet successfully sent, will be sent to the
   server in no more than `delay` seconds.
+
+## Key management
+
+Key are stored on embedded devices in a file
+`crypto/crypto.keys`. They are obfuscated with an AES key, but this
+doesn't constitute proper encryption, as the key is in the code and
+can be retrieved by someone with access to the hardware. The
+possibility is contemplated, for future versions of the agent, to let
+users plug alternative obfuscation methods in the system.
+
+Another risk mitigation measure is that keys retrieved from the key
+store are never passed directly to Lua. Instead, all Lua cryptographic
+primitives can access keys through their index in the key store. This
+means that every key used to encrypt or sign data must be put in the
+store, even if it is derived from a key already present in the store.
+
+The keys are, in order:
+
+    PROVIS_KS = MD5(server_id .. MD5(registration_password))
+    PROVIS_KD = MD5(device_id .. MD5(registration_password))
+    CRYPTO_K  = MD5(password)
+    AUTH_KS   = MD5(server_id .. MD5(password))
+    AUTH_KD   = MD5(device_id .. MD5(password))
+
+Where `registration_password` is the provisioning secret, generally
+common to a series of devices, and used to download the actual signing
+and encryption key `CRYPTO_K`. password is the final, device-specific
+secret used to generate the actual security keys.
+
+The keys have indexes 1...5 in Lua. Beware that in the keystore and
+the C code, they have indexes 0...4.
+
+Registration passwords as well as actual passwords can be provisionned
+in a device through telnet as follows:
+
+* after building the agent, run `make agent_provisioning` in the build
+  directory (the manual key provisioning system isn't built included
+  by default);
+* launch the agent and connect through telnet on port 2000;
+* then you can set the preshared secret:
+  `require 'agent.provisioning' .registration_password "foobar"`
+* you can also set the cipher+authentication password directly:
+  `require 'agent.provisioning' .password "letMeIn"`
+
+There's also a C API, but at a lower level; you have to compute the
+keys yourself before writing them down in the store. The writing is
+preformed by `set_plain_bin_keys( first_key, n_keys, keys)`, in
+`libs/keystore/keystore.{c,h}`.
+
+In the keystore, keys are ciphered with an AES-128 key embedded in the
+code. Moreover, this key is rotated n bytes to the left to encrypt the
+key at index n (this prevents identical keys from having the same
+encrypted forms).

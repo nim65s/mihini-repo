@@ -148,7 +148,7 @@
 -- interfaces signal important events such as going up or going down;
 -- every task emits a `'die'` signal when it exits, allowing other tasks
 -- to monitor their termination; etc. Many complex systems, such as the
--- telnet shell, the ReadyAgent initialization procedure, or TCP data
+-- telnet shell, the Agent initialization process, or TCP data
 -- handling, are internally synchronized through signals.
 --
 --

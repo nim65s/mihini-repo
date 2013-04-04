@@ -79,7 +79,6 @@ function M :send (src)
         log('M3DA-TRANSPORT', 'DEBUG', "Send data immediately")
         return ltn12.pump.all(src, socket.sink(self.socket))
     else
-        print(debug.traceback('in tcpserver:send, no socket'))
         log('M3DA-TRANSPORT', 'DEBUG', "Buffering data, to be sent upon next connection")
         table.insert(self.responses, src)
     end

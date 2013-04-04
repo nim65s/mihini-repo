@@ -9,7 +9,7 @@
 --     Fabien Fleutot for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
---- Agent config handler: present the persisted ReadyAgent configuration,
+--- Agent config handler: present the persisted agent configuration,
 --  managed by module `agent.config`, as a treemgr handler.
 --
 --  This handler is not based on `agent.treemgr.handlers.table` because

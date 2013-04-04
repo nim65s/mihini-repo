@@ -41,6 +41,6 @@ function closeLua()
 end
 
 sched.run(system.pexec, 'lua lua/tests/tools/sockettestsvr.lua')
-sched.run(function() rpc.newmultiserver('localhost', 7300) end) -- start the ReadyAgent
+sched.run(function() rpc.newmultiserver('localhost', 7300) end) -- start the Agent
 sched.loop() -- main loop: run the scheduler
 

@@ -42,23 +42,23 @@ psignal.signal("SIGTERM", function()
 --check if migration if needed----------------------------
 local function setupmigration()
     local persist = require "persist"
-    return persist.load("ReadyAgentVersion")
+    return persist.load("AgentVersion")
 end
 local function loadmigration(versionfrom)
     local migrationscript = require "agent.migration"
-    migrationscript.execute(versionfrom, _READYAGENTRELEASE)
+    migrationscript.execute(versionfrom, _MIHINI_AGENT_RELEASE)
     loader.unload("agent.migration")
 end
 local status, currentversion = copcall(setupmigration)
 currentversion = status and currentversion or "unknown"
 local migrationres, migrationerr
-if currentversion ~= _READYAGENTRELEASE then
+if currentversion ~= _MIHINI_AGENT_RELEASE then
     if status == false then
         loader.unload("persist")
     end
     migrationres, migrationerr = copcall(loadmigration, currentversion)
     local persist = require "persist"
-    persist.save("ReadyAgentVersion", _READYAGENTRELEASE)
+    persist.save("AgentVersion", _MIHINI_AGENT_RELEASE)
 end
 ----------------------------------------------------------
 
@@ -129,13 +129,13 @@ local function initmodule(name, mod, deperr, params)
 
     if not next(scheduledmodules) then -- detect end of initialization !
         if not next(failedmodules) then
-            log("GENERAL", "INFO", "ReadyAgent successfully initialized")
+            log("GENERAL", "INFO", "Agent successfully initialized")
         else
-            log("GENERAL", "ERROR", "ReadyAgent initialization finished with some errors:")
+            log("GENERAL", "ERROR", "Agent initialization finished with some errors:")
             for n, e in pairs(failedmodules) do log("GENERAL", "ERROR", "\t [%s] failed with %s", n, e) end
         end
-        -- Notify the rest of the world that the ReadyAgent Initialization process is finished...
-        sched.signal("ReadyAgent", "InitDone")
+        -- Notify the rest of the world that the agent's initialization process is completed.
+        sched.signal("Agent", "InitDone")
     end
 end
 
@@ -202,7 +202,7 @@ local function scheduleinit(p)
         else sched.sigonce(d, "InitDone", waitinit) end
     end
 
-    sched.sigonce("ReadyAgent", "InitStart", waitinit) -- init of this module will start only when the actual init process is started !
+    sched.sigonce("Agent", "InitStart", waitinit) -- init of this module will start only when the actual init process is started !
 end
 
 -- function that check if there is no cycle in the init sequence
@@ -249,12 +249,12 @@ local function startInitProcess()
     local s, e = protectedinit("platform", config.platformsettings)
     if not s then log("GENERAL", "ERROR", "Error while loading PlatformSpecifics, error=%s",e or "unknown") end
     -- Actually start the init process
-    sched.signal("ReadyAgent", "InitStart")
+    sched.signal("Agent", "InitStart")
 end
 
 log("GENERAL", "INFO", string.rep("*", 60))
-log("GENERAL", "INFO", "Starting ReadyAgent ...")
-log("GENERAL", "INFO", "     ReadyAgent: %s", _READYAGENTRELEASE)
+log("GENERAL", "INFO", "Starting Agent ...")
+log("GENERAL", "INFO", "     Agent: %s", _MIHINI_AGENT_RELEASE)
 log("GENERAL", "INFO", "     Lua VM: %s", _LUARELEASE)
 log("GENERAL", "INFO", "     System: %s", _OSVERSION)
 log("GENERAL", "INFO", string.rep("*", 60))
@@ -332,7 +332,7 @@ function simplemodules.dummynetman()
     local sched = require 'sched'
     module 'agent.netman'
     function withnetwork(action, ...) return action(...) end
-    sched.sigonce("ReadyAgent", "InitDone", function() sched.signal("NETMAN", "CONNECTED", "Default") end)
+    sched.sigonce("Agent", "InitDone", function() sched.signal("NETMAN", "CONNECTED", "Default") end)
     return "ok"
 end
 

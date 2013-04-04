@@ -68,12 +68,14 @@ end
 --   but some more complex session managers might call it more than once,
 --   e.g. because a message must be reemitted for security reasons.
 -- @return `"ok"` or `nil` + error message
-function M :send(src_factory)
-    checks('m3da.session', 'function')
+function M :send(src_factory, headers)
+    checks('m3da.session', 'function', '?table')
     M.last_session_id = M.last_session_id + 1
     log("M3DA-SESSION", "INFO", "Opening default session #%d", M.last_session_id)
     local r, env_wrapper, errmsg
-    env_wrapper, errmsg = assert(m3da.envelope { id = self.localid })
+    headers = headers or { }
+    headers.id=self.localid
+    env_wrapper, errmsg = assert(m3da.envelope(headers))
     local source = ltn12.source.chain(src_factory(), env_wrapper)
     r, errmsg = self.transport :send (source)
     if not r then return nil, errmsg end

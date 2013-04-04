@@ -9,5 +9,5 @@
 --     Cuero Bugot for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-require "agent" -- start the ReadyAgent
+require "agent" -- start the agent
 sched.loop() -- main loop: run the scheduler

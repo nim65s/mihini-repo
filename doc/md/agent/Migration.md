@@ -11,9 +11,9 @@ automatically load migration scripts.
 
 The migration module will determine if a migration is needed.\
  For that purpose, it will use a persisted object named
-**"ReadyAgentVersion"**.\
+**"AgentVersion"**.\
  The content of this persisted object is the value of
-**_READYAGENTRELEASE** Lua global variable (the version is also
+**MIHINI_AGENT_RELEASE** Lua global variable (the version is also
 displayed in the logs).
 
 If the content of persisted object is different of current version

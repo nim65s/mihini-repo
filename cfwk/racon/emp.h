@@ -27,7 +27,7 @@
 #include "swi_dset.h"
 
 /**
- * ReadyAgent connection parameters
+ * Agent connection parameters
  */
 #define SWI_IPC_SERVER_ADDR "127.0.0.1"
 #define SWI_IPC_SERVER_PORT 9999

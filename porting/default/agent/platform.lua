@@ -10,7 +10,7 @@
 --     Fabien Fleutot     for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
---- ReadyAgent port on Linux : porting and wrappers functions
+--- Agent port to Linux : porting and wrappers functions
 
 
 local M = { }
@@ -24,7 +24,7 @@ end
 
 function M.getupdateplatformcomponent()
         return {
-            ReadyAgent    = _READYAGENTRELEASE,
+            Agent    = _MIHINI_AGENT_RELEASE,
         }
     end
 

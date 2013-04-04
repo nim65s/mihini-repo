@@ -12,19 +12,19 @@
 
 /**
 * @file
-* @brief This API provides functionalities to control an update process in the ReadyAgent context.
+* @brief This API provides functionalities to control an update process in the Agent context.
 *
-* ReadyAgent update process is working with the AirVantage services platform.
+* Agent update process is working with the AirVantage services platform.
 * The basic concepts are:
 *  - An update job is setup on the AirVantage services platform for your device,
-*  - The ReadyAgent receives the update request,
-*  - The ReadyAgent checks the update request,
-*  - The ReadyAgent downloads the update package,
-*  - The ReadyAgent checks the update package,
-*  - The ReadyAgent dispatches the update package content to the software components (those components can be ReadyAgent internals or external applications
+*  - The Agent receives the update request,
+*  - The Agent checks the update request,
+*  - The Agent downloads the update package,
+*  - The Agent checks the update package,
+*  - The Agent dispatches the update package content to the software components (those components can be Agent internals or external applications
 *    that want to process their own update or applications that are responsible for updating another pieces of software),
-*  - The ReadyAgent receives the result of each software component responsible for a part of the update,
-*  - The ReadyAgent sends the update result to the AirVantage services platform.
+*  - The Agent receives the result of each software component responsible for a part of the update,
+*  - The Agent sends the update result to the AirVantage services platform.
 *
 * Here are some details on the update package:
 *  - contains a Manifest file that describes the update package
@@ -37,7 +37,7 @@
 *
 * The API to deal with application/asset update request  is documented here: \ref swi_av_RegisterUpdateNotification function and related definitions in \ref swi_airvantage.h API.
 *
-* For more details on the update process, please read the ReadyAgent product documentation.
+* For more details on the update process, please read the Agent product documentation.
 * <HR>
 */
 
@@ -66,7 +66,7 @@ swi_status_t swi_update_Init();
 swi_status_t swi_update_Destroy();
 
 /**
-* This enum lists the events that will notified by the ReadyAgent
+* This enum lists the events that will notified by the Agent
 * while an update process is running.
 */
 typedef enum swi_update_Event
@@ -167,7 +167,7 @@ swi_status_t swi_update_RegisterStatusNotification
 
 
 /**
-* This enum is used to send requests to the ReadyAgent in order to change the update process.
+* This enum is used to send requests to the Agent in order to change the update process.
 */
 typedef enum swi_update_Request
 {
@@ -189,7 +189,7 @@ typedef enum swi_update_Request
 */
 swi_status_t swi_update_Request
 (
-    swi_update_Request_t req ///< [IN] the request to send to the ReadyAgent in order to change the update process.
+    swi_update_Request_t req ///< [IN] the request to send to the Agent in order to change the update process.
 );
 
 

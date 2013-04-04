@@ -103,19 +103,19 @@ function M.dosession()
     local pending_factories
     M.sourcefactories, pending_factories = { }, M.sourcefactories
     local source_factory = concat_factories(pending_factories)
-    local r, errmsg = agent.netman.withnetwork(M.session.send, M.session, source_factory)
-    if not r then
-        log('SRVCON', 'ERROR', "Error while sending data to server: %s", errmsg)
+    local status, errmsg = agent.netman.withnetwork(M.session.send, M.session, source_factory)
+    if not status then
+        log('SRVCON', 'ERROR', "Error while sending data to server: %s", tostring(errmsg))
         restore_factories(pending_factories);
         lock.unlock(M)
         return nil, errmsg
     end
     for callback, _ in pairs(M.pendingcallbacks) do
-        callback(r, errmsg)
+        callback(status, errmsg)
     end
     M.pendingcallbacks = { }
     lock.unlock(M)
-    return "ok"
+    return status
 end
 
 -- Obsolete: former support for data sending through SMS.
@@ -172,7 +172,7 @@ function M.init()
             end
         end
     end
-    sched.sigrunonce("ReadyAgent","InitDone", setdevid)
+    sched.sigrunonce("Agent","InitDone", setdevid)
 
     -- Choose and load the appropriate session and transport modules, depending on config.
     local cs, session_name = config.server, 'default'

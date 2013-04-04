@@ -92,7 +92,7 @@ local notifypause
 -- Returns the status of the last update done or the status of current update if an update is in progress.
 -- @function [parent=#agent.update] getstatus
 -- @param sync optional boolean, to request blocking behavior to wait for the end of the whole update process, only applies if an update is in progress. <br>
--- remark: please note that update process may provoke system/agent reboot, if so you can call again getstatus after ReadyAgent reboot to get the result.
+-- remark: please note that update process may provoke system/agent reboot, if so you can call again getstatus after Agent reboot to get the result.
 --
 -- @return "in_progress" if an update is in progress but blocking behavior was not requested
 -- @return "ok" in case of success of the last update process
@@ -567,10 +567,10 @@ local function init()
         --resume current update if any
         if data.currentupdate then
             log("UPDATE", "INFO", "Previous Update was interrupted, resuming it ...");
-            sched.sighook("ReadyAgent", "InitDone", function() sched.run(resumeupdate) end )
+            sched.sighook("Agent", "InitDone", function() sched.run(resumeupdate) end )
         else
             -- or look for local update
-            sched.sighook("ReadyAgent", "InitDone", function() sched.run(localupdate) end )
+            sched.sighook("Agent", "InitDone", function() sched.run(localupdate) end )
         end
     else
         log("UPDATE", "INFO", "Update service init was already done!")

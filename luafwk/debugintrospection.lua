@@ -31,7 +31,7 @@
 -- WARNING: do never keep any direct reference to internal fields (dump or tables): a dump object is not re-dumped to
 -- avoid making huge data structures (and potentially overflow l2b)
 
--- Utility function (from ReadyAgent utils, copied here to avoid this dependency for a single function)
+-- Utility function (from Mihini's utils, copied here to avoid this dependency for a single function)
 local function isregulararray(T)
     local n = 1
     for k, v in pairs(T) do

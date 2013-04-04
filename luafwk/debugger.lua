@@ -59,7 +59,7 @@ do
     blockingtcp.send       = reg["tcp{client}"].__index.send
     blockingtcp.settimeout = reg["tcp{master}"].__index.settimeout
 
-    -- verify that the socket function are the real ones and not ReadyAgent not blocking versions
+    -- verify that the socket function are the real ones rather than Mihini sched's non-blocking versions
     assert(debug.getinfo(blockingtcp.connect, "S").what == "C", "The debugger needs the real socket functions !")
     -- cleanup the package.loaded table (socket.core adds socket field into it)
     package.loaded.socket = nil

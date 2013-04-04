@@ -34,7 +34,7 @@
 
     -- Agent auto connection policy
     server.autoconnect = {}
-    -- server.autoconnect.onboot = true -- connect a few seconds after the ReadyAgent started
+    -- server.autoconnect.onboot = true -- connect a few seconds after the Agent started
     -- server.autoconnect.period = 5 -- period in minute (connect every 5 minutes)
     -- server.autoconnect.cron = "0 0 * * *" -- cron entry (connect once a day at midnight)
 
@@ -67,7 +67,7 @@
 
     time.ntpserver = "pool.ntp.org"
     --polling period for auto time sync
-    --whatever ntppolling value, time sync is done on ReadyAgent boot if Time and NetworkManager are activated
+    --whatever ntppolling value, time sync is done on Agent boot if Time and NetworkManager are activated
     --if ntppolling is set to 0 or nil value, no periodic time sync is done
     --if set to string value, it will be interpreted as a cron entry (see timer.lua doc)
     --else positive number representing minutes is expected to specify periodic time sync

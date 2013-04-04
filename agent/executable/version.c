@@ -19,8 +19,8 @@
 
 int luaopen_agent_versions(lua_State *L)
 {
-    lua_pushstring(L, READYAGENT_MAJOR_VERSION "." READYAGENT_MINOR_VERSION " - Build: " GIT_REV);
-    lua_setglobal(L, "_READYAGENTRELEASE");
+    lua_pushstring(L, MIHINI_AGENT__MAJOR_VERSION "." MIHINI_AGENT__MINOR_VERSION " - Build: " GIT_REV);
+    lua_setglobal(L, "_MIHINI_AGENT_RELEASE");
     lua_pushstring(L, LUA_RELEASE);
     lua_setglobal(L, "_LUARELEASE");
     push_sysversion(L);

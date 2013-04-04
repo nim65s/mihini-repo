@@ -44,6 +44,7 @@ function M.msghandler(serialized_message)
             M.from_device(message)
         end
     until not message
+    M.session :send(ltn12.source.empty, {status=200})
     return 'ok'
 end
 

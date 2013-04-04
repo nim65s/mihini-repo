@@ -31,7 +31,7 @@ Run NTP time synchronization **asynchronously**.
 
 ###### Time update broadcast / notification
 
--   Internal notification (within the ReadyAgent Lua VM):\
+-   Internal notification (within the Agent Lua VM):\
     -\> Time updated given the offset computed from NTP packet (local
     clock updated)
 
@@ -81,7 +81,7 @@ end
 
 #### Time zone and Daylight Saving Time (DST)
 
-Time zone and Daylight Saving Time parameters are defined in ReadyAgent
+Time zone and Daylight Saving Time parameters are defined in the Agent's
 Config table.
 
 > **WARNING**

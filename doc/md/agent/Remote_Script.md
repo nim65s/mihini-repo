@@ -49,9 +49,9 @@ Management](Device_Management.html)
 
 ##### 5.1 Light Update
 
-This Remote Script can be used to update small software parts.\
- It is **not** targeted to update **big part of code**, but fit for
-remote command execution, small code update, ...
+<<<<<<< HEAD
+This Remote Script can be used to update small software parts. It is **not** intended to perform **big software updates**,
+but rather to allow remote command execution, small code update...
 
 This feature can make patching of Lua parts very easy for remote debug/hack, but it is not meant to create a new whole update 
 mechanism framework.

@@ -12,7 +12,7 @@
 #*******************************************************************************
 
 # Were the packaged copy will be put
-WD_DST=${1:-/tmp/readyagent-$(date '+%y-%m-%d-%H-%M-%S')}
+WD_DST=${1:-/tmp/agent-$(date '+%y-%m-%d-%H-%M-%S')}
 # Were the original copy is
 WD_SRC=$(cd $(dirname $0)/.. && pwd)
 

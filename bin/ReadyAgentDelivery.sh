@@ -100,7 +100,7 @@ printok() {
 
 # Start the actual work !
 mkdir -p $TEMPDIR
-printstep "Make ReadyAgent $MAJOR_VERSION.$MINOR_VERSION Release packages"
+printstep "Make Agent $MAJOR_VERSION.$MINOR_VERSION Release packages"
 rm -fr $RELDIR
 require mkdir -p $RELDIR
 require cd $RELDIR
@@ -136,24 +136,24 @@ then
 fi
 if [ ! $DRYRUN ]
 then
-    svn --username $USER $SVNPASS commit -m "Release of the ReadyAgent R$REV" -q $TEMPDIR/version.h
+    svn --username $USER $SVNPASS commit -m "Release of the Agent R$REV" -q $TEMPDIR/version.h
 else
     printf "dryrun"
 fi
 printok
 
-TAG="ReadyAgent-R$REV"
+TAG="Agent-R$REV"
 printstep "Branching trunk to create the tag $TAG"
 if [ ! $DRYRUN ]
 then
-    svn --username $USER $SVNPASS copy -q -m "Create tag $TAG for ReadyAgent release" https://svn.anyware/platform-embedded/trunk https://svn.anyware/platform-embedded/tags/$TAG
+    svn --username $USER $SVNPASS copy -q -m "Create tag $TAG for Agent release" https://svn.anyware/platform-embedded/trunk https://svn.anyware/platform-embedded/tags/$TAG
 else
     printf "dryrun"
 fi
 printok
 
 
-printstep "Checking out sources and build the ReadyAgent"
+printstep "Checking out sources and build the Agent"
 require svn --username $USER $SVNPASS export -q https://svn.anyware/platform-embedded/trunk $SRCDIR
 printok
 
@@ -202,7 +202,7 @@ require cp -fr $SRCDIR/demos/samples/* $DOCDIR/../CodeSamples
 printok
 
 
-printstep "Build the ReadyAgent"
+printstep "Build the Agent"
 require cd $RELDIR
 require $SRCDIR/bin/build.sh
 require cd build.default
@@ -215,8 +215,8 @@ printok
 
 
 printstep "Make source and binary tarballs"
-require tar -cjf "ReadyAgent-R$REV-Linux-x86.tar.bz2" runtime
-require tar -cjf "ReadyAgent-R$REV-sources.tar.bz2" sources
+require tar -cjf "Agent-R$REV-Linux-x86.tar.bz2" runtime
+require tar -cjf "Agent-R$REV-sources.tar.bz2" sources
 require rm -fr $SRCDIR
 require rm -fr runtime
 printok

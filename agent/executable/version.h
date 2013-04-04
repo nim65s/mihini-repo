@@ -9,10 +9,10 @@
  *     Cuero Bugot for Sierra Wireless - initial API and implementation
  *******************************************************************************/
 
-// Define the version of the ReadyAgent here:
+// Define the version of the Agent here:
 
-#define READYAGENT_MAJOR_VERSION        "9"
-#define READYAGENT_MINOR_VERSION        "0-DEV"
+#define MIHINI_AGENT__MAJOR_VERSION        "0"
+#define MIHINI_AGENT__MINOR_VERSION        "9-DEV"
 
 
 

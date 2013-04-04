@@ -250,6 +250,6 @@ end
 -------------------------
 function init()
     if not config.network.bearer then return nil, "No bearer in config" end
-    sched.sigrunonce("ReadyAgent", "InitDone", rahook)
+    sched.sigrunonce("Agent", "InitDone", rahook)
     return "ok"
 end

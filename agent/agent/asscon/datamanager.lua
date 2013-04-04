@@ -513,7 +513,7 @@ function handle.PFlush(asset, x)
         if not P then return 11, "no such policy" end
         c = send_policy(P)
     end
-    if c then srvcon.connect() end
+    if c then return 0, srvcon.connect() end
     return 0
 end
 
@@ -569,14 +569,14 @@ end
 function handle.ConsoTrigger(asset, x)
     local t = TABLES[x.table]
     if not t then return 11, "no such table" end
-    if consolidate(t, x.dont_reset) then srvcon.connect() end
+    if consolidate(t, x.dont_reset) then return 0, srvcon.connect() end
     return 0
 end
 
 function handle.SendTrigger(asset, x)
     local t = TABLES[x.table]
     if not t then return 11, "no such table" end
-    if tbl2srv(t, x.dont_reset) then  srvcon.connect() end
+    if tbl2srv(t, x.dont_reset) then  return 0, srvcon.connect() end
     return 0
 end
 
