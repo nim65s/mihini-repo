@@ -51,7 +51,7 @@ local function recsend(path, error_messages)
 end
 
 local function ReadNode(sys_asset, args, fullpath, ticketid)
-	checks('racon.asset', 'table', 'string', '?number')
+    checks('racon.asset', 'table', 'string', '?number')
     local error_messages = { }
     local err_msg=""
     -- ReadNode parameters are put in a list, every parameter is a path to read
