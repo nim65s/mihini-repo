@@ -50,12 +50,16 @@ local function recsend(path, error_messages)
     end
 end
 
-local function ReadNode(sys_asset, paths)
+local function ReadNode(sys_asset, args, fullpath, ticketid)
+	checks('racon.asset', 'table', 'string', '?number')
     local error_messages = { }
     local err_msg=""
     -- ReadNode parameters are put in a list, every parameter is a path to read
     -- No point in using parameter indexes/map keys
-    for _, path in pairs(paths) do recsend(path, error_messages) end
+    for _, path in pairs(args) do
+        if type(path)~='string' then return nil, 'ReadNode command expects string(s) parameter(s)' end
+        recsend(path, error_messages)
+    end
     if next(error_messages) then
        -- Concatenate all error messages into a single one.
        err_msg = table.concat(error_messages, ", ")
