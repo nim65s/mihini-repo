@@ -16,5 +16,5 @@ ADD_LIBRARY(Swi_AirVantage SHARED swi_airvantage.c)
 ADD_PUBLIC_HEADER(Swi_AirVantage swi_airvantage.h)
 TARGET_LINK_LIBRARIES(Swi_AirVantage Emp lib_yajl lib_swi_log)
 
-ADD_UNIT_TEST(av_test av_test.c TEST_DEPENDENCY web_server RUNTIME_DEPENDENCIES Swi_AirVantage lib_swi_log lualib)
+ADD_UNIT_TEST(av_test av_test.c RUNTIME_DEPENDENCIES Swi_AirVantage lib_swi_log lualib)
 
