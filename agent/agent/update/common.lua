@@ -34,7 +34,7 @@ local M = {}
 local data = {}
 
 
---updatepath: where update if put: tmp files, current update files, etc
+--updatepath: where update files are put: tmp files, current update files, etc
 local updatepath = (LUA_AF_RW_PATH or "./").."update/"
 --tmp dir to put packages stuff
 local tmpdir = updatepath.."tmp/"

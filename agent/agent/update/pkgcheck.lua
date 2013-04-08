@@ -55,10 +55,10 @@ local function checkpkg()
     local dirname = common.tmpdir .."/"..pkgname
     updatefile = data.currentupdate.updatefile
     
-    --Get absolute path if we can get it for callback user
+    --Get absolute path if we can get it: the absolute path will be sent to user callback
     local err, output = systemutils.pexec("readlink -f -n " .. common.tmpdir )
     if err ~= 0 then 
-        log("UPDATE", "WARNING", "Cannot get the absolu path : err=%s, the relatif path compared to runtime directory, is used for update package", tostring(output))     
+        log("UPDATE", "WARNING", "Cannot get the absolute path: err=%s, user callback will receive relative path!", tostring(output))
         output= nil
     end
     data.currentupdate.update_directory = (output or common.tmpdir) .."/"..pkgname
