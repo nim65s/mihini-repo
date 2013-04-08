@@ -30,6 +30,7 @@ markdown_list="
     agent/Remote_Script.md
     agent/Monitoring.md
     agent_connector_libraries/Airvantage_Lua_library.md
+    agent_connector_libraries/Embedded_Micro_Protocol_EMP.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
