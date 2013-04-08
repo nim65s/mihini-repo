@@ -41,5 +41,9 @@ local function load()
 end
 
 
---see api in unit test
-return { timeout=2, signalname=testname, unload =  unload, load = load, status="success"}
+--see update unit test api in update.lua unit test
+
+--(Note: there two components being installed 
+-- during this update, the "success" signal in sent by the last component update hook,
+-- let set the timeout a little bit bigger than usual)
+return { timeout=4, signalname=testname, unload =  unload, load = load, status="success"}
