@@ -17,7 +17,9 @@ local sched = require"sched"
 local asset
 
 local function uhook(name, version, path, parameters)
-    if name~="update" or version~="1" or not parameters.autostart or parameters.bar ~=42 or parameters.foo~='test' then
+    local _, output = require"utils.system".pexec("readlink -f -n .") -- get the absolu path of runtime dir
+    local absolupath = output .. "/update/tmp/pkg_standalone_pkg/."  -- "." corresponds to the location of package in the manifest file
+    if name~="update" or version~="1" or absolupath~=path or not parameters.autostart or parameters.bar ~=42 or parameters.foo~='test' then
         log(testname, "ERROR", "%s : parameters in package are not valid", testname)
         return --by default, a code 471 (User update callback failed) is return to RA
     end
