@@ -6,7 +6,7 @@
 -- http://www.eclipse.org/legal/epl-v10.html
 --
 -- Contributors:
---     Laurent Barthelement for Sierra Wireless - initial API and implementation
+--     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
 local u = require"unittest"
@@ -727,7 +727,8 @@ local function runlocaltest(name)
     local function teardown()
         u.assert(test, "test case was aborted during setup")
         if test.res ~="ok" then
-            umgr.finishupdate(600, "unittest "..name.." failed so the update is interrupted now.")
+            --TODO: find the best solution to abrutly stop and update with current state mgmt.
+            --umgr.finishupdate(600, "unittest "..name.." failed so the update is interrupted now.")
             --manually stop the update to prevent retries etc that can last for long
         --so that everthing is cleaned after the teardown
         --only do it when the test fails
@@ -737,7 +738,7 @@ local function runlocaltest(name)
     end
 
     t.setup=setup
-    t.test_test1=test_test1
+    t["test_"..name]=test_test1
     t.teardown = teardown
 
     return "ok"
