@@ -21,22 +21,25 @@ ROOT_DIR=$(dirname $BIN_DIR)
 CMAKE_DIR=$ROOT_DIR/cmake
 SOURCECODE_DIR=$ROOT_DIR
 
-DEBUG=
+PROFILE=
 TARGET=default
 
-while getopts 'dt:C:' OPTION
+while getopts 'dmt:C:' OPTION
 do
     case $OPTION in
-    d)    DEBUG=1
+    d)    PROFILE="Debug"
           echo '>>> Set DEBUG option to TRUE'
                 ;;
+    m)    PROFILE="MinSizeRel"
+          echo '>>> Set Minimum Size release option to TRUE'
+	        ;;
     t)    TARGET="$OPTARG"
           echo ">>> Set TARGET type to $OPTARG"
                 ;;
     C)    BUILD_DIR="$OPTARG"
           echo ">>> Set BUILD DIRECTORY to $OPTARG"
                 ;;
-    *)    printf "Usage: %s: [-d] [-t target] [-C target_dir]\n" $(basename $0) >&2
+    *)    printf "Usage: %s: [-d] [-m] [-t target] [-C target_dir]\n" $(basename $0) >&2
             exit 2
                 ;;
     esac
@@ -97,9 +100,9 @@ fi
 
 #launch cmake
 CMAKE_OPT="-DCMAKE_TOOLCHAIN_FILE=$CMAKE_DIR/toolchain.$TARGET.cmake -DPLATFORM=$TARGET"
-if [ $DEBUG ]
+if [ $PROFILE ]
 then
-    CMAKE_OPT="$CMAKE_OPT -DCMAKE_BUILD_TYPE=Debug"
+    CMAKE_OPT="$CMAKE_OPT -DCMAKE_BUILD_TYPE=${PROFILE}"
 else
     CMAKE_OPT="$CMAKE_OPT -DCMAKE_BUILD_TYPE=Release"
 fi

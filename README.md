@@ -78,15 +78,15 @@ Output files are produced on working\_dir/build.$target folder, with
 $target equals to target specified in build.sh -t argument.
 
 ```bash
-MihiniAgentSources/bin/build.sh [-d] [-t <target>]
+MihiniAgentSources/bin/build.sh [-d] [-m] [-t <target>]
 ```
 
-Use `-d` to toggle debugging on
-
-Use `-t <target>` to specify the build target. When no target is
-specified, the default target (named "default") is used: it uses the
-compiler for the host computer running the build.sh script, using
-gcc/g++.
+* Use `-d` to toggle debugging on
+* Use `-m` to compress build artifacts once compilation is completed (see the corresponding section below)
+* Use `-t <target>` to specify the build target. When no target is
+  specified, the default target (named "default") is used: it uses the
+  compiler for the host computer running the build.sh script, using
+  gcc/g++.
 
 Available targets are the ones corresponding to the toolchain files in
 `cmake` directory. Using non default targets will require to install
@@ -188,3 +188,25 @@ make
 # this one builds a specific target
 make some-target
 ```
+
+Compressing build artifacts
+===========================
+
+According to the device used, it might be useful to save space for the build artifacts.
+In order to turn on runtime compression, you just need to invoke the script bin/build.sh
+with `-m` as argument.
+
+```bash
+$ bin/build.sh -m
+>>> Set Minimum Size release option to TRUE
+[...]
+```
+
+For the time being, activating this option does the following things:
+
+* Build the native code with CFLAGS optimized for size (-Os -s)
+* Minify lua code
+
+Depending on your toolchain and the target used, the produced build artifacts
+might be different in size.
+
