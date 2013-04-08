@@ -6,7 +6,7 @@
 -- http://www.eclipse.org/legal/epl-v10.html
 --
 -- Contributors:
---     Laurent Barthelement for Sierra Wireless - initial API and implementation
+--     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
 return { components={} }

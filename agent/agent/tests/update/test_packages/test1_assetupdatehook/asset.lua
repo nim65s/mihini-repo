@@ -6,7 +6,7 @@
 -- http://www.eclipse.org/legal/epl-v10.html
 --
 -- Contributors:
---     Laurent Barthelement for Sierra Wireless - initial API and implementation
+--     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
 --be aware that testname is used as asset name, and must be set accordingly in Manifest
