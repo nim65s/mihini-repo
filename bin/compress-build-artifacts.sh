@@ -14,8 +14,7 @@
 
 luavm=lua
 lua_version=`${luavm} -e 'print(_VERSION)' | cut -d ' ' -f 2`
-version=0.12.1
-tarball=LuaSrcDiet-${version}.tar.bz2
+lua_srcdiet_version=
 
 fail() {
     echo "FAIL!"
@@ -27,13 +26,9 @@ if [ $# != 1 ]; then
     exit 1
 fi
 
-if [ ! -d luasrcdiet ]; then
-    if [ ! -e ${tarball} ]; then
-        wget https://luasrcdiet.googlecode.com/files/${tarball} || exit 1
-    fi
-    tar xapf ${tarball} || exit 1
-    mv LuaSrcDiet-${version}/src luasrcdiet || exit 1
-    rm -rf LuaSrcDiet-${version}
+if [ ! -d /opt/luasrcdiet ]; then
+    echo "compress-build-artifacts: Warning: /opt/luasrcdiet not found, skipping..."
+    exit 0
 fi
 
 # For some distributions like Arch Linux, /usr/bin/lua is the lastest Lua (5.2 for now).
@@ -50,13 +45,18 @@ if [ "$lua_version" != "5.1" ]; then
 	lua_version=`${luavm} -e 'print(_VERSION)' | cut -d ' ' -f 2`
 fi
 
+orig_dir=`pwd`
+cd /opt/luasrcdiet
+lua_srcdiet_version=`${luavm} LuaSrcDiet.lua -v | head -n 2 | tail -n 1 | cut -d ' ' -f 2`
+
 echo "Found LuaVM ${lua_version}"
-cd luasrcdiet
+echo "Found LuaSrcDiet ${lua_srcdiet_version}"
+
 for i in $(find $1 -name '*.lua'); do
-    cp $i tmp.lua
-    echo -n "Compressing $i..."
-    ${luavm} LuaSrcDiet.lua --maximum tmp.lua -o $i 2>&1 >/dev/null || fail
+    cp $i $1/tmp.lua
+    echo -n "Minimizing $i..."
+    ${luavm} LuaSrcDiet.lua --maximum $1/tmp.lua -o $i 2>&1 >/dev/null || fail
     echo "Ok"
 done
-rm -f tmp.lua
-cd ..
+rm -f $1/tmp.lua
+cd $orig_dir
