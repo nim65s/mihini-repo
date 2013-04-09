@@ -268,6 +268,15 @@ end --migrationres = nil means no migration done at boot
 local function initialize()
     local c = config.get
 
+    if (not c'agent.deviceId' or c'agent.deviceId' == "") then
+        if type(platform.getdeviceid) == "function" then
+            config.set('agent.deviceId', platform.getdeviceid())
+        else
+            log("GENERAL", "ERROR", "No deviceId defined in config and no function agent.platform.getdeviceid defined")
+        end
+    end
+    log("GENERAL", "INFO", "Device ID = %q", c'agent.deviceId')
+
     -- Create the socket that is used for communication with all local clients
     scheduleinit{name="AssetConnector", mod="asscon", initflag=true, params=c"agent"}
     scheduleinit{name="ServerConnector", mod="srvcon", initflag=true, reqdep="AssetConnector", optdep="NetworkManager" }

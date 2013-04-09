@@ -161,19 +161,6 @@ function M.init()
     -- EMP callbacks
     asscon.registercmd("ConnectToServer", EMPConnectToServer)
 
-    -- Make sure a device ID will be set before the agent starts.
-    local function setdevid()
-        if (not config.agent.deviceId or config.agent.deviceId == "") then
-            local getdeviceid = require 'agent.platform' .getdeviceid
-            if getdeviceid and type(getdeviceid) == "function" then
-                config.agent.deviceId =  getdeviceid()
-            else
-                log("SRVCON", "ERROR", "No deviceId defined in config and no function agent.platform.getdeviceid defined");
-            end
-        end
-    end
-    sched.sigrunonce("Agent","InitDone", setdevid)
-
     -- Choose and load the appropriate session and transport modules, depending on config.
     local cs, session_name = config.server, 'default'
     local transport_name = socket.url.parse(cs.url).scheme :lower()
