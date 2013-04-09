@@ -2,19 +2,21 @@ ConfigStore
 ===========
  
 The following configuration elements are accessible through different
-APIs/Protocols.
+APIs/Protocols: remotely from the server, through an RPC in Lua
+applications connected to the Agent process, and locally in the Agent
+process (e.g. through the telnet shell).
 
 #### From the Server through M3DA
 
 The configuration table can be read (M3DA Command *ReadNode*) and
 written (Data writing).
 
-The path of the elements is prefixed by the path '@sys.config'.
+The path of the elements is prefixed by the path `"@sys.config"`.
 
-#### From The Lua Shell:
+#### From The Agent's Lua Shell
 
 In the Lua Shell you can access the configuration table thanks to the
-'agent.config' module:
+`agent.config` module:
 
 ~~~{.lua}
 -- Load/retrieve the config module
@@ -25,11 +27,10 @@ p(c.mediation)
 c.mediation.activate = false
 ~~~
 
-#### From the asset application:
+#### From an Asset Application
 
-See DeviceTree library API. A couple of function for setting and reading
-variables are provided.\
- Generated doc is available here:
+See `DeviceTree` library API. A couple of function for setting and reading
+variables are provided. Generated doc is available here:
 [http://docs.anyware/platform/embedded/](http://docs.anyware/platform/embedded/)
 
 Most likely, user will need the following command:
@@ -41,44 +42,53 @@ dt.init()
 -- user may append strings after config in order to browse deeper into the tree, e.g. ":dt.get("config.server.autoconnect")"
 ~~~
 
-How does the Config Store works
-===============================
+How the Config Store works
+==========================
 
 
 #### Default configuration
 
 The Agent comes with a default configuration that can be altered
 and restored at any time. \
-The default configuration of the Agent is
-specified into the file **defaultconfig.lua** that comes with the
-Agent. The Agent must be redeployed (build/installed) in order
-to change the **defaultconfig.lua**.
+
+The default configuration of the Agent is provided by thespecified
+into the fil `agent/defaultconfig.lua` file, which ships with each
+porting of the Agent to a target. Beware that changes to
+`defaultconfig` are only taken into account at first run, or after a
+`make clean`: the Agent makes a read/write copy of the config on the
+filesystem, which can be modified through the APIs described below,
+and won't detect a modification of `defaultconfig`.
 
 #### Persisted configuration
 
-In addition of the defaultconfig.lua it is possible to modify the Agent configuration at anytime.
-When changed the configuration entries are persisted into a non volatile storage area.
-On Linux and similar OS it uses a custom database format stored into a flash file system. By default, the ConfigStore is stored into "./persist/ConfigStore" file, relative to the directory where the Agent is executed.
+The preferred way to modify an Agent instance's configuration is to
+alter its persisted configuration, copied from `defaultconfig` the
+first time the Agent runs.  On Linux-like operating systems, the
+config is stored in a custom database format, on a read-write file
+system (often flash in embedded devices). By default, it goes in the
+is stored into `"./persist/ConfigStore"` file, in the Agent's
+read+write directory.relative to the directory
+where the Agent is executed.
 
 #### Configuration loading workflow
 
-When the Agent starts it looks if it has an already stored
-configuration (ConfigStore). If it does not find one then (and only
-then) it uses the **defaultconfig.lua** as a default configuration, and
-create the ConfigStore object. This means that changing the
-**defaultconfig.lua** after the first start of the Agent, ***will
-not*** change the current configuration of the Agent. A call to
-config.default() method is necessary to reload the default
-configuration.
+When the Agent starts, it looks for an existing stored configuration
+(ConfigStore). If none is found, it is created from the template
+provided by `agent.defaultconfig`.
+
+**This means that changing `agent.defaultconfig` after the first start
+of the Agent will not change the current configuration of the Agent. A
+call to `agent.config.default()` is necessary to reload the default
+configuration.**
 
 The configuration tree is stored in persisted memory (flash). Any change
 to the configuration is written synchronously, meaning that the settings
-are persisted as soon as returning from a 'set' function.
+are persisted as soon as returning from a `set()` operation.
 
 #### ConfigStore API
 
-The Configuration module has an API to manipulate the configuration
-store, in a lua shell you can type:
+The Configuration module has an API to manipulate the configuration;
+in a Lua shell, you can type:
 
 ~~~{.lua}
 agent.config.default(path)   -- reloads the configuration subtree 'path' from the defaultconfig.lua file.
