@@ -37,10 +37,10 @@ M.last_session_id = 0
 function M :newsink()
     local pending_data = ''
     local partial = nil
-    return function (data)
+    return function (data, err)
         if not data then
             sched.signal(self, 'connection_closed')
-            return 'ok'
+            return nil, err
         end
         pending_data = pending_data .. data
         local envelope, offset

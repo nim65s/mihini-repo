@@ -55,8 +55,10 @@ function M :monitor()
         end
         local status_snk, err_snk = self.sink(data, err)
         if not status_snk then
-            log('M3DA-TRANSPORT', 'ERROR', "Error when consuming incoming data: %s", err_snk)
-            err = err_snk
+            err = tostring(err_snk)
+            if err~='closed' then
+                log('M3DA-TRANSPORT', 'ERROR', "Error when consuming incoming data: %s", err)
+            end
             break
         end
     until not data

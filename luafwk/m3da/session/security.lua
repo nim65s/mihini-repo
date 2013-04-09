@@ -231,23 +231,22 @@ function M :newsink()
     checks('m3da.session')
     return function (src_data, src_error)
         --log('M3DA-SESSION', 'DEBUG', "Received some data")
-        if src_data then
+        if not src_data then
+            sched.signal(self, 'reception_error', src_error)
+            return nil, src_error
+        else -- some data received
             pending_data = pending_data .. src_data
             local status, envelope, offset
             status, envelope, offset, partial = pcall(m3da_deserialize, pending_data, partial)
             if not status then
                 local err_msg = envelope
-                if err_msg=='BADCONTEXT' then
-                    local x
-                    if #pending_data>80 then x=pending_data:sub(1, 75).."..."
-                    else x=pending_data end
-                    log('M3DA-SESSION', 'ERROR', "Received non-M3DA DATA: %s", sprint(x))
-                    sched.signal(self, 'reception_error', "Received non-M3DA data")
-                else sched.signal(self, 'reception_error', err_msg) end -- offset is an error msg
+                local log_msg =  #pending_data>80 and pending_data:sub(1, 75).."..." or pending_data
+                log('M3DA-SESSION', 'ERROR', "Received non-M3DA DATA (%s): %s", err_msg, sprint(log_msg))
+                sched.signal(self, 'reception_error', "Received non-M3DA data")
                 return nil, err_msg
-            elseif offset=='partial' then
-                return 'ok' -- incomplete msg, retry nex time
-            else -- got a complete envelope
+            elseif offset=='partial' then -- incomplete envelope, wait for more data
+                return 'ok'
+            else -- got a complete envelope: broadcast it
                 assert(envelope)
                 if self.waitingresponse then -- response to a request
                     sched.signal(self, 'envelope_received', envelope)
@@ -257,8 +256,6 @@ function M :newsink()
                 pending_data = pending_data :sub (offset, -1)
                 return 'ok'
             end
-        elseif src_error then -- no src_data
-            sched.signal(self, 'reception_error', src_error)
         end
     end
 end
