@@ -39,4 +39,4 @@ end
 
 
 --see api in unit test
-return { timeout=2, signalname=testname, unload =  unload, load = load, status="success"}
+return { timeout=3, signalname=testname, unload =  unload, load = load, status="success"}

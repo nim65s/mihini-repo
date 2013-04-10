@@ -648,7 +648,11 @@ local function unloadtest(testdata)
     return 'ok'
 end
 
-
+--Wait for all the signals (not only one) given as parameters
+--@param sigs table containing each signal to wait and to receive at least once
+--@param timeout in second
+--@param action the function to run that should provoke signals given in `sigs` table
+--@return "ok" when all signals have received before timeout, nil+error otherwise. 
 --doesnt deal with usecase where you want to want to get several time one of the signal in sigs
 local function waitmultisig(sigs, timeout, action)
     local sigres={}
