@@ -80,6 +80,14 @@ properties:
   receive data from the transport layer; those data represent
   (possibly partial) M3DA envelopes sent by the server to the agent.
 
+* optionally, a `:start()` method. If it exists, it will be run with the
+  network connection unabled before any other send/receive operation is
+  requested from the session instance object. If this method exists and
+  returns `nil` + message, the session object will be considered invalid.
+  This mechanism is used by security session objects to provision encryption
+  and authentication keys when they are missing.
+
+
 The `cfg` parameter for `new()` is a table. It must have the following
 fields, plus optionally some others specific to a given session type:
 

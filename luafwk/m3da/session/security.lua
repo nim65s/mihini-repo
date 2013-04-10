@@ -472,6 +472,18 @@ M.optional_keys = {
     encryption=1
 }
 
+function M :start()
+    if hmac.new{ name='md5', keyidx=M.IDX_AUTH_KS } then
+        return "OK" -- allready provisioned
+    elseif hmac.new{ name='md5', keyidx=M.IDX_PROVIS_KS } then
+        -- registration password OK, no communication password yet
+        local P = require 'm3da.session.provisioning'
+        if P.downloadkeys(self) then return self else return nil, errmsg end
+    else
+        return nil, "Neither provisioning nor authenticating crypto keys"
+    end
+end
+
 -------------------------------------------------------------------------------
 -- Creates and returns a session instance
 --
@@ -491,15 +503,7 @@ function M.new(cfg)
     setmetatable(self, MT)
 
     self.transport.sink = self :newsink()
-
-    if hmac.new{ name='md5', keyidx=M.IDX_AUTH_KS } then
-        return self
-    elseif hmac.new{ name='md5', keyidx=M.IDX_PROVIS_KS } then
-        local P = require 'm3da.session.provisioning'
-        if P.downloadkeys(self) then return self else return nil, errmsg end
-    else
-        return nil, "Neither provisioning nor authenticating crypto keys"
-    end
+    return self
 end
 
 return M

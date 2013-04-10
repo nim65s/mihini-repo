@@ -293,7 +293,7 @@ local function initialize()
     scheduleinit{name="SMS", mod= "asscon.sms", initflag=c"modem.sms", optdep="Modem"}
 
     -- Start the Mediation client module
-    scheduleinit{name="Mediation", mod="mediation", initflag=c"mediation.activate", reqdep="ServerConnector", optdep="NetworkManager"}
+    scheduleinit{name="Mediation", mod="mediation", initflag=c"mediation.activate", reqdep="ServerConnector", optdep={"NetworkManager", "DummyNetman"}}
 
     -- Start the Software Update module
     scheduleinit{name="Update", mod="update", initflag=c"update.activate",

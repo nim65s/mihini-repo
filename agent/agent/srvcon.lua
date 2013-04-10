@@ -172,10 +172,10 @@ function M.init()
     local session_mod   = require ('m3da.session.'..session_name)
     if not session_mod then return nil, "cannot get session manager" end
 
-    local transport, errmsg = transport_mod.new(cs.url);
-    if not transport then return nil, errmsg end
+    local transport, err_msg = transport_mod.new(cs.url);
+    if not transport then return nil, err_msg end
 
-    M.session, errmsg = session_mod.new{
+    M.session, err_msg = session_mod.new{
         transport      = transport,
         msghandler     = dispatch_message,
         localid        = config.agent.deviceId,
@@ -183,7 +183,13 @@ function M.init()
         authentication = cs.authentication,
         encryption     = cs.encryption
     }
-    if not M.session then return nil, errmsg end
+    if not M.session then return nil, err_msg end
+
+    if M.session.start then
+        local status
+        status, err_msg = require 'agent.netman'.withnetwork(M.session.start, M.session)
+        if not status then return nil, err_msg end
+    end
 
     -- Apply agent.config's settings
     if type(config.server.autoconnect) == "table" then
@@ -204,7 +210,6 @@ function M.init()
             end
         end
     end
-
 
     return "ok"
 end
