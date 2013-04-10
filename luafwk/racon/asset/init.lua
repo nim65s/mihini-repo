@@ -62,6 +62,7 @@ local log          = require 'log'
 local upath        = require 'utils.path'
 local asset_tree   = require 'racon.asset.tree'
 local niltoken     = require "niltoken"
+local errnum       = require 'status'.tonumber
 
 local M = { initialized=false; sem_value = 1}
 
@@ -370,7 +371,7 @@ local function emp_handler_SoftwareUpdate(payload)
     local self = M.assets[assetname]
     if not self then
         log('RACON-ASSET', 'ERROR', "Software update for unknown asset %q", assetname)
-        return 11
+        return errnum 'WRONG_PARAMS'
     end
     local status, err, res
     if self.notifyswu then

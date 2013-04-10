@@ -11,16 +11,17 @@
 --     Fabien Fleutot     for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-local sched       = require "sched"
-local config      = require "agent.config"
-local server      = require "agent.srvcon"
-local log         = require "log"
-local asscon      = require "agent.asscon"
-local treemgr     = require "agent.treemgr"
-local niltoken    = require "niltoken"
-local upath       = require 'utils.path'
-local utable      = require 'utils.table'
-local racon       = require 'racon'
+local sched    = require "sched"
+local config   = require "agent.config"
+local server   = require "agent.srvcon"
+local log      = require "log"
+local asscon   = require "agent.asscon"
+local treemgr  = require "agent.treemgr"
+local niltoken = require "niltoken"
+local upath    = require 'utils.path'
+local utable   = require 'utils.table'
+local racon    = require 'racon'
+local errnum   = require 'status'.tonumber
 
 require 'coxpcall'
 
@@ -67,7 +68,7 @@ local function tree_default(asset, data, path)
             sprint(data), path)
     end
     local status, msg = treemgr.set(path, data)
-    if status then return 0 else return -1, msg end
+    if status then return 0 else return errnum 'UNKNOWN_ERROR', msg end
 end
 
 --------------------------------------------------------------------------------------------------------------------
@@ -82,7 +83,7 @@ local function EMPSetVariable(assetid, payload)
     local path, value = unpack(payload)
     local res, err = treemgr.set(path, value) -- ensure we don't give niltoken to treemgr
     if res then return 0
-    else return 1,  (err or "unknown error") end
+    else return errnum 'UNKNOWN_ERROR',  (err or "unknown error") end
 end
 
 local dt_id_idx = 0
@@ -114,13 +115,13 @@ local function EMPRegisterVariable(assetid, payload)
 end
 
 local function EMPUnregisterVariable(assetid, dt_id)
-    if not dt_id then return 11, "no devicetree id provided to unregister" end
+    if not dt_id then return errnum 'WRONG_PARAMS', "no devicetree id provided to unregister" end
     local tm_id = dt2tm[dt_id]
     dt2tm[dt_id] = nil
-    if not tm_id then return 1, "no matching treemanager id found" end
+    if not tm_id then return errnum 'UNKNOWN_ERROR', "no matching treemanager id found" end
     local res, err = treemgr.unregister(tm_id)
     if res then return 0
-    else return 1, (err or "unknown error") end
+    else return errnum 'UNKNOWN_ERROR', (err or "unknown error") end
 end
 
 function M.init(cfg)

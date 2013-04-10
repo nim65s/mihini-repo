@@ -9,6 +9,8 @@
 --     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
+local errnum  = require 'agent.update.status'.tonumber
+
 local config = require 'agent.config'
 if not config.get('update.activate') then error "Update is disabled in agent.config" end
 --Update module is not activated, calling error will be defaulted in -1 code
@@ -21,7 +23,7 @@ local function SoftwareUpdate(asset, data, path, ticketid)
 
     local url = data and (data.url or data[1])
     local signature = data and (data.signature or data[2])
-    if not url or not signature then return 551, "Wrong params in SoftwareUpdate command: need package url and package signature" end
+    if not url or not signature then return errnum 'WRONG_PARAMS', "Wrong params in SoftwareUpdate command: need package url and package signature" end
 
 
     local newupdate = {proto= "m3da", url = url, signature=signature, ticketid = ticketid}
@@ -31,7 +33,7 @@ local function SoftwareUpdate(asset, data, path, ticketid)
         -- if update accepted the job, return "async" to indicate asynchronous update status acknowledge
         return "async"
     else
-        errcode = tonumber(errcode) or 558 -- update rejected by update module
+        errcode = tonumber(errcode) or errnum 'UPDATE_REJECTED' -- update rejected by update module
         return errcode, errstr or "update rejected by update module"
     end
 end

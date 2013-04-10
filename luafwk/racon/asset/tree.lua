@@ -11,8 +11,9 @@
 --     Fabien Fleutot     for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-local utils_path    = require 'utils.path'
-local utils_table   = require 'utils.table'
+local utils_path  = require 'utils.path'
+local utils_table = require 'utils.table'
+local errnum      = require 'status'.tonumber
 
 require 'coxpcall'
 require 'print'
@@ -222,7 +223,7 @@ local function emp_handler_SendData(data)
 
     if not asset then
         log('RACON-ASSET-TREE', 'ERROR', "Received data from server to unknown/closed asset %q", id)
-        return 11, "unknown or closed asset"
+        return errnum 'WRONG_PARAMS', "unknown or closed asset"
     end
     local tree = asset.tree
 

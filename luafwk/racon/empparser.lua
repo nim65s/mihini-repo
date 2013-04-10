@@ -13,10 +13,11 @@
 -------------------------------------------------------------------------------
 
 local require = require
-local sched = require 'sched'
-local log = require 'log'
-
-local yajl = require 'yajl'
+local sched   = require 'sched'
+local log     = require 'log'
+local status  = require 'status'
+local yajl    = require 'yajl'
+local errnum  = require 'status' .tonumber
 
 require 'pack'
 require 'coxpcall'
@@ -135,10 +136,10 @@ local function parse(self)
                 log('EMP', 'DEBUG', "payload = %s, type = %s, serialized = %s", tostring(cmd_payload), _G.type(cmd_payload), serialized_cmd_payload)
                 local copcall_status, cmd_status, resp_payload = copcall(self.cmdhook, cmdname, cmd_payload)
                 if not copcall_status then
-                    cmd_status, resp_payload = 11, cmd_status
+                    cmd_status, resp_payload = errnum 'WRONG_PARAMS', cmd_status
                 elseif _G.type(cmd_status)~='number' then
                     log('EMP', 'ERROR', "Invalid status returned by handler for %q: %s", cmdname, sprint(cmd_status))
-                    cmd_status = 11 -- SWI_STATUS_WRONG_PARAMS
+                    cmd_status = errnum 'WRONG_PARAMS'
                 end
                 local serialized_resp_payload = serialize (resp_payload)
                 log('EMP', 'DEBUG', "[<-SND] [RSP] #%d %s %s", rid-1, cmdname, serialized_resp_payload)
@@ -156,7 +157,7 @@ function api:run(reconnect_handler)
     local s, err, skt, status
     while true do
        s, err = copcall(parse, self)
-       self.skt = 517
+       self.skt = errnum 'IPC_BROKEN'
        sched.signal(self, "ipc broken")
 
        if not reconnect_handler then break end
@@ -198,18 +199,21 @@ end
 
 function api:send_emp_cmd(cmd, payload)
     assert(type(cmd) == "string" and COMMAND_NAMES[cmd]) -- ensure the command exist
-    if not self.skt then return 512, "connection closed" end
-    if self.skt == 517 then return 517, "ipc broken" end
+    if not self.skt    then return errnum 'SERVER_UNREACHABLE', "connection closed" end
+    if self.skt == 517 then return errnum 'IPC_BROKEN', "ipc broken" end
 
     sendcmd(self, cmd, getrequestid(self, cmd), payload)
     return "ok"
 end
 
+local ERR_IPC_BROKEN = errnum 'IPC_BROKEN'
+local ERR_SERVER_UNREACHABLE = errnum 'SERVER_UNREACHABLE'
+
 function api:send_emp_cmd_wait(cmd, payload)
     assert(type(cmd) == "string" and COMMAND_NAMES[cmd]) -- ensure the command exist
-    if not self.skt then return 512, "connection closed" end
-    if self.skt == 517 then return 517, "ipc broken" end
-    if self.skt == 512 then return 512, "server unreachable" end
+    if not self.skt then return ERR_SERVER_UNREACHABLE, "connection closed" end
+    if self.skt == ERR_IPC_BROKEN then return ERR_IPC_BROKEN, "ipc broken" end
+    if self.skt == ERR_SERVER_UNREACHABLE then return ERR_SERVER_UNREACHABLE, "server unreachable" end
 
     local rid = getrequestid(self, cmd)
     -- launch it in background (sched.run does not cause a yield) so we are sure that the following wait will not miss an event !!
@@ -218,15 +222,15 @@ function api:send_emp_cmd_wait(cmd, payload)
     local ev, s, p = sched.wait(self, {cmd..tostring(rid), 'closed', 'ipc broken', M.cmd_timeout})
     if ev == 'closed' then
        self.inprogress[rid] = nil
-       return 512, "server unreachable"
+       return errnum 'SERVER_UNREACHABLE', "server unreachable"
     end
     if ev == 'timeout' then
        self.inprogress[rid] = "TIMEDOUT"
-       return 516, "timeout for ack expired"
+       return errnum 'IPC_TIMEOUT', "timeout for ack expired"
     end
     if ev == 'ipc broken' then
        self.inprogress[rid] = nil
-       return 517, "ipc broken"
+       return errnum 'IPC_BROKEN', "ipc broken"
     end
     return s, p
 end

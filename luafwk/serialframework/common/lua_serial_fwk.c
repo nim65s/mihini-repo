@@ -28,24 +28,6 @@ static const char* FC_NONE = "none";
 static const char* FC_RTS_CTS = "rtscts";
 static const char* FC_XON_XOFF = "xonxoff";
 
-static char *errorMessages[] = {
-        "error",
-        "stack not ready",
-        "response timeout",
-        "response exception",
-        "reponse invalid frame",
-        "response bad checksum",
-        "response incomplete frame",
-        "response bad slave",
-        "response bad function",
-        "response short frame",
-        "init context null",
-        "init null pointer",
-        "init cannot capture uart",
-        "init cannot set message",
-        "init cannot set flow control",
-        "request parameter error" };
-
 void GetConfigIdentity(lua_State* L, int index, SerialUARTId* identity) {
     if (!lua_isnil(L, index)) {
         if (!lua_isstring(L, 1)) {
@@ -243,56 +225,5 @@ void GetConfigLevel(lua_State* L, int index, SerialGPIOWriteModeLevel* level) {
 }
 
 const char* statusToString(swi_status_t status) {
-    switch (status) {
-    case SWI_STATUS_SERIAL_ERROR:
-        return errorMessages[0];
-
-    case SWI_STATUS_SERIAL_STACK_NOT_READY:
-        return errorMessages[1];
-
-    case SWI_STATUS_SERIAL_RESPONSE_TIMEOUT:
-        return errorMessages[2];
-
-    case SWI_STATUS_SERIAL_RESPONSE_EXCEPTION:
-        return errorMessages[3];
-
-    case SWI_STATUS_SERIAL_RESPONSE_INVALID_FRAME:
-        return errorMessages[4];
-
-    case SWI_STATUS_SERIAL_RESPONSE_BAD_CHECKSUM:
-        return errorMessages[5];
-
-    case SWI_STATUS_SERIAL_RESPONSE_INCOMPLETE_FRAME:
-        return errorMessages[6];
-
-    case SWI_STATUS_SERIAL_RESPONSE_BAD_SLAVE:
-        return errorMessages[7];
-
-    case SWI_STATUS_SERIAL_RESPONSE_BAD_FUNCTION:
-        return errorMessages[8];
-
-    case SWI_STATUS_SERIAL_RESPONSE_SHORT_FRAME:
-        return errorMessages[9];
-
-    case SWI_STATUS_SERIAL_INIT_CONTEXT_NULL:
-        return errorMessages[10];
-
-    case SWI_STATUS_SERIAL_INIT_NULL_POINTER:
-        return errorMessages[11];
-
-    case SWI_STATUS_SERIAL_INIT_CANNOT_CAPTURE_UART:
-        return errorMessages[12];
-
-    case SWI_STATUS_SERIAL_INIT_CANNOT_SET_MESSAGE:
-        return errorMessages[13];
-
-    case SWI_STATUS_SERIAL_INIT_CANNOT_SET_FLOW_CONTROL:
-        return errorMessages[14];
-
-    case SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR:
-        return errorMessages[15];
-
-    default:
-        return errorMessages[0];
-    }
+    return swi_status2string( status);
 }
