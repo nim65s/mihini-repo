@@ -28,7 +28,7 @@ encoding and regrouping, of handling acknowledgements, of securing them
 in non-volatile memory if asked to, etc.
 
 In addition to offering communication means to the server, the
-AirVantage library also gives acces to other Agent features: SMS
+AirVantage library also gives access to other Agent features: SMS
 communications, hardware I/O control and monitoring, etc.
 
 #### 2. Create a New Asset Instance, Initialize a New Asset
@@ -116,7 +116,7 @@ If `latency=60*60`, the device will connect every one hour: the first
 connection will be done one hour after the device booted. However, if a
 periodic connection is due at 9:00, and a connection is forced at 8:59,
 the next connection will occur at 9:59 rather than at 9:00. This policy
-guaranties that data will not be buffered for more than 60*60 seconds
+guarantees that data will not be buffered for more than 60*60 seconds
 before being sent to the server, and that no more than 60*60 seconds
 will pass between two connections. (Connections not only allow data to
 be sent to the server, but also to receive data sent by it).
@@ -425,20 +425,19 @@ mechanism that is well coupled with the Platform Server. The final
 update process (replace a binary file, update a text configuration file,
 upgrade a device firmware, etc.) is really dependent on the application,
 and thus this part is let at user discretion. There are exceptions to
-the process. For example, for OSGi bundle management, the Agent
-provides an end to end solution including bundle management (see OSGi
-section below).
+the process. For example, for updating application managed by the Application
+Container, everything is managed by the Agent.
 
 The Platform Server and Agent are actually in charge of the
 transfer and notification of new software update packages. The system
-guaranties that the software package transfer is safe and different
+guarantees that the software package transfer is safe and different
 options are available: checksums, authentication, and encryption.
 
 In order to receive Software Update notifications, the user must
 register a listener on the Agent Connector context. The
-notification provides a **packageName**, a **packageVersion**, a **url**
+notification provides a `packageName`, a `packageVersion`, an `url`
 that specifies where the file is located (on the local file system) and
-some custom applicative **parameters** to help the update process.
+some custom applicative `parameters` to help the update process.
 
 #### 7. Sending and Receiving SMS
 

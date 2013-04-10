@@ -31,6 +31,7 @@ markdown_list="
     agent/Monitoring.md
     agent_connector_libraries/Airvantage_Lua_library.md
     agent_connector_libraries/Embedded_Micro_Protocol_EMP.md
+	agent_connector_libraries/Agent_UserGuide.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
