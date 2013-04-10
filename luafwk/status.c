@@ -17,25 +17,25 @@
 
 /* Converts a name into a numeric status, or `0` if unknown.
  * Warning: `0` also happens to be the status code corresponding to `"OK"`. */
-static int api_name2num( lua_State *L) {
+static int api_tonumber( lua_State *L) {
     const char *name = luaL_checkstring( L, 1);
     lua_pushinteger( L, swi_string2status( name));
     return 1;
 }
 
 /* Converts a numeric status into a name, or `nil` if not found. */
-static int api_num2name( lua_State *L) {
+static int api_tostring( lua_State *L) {
     int num = luaL_checkinteger( L, 1);
     lua_pushstring( L, swi_status2string( num));
     return 1;
 }
 
 /* Loads the library. */
-int luaopen_statusname( lua_State *L) {
+int luaopen_status( lua_State *L) {
     lua_newtable( L);
-    lua_pushcfunction( L, api_name2num);
-    lua_setfield( L, -2, "name2num");
-    lua_pushcfunction( L, api_num2name);
-    lua_setfield( L, -2, "num2name");
+    lua_pushcfunction( L, api_tonumber);
+    lua_setfield( L, -2, "tonumber");
+    lua_pushcfunction( L, api_tostring);
+    lua_setfield( L, -2, "tostring");
     return 1;
 }

@@ -65,5 +65,5 @@ ADD_CUSTOM_TARGET(luafwk)
 ADD_DEPENDENCIES(luafwk  mihini_misc mihini_linux bit32 luasignalcmd appmon_daemon serial racon_aliases)
 
 INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
-ADD_LUA_LIBRARY(statusname statusname.c)
-TARGET_LINK_LIBRARIES(statusname lib_swi_statusname)
+ADD_LUA_LIBRARY(status status.c)
+TARGET_LINK_LIBRARIES(status lib_swi_statusname)
