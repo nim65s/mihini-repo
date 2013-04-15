@@ -131,10 +131,17 @@
 
     -- Application Container
     appcon={}
-    appcon.activate = true
+    appcon.activate = false
     -- Tcp Port to connect to appmon_daemon.
     -- No need to use this config value if using appmon_daemon default port (4242)
     --appcon.port = 4243
+
+    --appcon.envvars = {}
+
+    -- @LUA_AF_RO_PATH@ is a pattern which is replaced by the runtime path LUA_AF_RO_PATH
+    -- when the appcon component is loaded.
+    --appcon.envvars.PYTHONPATH = "@LUA_AF_RO_PATH@/python"
+    --appcon.envvars.CLASSPATH = "@LUA_AF_RO_PATH@/java"
 
 
     -- Device Management Application/Commands

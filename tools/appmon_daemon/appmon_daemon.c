@@ -135,6 +135,7 @@
 #define REMOVE_APP "remove "
 #define STATUS_APP "status "
 #define LIST_APPS "list"
+#define SETENV "setenv "
 #define PCONFIG "printconfig"
 
 // exit code: 0-> success;  APPMON_ERR_EXIT_CODE-> internal error, else-> errno value that provoked exit.
@@ -1345,6 +1346,21 @@ int main(int argc, char** argv)
           }
           send_result("");
           sigprocmask(SIG_UNBLOCK, &block_sigs, NULL);
+          break;
+        }
+        if (!strncmp(buffer, SETENV, strlen(SETENV)))
+        {
+          char *arg, *varname, *tmp;
+
+          arg = buffer + strlen(SETENV);
+          varname = arg;
+          tmp = strchr(arg, '=');
+          *tmp++ = '\0';
+
+          SWI_LOG("APPMON", DEBUG, "Setting Application framework environment variable %s = %s...\n", varname, tmp);
+          setenv(varname, tmp, 1);
+
+          send_result("");
           break;
         }
 

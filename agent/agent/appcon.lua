@@ -81,6 +81,23 @@ local function sndcmd(str)
     return res, err
 end
 
+local function afpathprovisioning()
+   local af_ro_path = (LUA_AF_RW_PATH or lfs.currentdir())
+
+   local res, err = sndcmd("setenv LD_LIBRARY_PATH=".. af_ro_path .. "/lib")
+
+   sndcmd("setenv LUA_PATH=".. af_ro_path .. "/lua/?.lua;" .. af_ro_path .. "/" .. "lua/?/init.lua")
+   sndcmd("setenv LUA_CPATH=".. af_ro_path .. "/lua/?.so")
+   sndcmd("setenv PATH=" .. os.getenv("PATH") .. ":" .. af_ro_path .. "/bin")
+
+   if config.appcon.envvars then
+      for k, v in pairs(config.appcon.envvars) do
+	 local value, _ = string.gsub(v, "@LUA_AF_RO_PATH@", af_ro_path)
+	 sndcmd("setenv " .. tostring(k) .. "=" .. value)
+      end
+   end
+end
+
 -- escape lua magic character to analyse appmon_daemon status command result
 local function escapemagicchars(str)
     --put % at the first place!
@@ -405,8 +422,9 @@ local function init()
             end
         end
     end
-    persist.save("ApplicationList", application_list);
+    persist.save("ApplicationList", application_list)
     sched.sigrunonce("Agent", "InitDone",  initapps )
+    afpathprovisioning()
     return "ok"
 end
 
