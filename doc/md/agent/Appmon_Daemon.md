@@ -369,6 +369,22 @@ AppID=[4] Privileged=[0] Prog=[/tmp/prog4] Wd=[/tmp] Status=[STARTED] Pid=[16859
 AppID=[5] Privileged=[0] Prog=[/tmp/prog] Wd=[/tmp] Status=[STOPPED] Pid=[16862] StartCount[0] LastExitType=[App haven't died yet] LastExitCode[-1]
 ~~~~
 
+#### 2.3.9 setenv command
+
+~~~~{.bash}
+setenv variable_name=value
+~~~~
+
+Where `variable_name` is the name of the variable to set in Appmon Daemon's address space, and `value` its value.
+
+ex:
+
+~~~~{.bash}
+setenv LD_LIBRARY_PATH="/path/to/lib"
+setenv LUA_CPATH="/path/to/lua/native/modules/?.so"
+setenv LUA_PATH="/path/to/lua/modules/?.lua;/path/to/lua/modules/?/init.lua"
+~~~~
+
 3. Usage examples
 =================
 
