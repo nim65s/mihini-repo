@@ -136,7 +136,6 @@ end
 -- Return the name of the event that will be sent at expiration.
 -------------------------------------------------------------------------------------
 function set(t, em, ev)
-    t = math.ceil(t)
     assert(t>=0, "parameter must be a positive number")
     local nd = time() + t
     em = em or 'timer'
