@@ -20,6 +20,7 @@ local checks = require 'checks'
 local sched_timer = require 'sched.timer'
 local os_time = os.time
 local os_date = os.date
+local monotonic_time = require'sched.timer.core'.time
 local math = math
 local tonumber = tonumber
 local tostring = tostring
@@ -180,7 +181,7 @@ local function cron_nextevent(timer)
     d.yday = nil
     d.wday = nil
     d.sec = 0
-    d = os_time(d)
+    d = monotonic_time() + (os_time(d) - now)
 
     if timer.jitter then d=d+timer.jitter end
 
@@ -192,7 +193,7 @@ end
 -- To be stored as a timer object's `nextevent` field.
 local function periodic_nextevent(timer)
     local n, period = timer.nd, timer.period
-    local now = os_time()
+    local now = monotonic_time()
     n = (n or now) + period
     if n<now then  -- make sure the next expiration date is in the future
         n = (1 + math.floor(now/period)) * period
@@ -204,7 +205,7 @@ end
 -- Computes next due date for 1-shot timers
 --  To be stored as a timer object's `nextevent` field.
 local function oneshot_nextevent(timer)
-   return not timer.nd  and  os_time()+timer.delay  or  nil
+   return not timer.nd and monotonic_time()+timer.delay or nil
 end
 
 
@@ -504,7 +505,7 @@ function latencyExec(func, latency)
         return dofunc()
     end
     -- calculate exec time
-    local next = os_time() + latency
+    local next = monotonic_time() + latency
     -- if not already scheduled, schedule
     local entry = latencyjobs[func]
     if latency == 0 then
