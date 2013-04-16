@@ -28,6 +28,7 @@ local pairs = pairs
 local next = next
 local type = type
 local _G=_G
+local time = require'sched.timer.core'.time
 
 module (...)
 
@@ -109,7 +110,7 @@ end
 function step()
     if not events[1] then return end -- if no timer is set just return and prevent further processing
 
-    local now = os.time()
+    local now = time()
     while events[1] and now >= events[1] do
         local d = table.remove(events, 1)
         local entries = events[d]
@@ -137,7 +138,7 @@ end
 function set(t, em, ev)
     t = math.ceil(t)
     assert(t>=0, "parameter must be a positive number")
-    local nd = os.time() + t
+    local nd = time() + t
     em = em or 'timer'
     ev = ev or "@"..nd
     local timer = { nextevent=stimer_nextevent, nd=nd, emitter=em, event=ev }

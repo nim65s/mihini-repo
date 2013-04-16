@@ -36,4 +36,7 @@ ADD_LUA_LIBRARY(sched_daemon DESTINATION sched daemon.lua)
 ADD_DEPENDENCIES(sched_daemon sched)
 
 
-
+ADD_LUA_LIBRARY(sched_timer_core DESTINATION sched/timer timer_core.c)
+TARGET_LINK_LIBRARIES(sched_timer_core lualib)
+SET_TARGET_PROPERTIES (sched_timer_core PROPERTIES OUTPUT_NAME core)
+ADD_DEPENDENCIES(sched sched_timer_core)
