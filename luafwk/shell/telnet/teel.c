@@ -50,10 +50,12 @@ KeySeqAction defaultksa[] =
   {SEQ("\033[C"), tl_act_moveright},
   {SEQ("\033[D"), tl_act_moveleft},
   {SEQ("\033[1~"), tl_act_movetostartpos},
+  {SEQ("\033[7~"), tl_act_movetostartpos},
   {SEQ("\033[H"), tl_act_movetostartpos},
   {SEQ("\033OH"), tl_act_movetostartpos},
   {SEQ("\001"), tl_act_movetostartpos}, // Ctrl-A
   {SEQ("\033[4~"), tl_act_movetoendpos},
+  {SEQ("\033[8~"), tl_act_movetoendpos},
   {SEQ("\033[F"), tl_act_movetoendpos},
   {SEQ("\033OF"), tl_act_movetoendpos},
   {SEQ("\005"), tl_act_movetoendpos}, // Ctrl-E
