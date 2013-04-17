@@ -234,12 +234,14 @@ local function getfreespace(path)
     if not string.match(path,"%a") then
         return nil, "the path is not valid"
     end
-    local cmdspace = "df -B 1 " .. path .. " | tail -1 |awk '{print $4}' "
+    local cmdspace = "df -B 1 " .. path .. " | tail -1 | awk '{print $4}' "
     local err, output = systemutils.pexec(cmdspace)
-    if err ~= 0 then
-        return nil, string.format("Cannot get free space for storage, err=%s",tostring(output))
+    --check conversion to number: pexec status might not be enough, especially because of the pipes in previous sys cmd.
+    local res = tonumber(output)
+    if err ~= 0 or not res then
+        return nil, string.format("Cannot get free space for storage, err=%s",tostring(output or err))
     end
-    return tonumber(output)
+    return res
 end
 
 

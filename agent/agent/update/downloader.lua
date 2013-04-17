@@ -218,7 +218,7 @@ function start_m3da_download()
     --we get free space
     local freespace, err = common.getfreespace(common.tmpdir)
     if not freespace then
-        return state.stepfinished("failure", 501, "Download failure: Cannot get free space on device: %s", err)
+        return state.stepfinished("failure", 501, string.format("Download failure: Cannot get free space on device: %s", tostring(err)))
     end
 
     --we check the existing package to get the size and the mode.
