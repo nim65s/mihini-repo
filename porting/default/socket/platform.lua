@@ -46,7 +46,7 @@ end
 
 socket.try = base.assert
 
-local os_time = (require 'os').time
+local monotonic_time = require 'sched.timer.core'.time
 local table = require 'table'
 local tonumber = base.tonumber
 local debug = require 'debug'
@@ -92,7 +92,7 @@ function newtcp.send(self, data, i, j)
     i = i or 1
     local lastIndex = i - 1
     --local tmark = os_time() -- time elapsed debug
-    local timelimit = totaltimeout[self] and os_time() + totaltimeout[self]
+    local timelimit = totaltimeout[self] and monotonic_time() + totaltimeout[self]
     local timedelay = blocktimeout[self]
 
     repeat
@@ -117,7 +117,7 @@ function newtcp.receive(self, pattern, prefix)
         some_bytes = true
     end
     --local tmark = os_time() -- time elapsed debug
-    local timelimit = totaltimeout[self] and os_time() + totaltimeout[self]
+    local timelimit = totaltimeout[self] and monotonic_time() + totaltimeout[self]
     local timedelay = blocktimeout[self]
 
     repeat
@@ -152,7 +152,7 @@ function newtcp.receive(self, pattern, prefix)
 end
 
 function newtcp.connect(self, address, port)
-    local timelimit = totaltimeout[self] and os_time() + totaltimeout[self]
+    local timelimit = totaltimeout[self] and monotonic_time() + totaltimeout[self]
     local timedelay = blocktimeout[self]
     local r, err = oldtcpconnect(self, address, port)
     if r or err ~= "timeout" then return r, err end
@@ -168,7 +168,7 @@ local function accept(self)
     return r, err
 end
 function newtcp.accept(self)
-    local timelimit = totaltimeout[self] and os_time() + totaltimeout[self]
+    local timelimit = totaltimeout[self] and monotonic_time() + totaltimeout[self]
     local timedelay = blocktimeout[self]
     oldtcpsettimeout(self, 0.1)
     local r, err = accept(self)
@@ -235,7 +235,7 @@ end
 newudp.settimeout = newtcp.settimeout
 
 function newudp.receive(self, size)
-    local timelimit = totaltimeout[self] and os_time() + totaltimeout[self]
+    local timelimit = totaltimeout[self] and monotonic_time() + totaltimeout[self]
     local timedelay = blocktimeout[self]
 
     local r, err = oldudpreceive(self, size)
@@ -246,7 +246,7 @@ function newudp.receive(self, size)
 end
 
 function newudp.receivefrom(self, size)
-    local timelimit = totaltimeout[self] and os_time() + totaltimeout[self]
+    local timelimit = totaltimeout[self] and monotonic_time() + totaltimeout[self]
     local timedelay = blocktimeout[self]
 
     local r, ip, port, err = oldudpreceivefrom(self, size)
