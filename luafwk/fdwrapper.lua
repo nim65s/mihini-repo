@@ -14,6 +14,7 @@ local string = string
 local table = table
 local type = type
 local tonumber = tonumber
+local monotonic_time = require 'sched.timer.core'.time
 --local print = print
 
 module(...)
@@ -62,7 +63,7 @@ end
 --------------------------------------------------------
 function wrapper:read(pattern)
     pattern = pattern or "*l"
-    local timelimit = self.totaltimeout and os_time() + self.totaltimeout
+    local timelimit = self.totaltimeout and monotonic_time() + self.totaltimeout
     local timedelay = self.blocktimeout
     local r, s, err
     if type(pattern) == 'number' then
@@ -125,7 +126,7 @@ end
 function wrapper:write(data)
     local towrite = #data
     local written = 0
-    local timelimit = self.totaltimeout and os_time() + self.totaltimeout
+    local timelimit = self.totaltimeout and monotonic_time() + self.totaltimeout
     local timedelay = self.blocktimeout
     while written < towrite do
         local n, err = self.file:write(data)
