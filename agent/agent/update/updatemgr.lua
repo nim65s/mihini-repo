@@ -20,7 +20,7 @@ local pathutils = require"utils.path"
 local sched = require"sched"
 local timer = require"timer"
 local lfs = require"lfs"
-local serrnum = require 'status'.tonumber
+local errnum = require 'status'.tonumber
 local data = common.data
 local state = {} -- stepfinished to be given at init
 

@@ -79,7 +79,7 @@ function installscript(name, version, path, parameters)
         return errnum 'CANNOT_RUN_INSTALL_SCRIPT'
     end
 
-    return ernum 'OK'
+    return errnum 'OK'
 end
 
 function appconinstall(name, version, appdata, parameters)
