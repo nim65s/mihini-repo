@@ -21,6 +21,8 @@ local config = require"agent.config"
 local log = require"log"
 local sched = require"sched"
 local timer = require"timer"
+--this time function is not affected by date adjustment, perfect for periodic action
+local monotonic_time = require 'sched.timer.core'.time
 local data = common.data
 
 local M = {}
@@ -116,7 +118,7 @@ local function do_m3da_download(dwlstate, headers, hrange)
                 periodictask = nil
             end
 
-            local currenttime=os.time()
+            local currenttime = monotonic_time()
             --if download progress was sent not long ago, discard current notification
             if currenttime - lasttimenotif < (config.update.dwlnotifperiod or 2) then
                 return
