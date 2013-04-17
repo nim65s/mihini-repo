@@ -27,7 +27,7 @@ proc.fd = fdt
 ------------------------------------------------------------------------------
 sched.fd = { }
 
-local os_time = os.time
+local monotonic_time = require 'sched.timer.core'.time
 local math_min = math.min
 
 ------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ local function wait_fd(rw, fd, timelimit, timedelay)
   if not stat then return nil, msg end
 
   local timeout -- compute the first due date: either timeout per operation (timedelay) or global timeout (time limit)
-  timelimit = timelimit and timelimit-os_time()
+  timelimit = timelimit and timelimit-monotonic_time()
   timeout = timedelay and (timelimit and math_min(timelimit, timedelay) or timedelay) or timelimit
 
   local event, msg = sched.wait(fd, {rw, "error", "closed", timeout})

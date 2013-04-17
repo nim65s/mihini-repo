@@ -18,7 +18,7 @@ require 'pack'
 require 'log'
 require 'utils.table' -- used at least for table.pack
 
-local os_time = os.time
+local monotonic_time = require 'sched.timer.core'.time
 
 ------------------------------------------------------------------------------
 --
@@ -55,7 +55,7 @@ function sched.loop ()
         do
             local date = timer_nextevent()
             if date then
-                local now=os_time()
+                local now = monotonic_time()
                 timeout = date<now and 0 or date-now
             end
         end

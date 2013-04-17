@@ -87,7 +87,7 @@ require 'checks'
 --------------------------------------------------------------------------------
 local P = { __type='sched.pipe' }; P.__index = P
 
-local insert, remove, os_time = table.insert, table.remove, os.time
+local insert, remove, monotonic_time = table.insert, table.remove, require 'sched.timer.core'.time
 
 --------------------------------------------------------------------------------
 -- A registry of all currently active pipes. This is intended as a debug aid,
@@ -167,8 +167,8 @@ function P :receive (timeout)
     while true do
         if self.rcvidx==self.sndidx then
             log('SCHED-PIPE', 'DEBUG', "Pipe %s empty, :receive() waits for data", tostring(self))
-            due_date = due_date or timeout and os_time() + timeout
-            local timeout = due_date and due_date - os_time()
+            due_date = due_date or timeout and monotonic_time() + timeout
+            local timeout = due_date and due_date - monotonic_time()
             if timeout and timeout<=0 or sched.wait(self, {'state', timeout})=='timeout' then
                 return nil, 'timeout'
             end
@@ -194,8 +194,8 @@ function P :send (x, timeout)
     local due_date
     while self.state == 'full' do
         log('SCHED-PIPE', 'DEBUG', "Pipe %s full, :send() blocks until some data is pulled from pipe", tostring(self))
-        due_date = due_date or timeout and os_time() + timeout
-        local timeout = due_date and due_date - os_time()
+        due_date = due_date or timeout and monotonic_time() + timeout
+        local timeout = due_date and due_date - monotonic_time()
         if timeout and timeout<=0 or wait(self, {'state', timeout})=='timeout' then
             log('SCHED-PIPE', 'DEBUG', "Pipe %s :send() timeout", tostring(self))
             return nil, 'timeout'
