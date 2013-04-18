@@ -279,7 +279,10 @@ function tredirect(reqt, location)
         headers = reqt.headers,
         proxy = reqt.proxy,
         nredirects = (reqt.nredirects or 0) + 1,
-        create = reqt.create
+        create = reqt.create,
+        --fix made by Sierra Wireless for agent usage: keep same 
+        --method when redirection happens ( before the fix, redirect always made GET request)
+        method = reqt.method
     }
     -- pass location header back as a hint we redirected
     headers = headers or {}
