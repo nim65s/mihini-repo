@@ -25,7 +25,6 @@ local function SoftwareUpdate(asset, data, path, ticketid)
     local signature = data and (data.signature or data[2])
     if not url or not signature then return errnum 'WRONG_PARAMS', "Wrong params in SoftwareUpdate command: need package url and package signature" end
 
-
     local newupdate = {proto= "m3da", url = url, signature=signature, ticketid = ticketid}
     local res, errcode, errstr = update.notifynewupdate(newupdate)
 
