@@ -100,6 +100,7 @@ local function restore_factories(factories)
 end
 
 function M.dosession()
+    if lock.waiting(M) > 0 then return nil, "connection already in progress" end
     lock.lock(M)
     local pending_factories
     M.sourcefactories, pending_factories = { }, M.sourcefactories
