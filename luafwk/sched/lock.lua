@@ -110,14 +110,18 @@ module(...)
 --------------------------------------------------------------------------------
 --
 --------------------------------------------------------------------------------
-LOCK = { hooks =  {}, objlocks = setmetatable({}, {__mode = "k"}) }
-LOCK.__index = LOCK
+local objlocks = setmetatable({}, {__mode = "k"})
+local hooks =  {}
+
+-- Lock object
+LOCK = {}
+
 
 --------------------------------------------------------------------------------
 -- Create a new lock object. It remains unlocked.
 --------------------------------------------------------------------------------
 function new()
-    return setmetatable({ waiting =  {} }, LOCK)
+    return setmetatable({ wt = {} }, { __index = LOCK })
 end
 
 --------------------------------------------------------------------------------
@@ -125,9 +129,9 @@ end
 --------------------------------------------------------------------------------
 function LOCK:destroy()
     self.owner = "destroyed" -- means that the lock is being destroyed !
-    for t, _ in pairs(self.waiting) do
+    for t, _ in pairs(self.wt) do
         sched.signal(self, t)
-        self.waiting[t] = nil
+        self.wt[t] = nil
     end
 end
 
@@ -135,56 +139,70 @@ end
 -- Helper to release locks on dead threads.
 --------------------------------------------------------------------------------
 local function autorelease(thread)
-    for l, _ in pairs(LOCK.hooks[thread]) do
+    for l, _ in pairs(hooks[thread]) do
         if l.owner == thread then l:release(thread)
-        elseif l.waiting then l.waiting[thread] = nil end
+        elseif l.wt then l.wt[thread] = nil end
     end
-    LOCK.hooks[thread] = nil
+    hooks[thread] = nil
 end
 
 --------------------------------------------------------------------------------
 -- Helper to release locks on dead threads.
 --------------------------------------------------------------------------------
 local function protectdie(self, thread)
-    if not LOCK.hooks[thread] then
+    if not hooks[thread] then
         local h = sched.sigonce(thread, "die", function()
             autorelease(thread)
         end)
-        LOCK.hooks[thread] = {sighook = h}
+        hooks[thread] = {sighook = h}
     end
-    (LOCK.hooks[thread])[self] = true
+    (hooks[thread])[self] = true
 end
 
 --------------------------------------------------------------------------------
 -- Helper to release locks on dead threads.
 --------------------------------------------------------------------------------
 local function unprotectdie(self, thread)
-    (LOCK.hooks[thread])[self] = nil
-    if not next(LOCK.hooks[thread], next(LOCK.hooks[thread])) then -- if this was the last lock attached to that thread...
-        sched.kill(LOCK.hooks[thread].sighook)
-        LOCK.hooks[thread] = nil
+    (hooks[thread])[self] = nil
+    if not next(hooks[thread], next(hooks[thread])) then -- if this was the last lock attached to that thread...
+        sched.kill(hooks[thread].sighook)
+        hooks[thread] = nil
     end
 end
 
 --------------------------------------------------------------------------------
 -- Attempt to take ownership of a lock; might block until the current owner
 -- releases it.
+-- If nonblocking is set to true, then the call return nil "lock is used" if the lock is used
 --------------------------------------------------------------------------------
-function LOCK:acquire()
+function LOCK:acquire(nonblocking)
     local t = proc.tasks.running --coroutine.running()
     assert(self.owner ~= t, "a lock cannot be acquired twice by the same thread")
     assert(self.owner ~= "destroyed", "cannot acquire a destroyed lock")
+
+    if nonblocking and self.owner then return nil, "lock is used" end
+
     protectdie(self, t) -- ensure that the lock will be unlocked if the thread dies before unlocking...
 
     while self.owner do
-        self.waiting[t] = true
+        self.wt[t] = true
         sched.wait(self, {t}) -- wait on the current lock with the current thread
         if self.owner == "destroyed" then error("lock destroyed while waiting") end
     end
-    self.waiting[t] = nil
+    self.wt[t] = nil
     self.owner = t
+
+    return "ok"
 end
 
+--------------------------------------------------------------------------------
+-- Return the number of waiting threads on that lock
+--------------------------------------------------------------------------------
+function LOCK:waiting()
+    local n = 0
+    for k in pairs(self.wt) do n = n+1 end
+    return n
+end
 --------------------------------------------------------------------------------
 -- Release ownership of a lock.
 --------------------------------------------------------------------------------
@@ -196,30 +214,40 @@ function LOCK:release(thread)
     self.owner = nil
 
     -- wakeup a waiting thread, if any...
-    local t = next(self.waiting)
+    local t = next(self.wt)
     if t then
         sched.signal(self, t)
     end
+
+    return "ok"
 end
 
 --------------------------------------------------------------------------------
 -- Create and acquire a new lock, associated to an arbitrary object.
 --------------------------------------------------------------------------------
-function lock(object)
+function lock(object, nonblocking)
     assert(object, "you must provide an object to lock on")
     assert(type(object) ~= "string" and type(object) ~= "number", "the object to lock on must be a collectable object (no string or number)")
-    if not LOCK.objlocks[object] then LOCK.objlocks[object] = new() end
-    LOCK.objlocks[object]:acquire()
+    if not objlocks[object] then objlocks[object] = new() end
+    return objlocks[object]:acquire(nonblocking)
 end
 
+--------------------------------------------------------------------------------
+-- Return the number of waiting threads on that locked object.
+--------------------------------------------------------------------------------
+function waiting(object)
+    assert(object, "you must provide an object")
+    if not objlocks[object] then return 0 end -- if the lock was never used then there is nobody waiting on it...
+    return objlocks[object]:waiting()
+end
 
 --------------------------------------------------------------------------------
 -- Release an object created with lock().
 --------------------------------------------------------------------------------
 function unlock(object, thread)
     assert(object, "you must provide an object to unlock on")
-    assert(LOCK.objlocks[object], "this object was not locked")
-    LOCK.objlocks[object]:release()
+    assert(objlocks[object], "this object was not locked")
+    return objlocks[object]:release()
 end
 
 --------------------------------------------------------------------------------
