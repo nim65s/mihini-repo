@@ -331,32 +331,32 @@ function start_m3da_download()
         if need_retry then
             if m3da_dwl_retry_state.attempt >= #m3da_dwl_retry_delays then
                 return state.stepfinished("failure", 552, string.format("Download failed: all retries exhausted"))
-             else
-            m3da_dwl_retry_state.attempt =  m3da_dwl_retry_state.attempt +1
+            else
+                m3da_dwl_retry_state.attempt =  m3da_dwl_retry_state.attempt +1
 
-            local function dwlretrynotifier()
-                local function dwlretryfinalizer()
-                    sched.signal("update.dwlretry", "interrupted")
+                local function dwlretrynotifier()
+                    local function dwlretryfinalizer()
+                        sched.signal("update.dwlretry", "interrupted")
+                    end
+                   --dwlretryfinalizer is called in/by stepprogress only if download is paused/aborted.
+                    state.stepprogress("Waiting for download retry", dwlretryfinalizer)
                 end
-               --dwlretryfinalizer is called in/by stepprogress only if download is paused/aborted.
-                state.stepprogress("Waiting for download retry", dwlretryfinalizer)
-            end
 
-            --start poller to listen to download request that may be sent while waiting for next retry
-            local periodictask,err = timer.periodic(config.update.dwlnotifperiod or 2, dwlretrynotifier)
-            if not periodictask then log("UPDATE", "WARNING", "Can't start periodic task to send download retry, err=%s", tostring(err)) end
+                --start poller to listen to download request that may be sent while waiting for next retry
+                local periodictask,err = timer.periodic(config.update.dwlnotifperiod or 2, dwlretrynotifier)
+                if not periodictask then log("UPDATE", "WARNING", "Can't start periodic task to send download retry, err=%s", tostring(err)) end
 
-            log("UPDATE", "INFO", "Download: waiting for next retry: %d seconds", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt])
-            local event = sched.wait("update.dwlretry", {"*", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt]} )
-            --ensure timer is cleaned, stopped.
-            timer.cancel(periodictask)
-            periodictask = nil
+                log("UPDATE", "INFO", "Download: waiting for next retry: %d seconds", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt])
+                local event = sched.wait("update.dwlretry", {"*", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt]} )
+                --ensure timer is cleaned, stopped.
+                timer.cancel(periodictask)
+                periodictask = nil
 
-            --download retry phase was interrupted by a update request (pause/abort) from user, stop here
-            if event == "interrupted" then return end
-            --otherwise restart the download
-            sched.run(start_m3da_download)
-            return
+                --download retry phase was interrupted by a update request (pause/abort) from user, stop here
+                if event == "interrupted" then return end
+                --otherwise restart the download
+                sched.run(start_m3da_download)
+                return
             end
         end
 
