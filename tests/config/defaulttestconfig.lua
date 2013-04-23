@@ -21,6 +21,7 @@ local tests = {
   --socket      = { target = {"native"}, environment = {"agent", "luafwk"}, TestPolicy = "OnCommit"},
   --logstore    = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, -- deprecated module for now
   persist     = { target = {"native"}, environment = {"agent" , "luafwk"}, TestPolicy = "OnCommit"},
+  timer       = { target = {"native"}, environment = {"agent", "luafwk"}, TestPolicy = "OnCommit"},
 
 
   --luafwk racon tests
