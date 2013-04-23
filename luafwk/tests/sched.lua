@@ -452,3 +452,24 @@ function t :test_sigrun_error()
     checkacc{'x', 'x', 'x'}
     checkleak()
 end
+
+local function ensure_correct_wait(time)
+   local monotonic_time = require 'sched.timer.core'.time
+   local b = monotonic_time()
+   sched.wait(time)
+   local e = monotonic_time()
+   local delta=time * 1.0 / 100
+   u.assert_gte(time, e - b)
+   u.assert_lte(time+delta, e - b)
+end
+
+function t: test_wait_various_time()
+   ensure_correct_wait(0.1)
+   ensure_correct_wait(0.2)
+   ensure_correct_wait(0.4)
+   ensure_correct_wait(0.5)
+   ensure_correct_wait(1)
+   ensure_correct_wait(1.0)
+   ensure_correct_wait(1.15)
+   ensure_correct_wait(2.333)
+end
