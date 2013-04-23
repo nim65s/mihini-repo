@@ -493,6 +493,8 @@ function latencyExec(func, latency)
     checks('function', '?number')
 
     latency = tonumber(latency)
+    if latency and latency < 0 then return nil, "latency must be positive integer" end
+
     local function dofunc()
         latencyjobs[func] = nil
         return func()

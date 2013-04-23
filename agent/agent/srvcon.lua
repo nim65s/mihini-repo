@@ -100,6 +100,7 @@ local function restore_factories(factories)
 end
 
 function M.dosession()
+    if lock.waiting(M) > 0 then return nil, "connection already in progress" end
     lock.lock(M)
     local pending_factories
     M.sourcefactories, pending_factories = { }, M.sourcefactories
@@ -144,9 +145,6 @@ end
 --  @param latency an optional delay after which connection to the server is forced.
 --
 function M.connect(latency)
-    checks('?number')
-    if latency and latency < 0 then return nil, "latency must be positive integer" end
-    if latency and latency > 2^31 then return nil, "latency is too big (possible integer overflow)" end
     return timer.latencyexec(M.dosession, latency)
 end
 

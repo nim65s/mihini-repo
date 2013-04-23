@@ -21,6 +21,8 @@ local config = require"agent.config"
 local log = require"log"
 local sched = require"sched"
 local timer = require"timer"
+--this time function is not affected by date adjustment, perfect for periodic action
+local monotonic_time = require 'sched.timer.core'.time
 local data = common.data
 
 local M = {}
@@ -116,7 +118,7 @@ local function do_m3da_download(dwlstate, headers, hrange)
                 periodictask = nil
             end
 
-            local currenttime=os.time()
+            local currenttime = monotonic_time()
             --if download progress was sent not long ago, discard current notification
             if currenttime - lasttimenotif < (config.update.dwlnotifperiod or 2) then
                 return
@@ -209,6 +211,7 @@ function init_m3da_download()
 end
 
 function start_m3da_download()
+    log("UPDATE", "INFO", "Start download using M3DA command info")
 
     if not data.currentupdate.infos.url or "string" ~= type(data.currentupdate.infos.url)
     or not data.currentupdate.infos.signature or "string" ~= type(data.currentupdate.infos.signature) then
@@ -244,11 +247,11 @@ function start_m3da_download()
 
     local need_download = true
     if sz and sz > 0 then
-        if headers and sz == headers.contentlength then
+        if headers and headers.contentlength and sz == headers.contentlength then
             log("UPDATE", "INFO", "Download: file is already completed :)")
             md5 = compute_md5(md5, updatepath)
             need_download = false
-        elseif headers and headers.acceptrange then
+        elseif headers and headers.acceptrange and headers.contentlength then
             log("UPDATE", "INFO", "Download: found package with size " ..sz .. ", trying to resume download...")
             --prepare HTTP header with range as server supports it.
             hrange = { ["Range"] = "bytes=" .. sz .."-" }
@@ -270,7 +273,7 @@ function start_m3da_download()
     --download package
     if need_download then
 
-        if headers and freespace < (headers.contentlength - sz)  then
+        if headers and headers.contentlength and freespace < (headers.contentlength - sz)  then
             return state.stepfinished("failure", 555, "Download failure: Not enough free space to download package")
         end
 
@@ -328,31 +331,32 @@ function start_m3da_download()
         if need_retry then
             if m3da_dwl_retry_state.attempt >= #m3da_dwl_retry_delays then
                 return state.stepfinished("failure", 552, string.format("Download failed: all retries exhausted"))
-             else
-            m3da_dwl_retry_state.attempt =  m3da_dwl_retry_state.attempt +1
+            else
+                m3da_dwl_retry_state.attempt =  m3da_dwl_retry_state.attempt +1
 
-            local function dwlretrynotifier()
-                local function dwlretryfinalizer()
-                    sched.signal("update.dwlretry", "interrupted")
+                local function dwlretrynotifier()
+                    local function dwlretryfinalizer()
+                        sched.signal("update.dwlretry", "interrupted")
+                    end
+                   --dwlretryfinalizer is called in/by stepprogress only if download is paused/aborted.
+                    state.stepprogress("Waiting for download retry", dwlretryfinalizer)
                 end
-               --dwlretryfinalizer is called in/by stepprogress only if download is paused/aborted.
-                state.stepprogress("Waiting for download retry", dwlretryfinalizer)
-            end
 
-            --start poller to listen to download request that may be sent while waiting for next retry
-            local periodictask,err = timer.periodic(config.update.dwlnotifperiod or 2, dwlretrynotifier)
-            if not periodictask then log("UPDATE", "WARNING", "Can't start periodic task to send download retry, err=%s", tostring(err)) end
+                --start poller to listen to download request that may be sent while waiting for next retry
+                local periodictask,err = timer.periodic(config.update.dwlnotifperiod or 2, dwlretrynotifier)
+                if not periodictask then log("UPDATE", "WARNING", "Can't start periodic task to send download retry, err=%s", tostring(err)) end
 
-            local event = sched.wait("update.dwlretry", {"*", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt]} )
-            --ensure timer is cleaned, stopped.
-            timer.cancel(periodictask)
-            periodictask = nil
+                log("UPDATE", "INFO", "Download: waiting for next retry: %d seconds", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt])
+                local event = sched.wait("update.dwlretry", {"*", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt]} )
+                --ensure timer is cleaned, stopped.
+                timer.cancel(periodictask)
+                periodictask = nil
 
-            --download retry phase was interrupted by a update request (pause/abort) from user, stop here
-            if event == "interrupted" then return end
-            --otherwise restart the download
-            sched.run(start_m3da_download)
-            return
+                --download retry phase was interrupted by a update request (pause/abort) from user, stop here
+                if event == "interrupted" then return end
+                --otherwise restart the download
+                sched.run(start_m3da_download)
+                return
             end
         end
 
