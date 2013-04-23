@@ -201,7 +201,7 @@ end
 --
 -- **Note:** Notice that for the server, all data is timestamped. If there is 
 -- no 'timestamp' or 'timestamps' entry on a record, it will be timestamped 
--- at the date of its reception by the server (see more detail [Airvantage_Lua_library](http://docs.anyware/platform/embedded/mihini/md/agent_connector_libraries/Airvantage_Lua_library.html))
+-- at the date of its reception by the server (see more detail [Airvantage_Lua_library](http://git.eclipse.org/c/mihini/org.eclipse.mihini.git/tree/doc/md/agent_connector_libraries/Airvantage_Lua_library.md))
 --
 -- @function [parent=#asset] pushData
 -- @param self
