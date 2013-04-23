@@ -12,7 +12,7 @@
 PROJECT(TEST_LUAFWK)
 
 ADD_LUA_LIBRARY(test_luafwk DESTINATION tests EXCLUDE_FROM_ALL
-                bysant.lua luatobin.lua  persist.lua rpc.lua sched.lua socket.lua logstore.lua crypto.lua posixsignal.lua
+                bysant.lua luatobin.lua  persist.lua rpc.lua sched.lua socket.lua logstore.lua crypto.lua posixsignal.lua timer.lua
                )
 
 ADD_DEPENDENCIES(test_luafwk agent_provisioning)
