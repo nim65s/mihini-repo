@@ -191,7 +191,17 @@ end
 -- Data send through `pushData` can be a flat set of key/values in a record,
 -- or can contain nested sub-records. It can also be a simple value out of a
 -- record, if the path is not empty: in this case, the last path segment will be
--- used as a datastore key.
+-- used as a datastore key. You also can add a timestamps in the record to inform
+-- to the server side about the sending date.
+--
+--     --Examples
+--     asset :pushData('foo', {x=1, y=2}) -- sends <assetroot>.foo.x=1, <assetroot>.foo.y=2
+--     asset :pushData('foo.x', 1, 'midnight') -- sends <assetroot>.foo.x=1 according to the "midnight" policy
+--     asset :pushData('foo', { timestamp=os.time(), y={a=2, b=3}}) -- sends <assetroot>.foo.y.a=2 and <assetroot>.foo.y.b=3 with the timestamp
+--
+-- **Note:** Notice that for the server, all data is timestamped. If there is 
+-- no 'timestamp' or 'timestamps' entry on a record, it will be timestamped 
+-- at the date of its reception by the server (see more detail [Airvantage_Lua_library](http://docs.anyware/platform/embedded/mihini/md/agent_connector_libraries/Airvantage_Lua_library.html))
 --
 -- @function [parent=#asset] pushData
 -- @param self
