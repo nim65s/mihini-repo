@@ -163,6 +163,7 @@ function M.init()
     -- Choose and load the appropriate session and transport modules, depending on config.
     local cs, session_name = config.server, 'default'
     local transport_name = socket.url.parse(cs.url).scheme :lower()
+    log('SRVCON', 'INFO', "Server URL = %q", cs.url)
     if cs.authentication or cs.encryption then session_name = 'security' end
 
     local transport_mod = require ('m3da.transport.'..transport_name)
