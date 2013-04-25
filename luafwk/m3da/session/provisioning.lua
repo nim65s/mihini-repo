@@ -58,16 +58,18 @@ function M.downloadkeys(session)
         ltn12.source.empty(),
         m3da.envelope{ id = session.localid, autoreg_salt = salt_device })
     log('M3DA-PROVISIONING', 'DEBUG', "Sending device salt")
-    assert(session.transport :send (env_1d))    -- Second exchange (1): send device pubkey
+    local s, err = session.transport :send (env_1d) -- Second exchange (1): send device pubkey
+    if not s then return nil, "env_1d: "..err end
 
     -- message 1S: receive server signing salt (neither signed nor ciphered)
     local env_1s = assert(session :receive())
     if env_1s.header.challenge then
         local msg = "Server won't re-provision the cipher+auth key"
         log('M3DA-PROVISIONING', 'ERROR', msg)
-        error(msg)
-    end
-    local salt_server = assert(env_1s.header.autoreg_salt, "missing server salt in 1st provisioning msg")
+        return nil, msg
+    end 
+    local salt_server = env_1s.header.autoreg_salt
+    if not salt_server then return nil, "missing server salt in 1st provisioning msg" end
     if log.musttrace('M3DA-PROVISIONING', 'DEBUG') then
         log('M3DA-PROVISIONING', 'DEBUG', "Received server salt %s", sprint(salt_server))
     end
@@ -82,17 +84,20 @@ function M.downloadkeys(session)
     local env_2d = ltn12.source.chain(ltn12.source.empty(), chain)
     if false then
         local str = require 'utils.ltn12.source'.tostring(env_2d)
-        env_2d = assert(ltn12.source.string(str))
+        env_2d = ltn12.source.string(str)
         local ext = m3da_deserialize(str)
         local int  = m3da_deserialize(ext.payload)
         printf("Header Ext=%s\nHeader Int=%s\nFooter Ext=%s",
             sprint(ext.header), sprint(int.header), sprint(ext.footer))
     end
     log('M3DA-PROVISIONING', 'DEBUG', "Sending authenticated device public ECC-DH key")
-    assert(session.transport :send (env_2d))
+    s, err = session.transport :send (env_2d)
+    if not s then return nil, "env_2d: "..err end
 
     -- message 2S: receive peer ECC-DH pubkey and ciphered K, check signature (PROVIS_KS + device salt)
-    local env_2s = assert(session :receive())
+    local env_2s
+    env_2s, err = session :receive()
+    if not env_2s then return nil, err end
     log('M3DA-PROVISIONING', 'DEBUG', "Received authenticated server public ECC-DH key + ciphered provisionned key")
     local hmac = assert(session :getauthentication(session.IDX_PROVIS_KS, 'hmac-md5'))
     local expected = hmac :update(env_2s.payload) :update(salt_device) :digest(true)
@@ -108,6 +113,7 @@ function M.downloadkeys(session)
     log('M3DA-PROVISIONING', 'DEBUG', "Got provisionned key")
     local KS = hash.new 'md5' :update (session.peerid)  :update (K) :digest(true)
     local KD = hash.new 'md5' :update (session.localid) :update (K) :digest(true)
+
     -- Verify that key indexes are consecutive, as they must be
     assert(session.IDX_AUTH_KS == session.IDX_CRYPTO_K + 1)
     assert(session.IDX_AUTH_KD == session.IDX_CRYPTO_K + 2)
@@ -120,7 +126,8 @@ function M.downloadkeys(session)
     local chain = ltn12.filter.chain(env_3d_inner, filter_3d, env_3d_outer)
     local env_3d = ltn12.source.chain(ltn12.source.empty(), chain)
     log('M3DA-PROVISIONING', 'DEBUG', "Sending final acknowledgment")
-    assert(session.transport :send (env_3d))
+    s, err = session.transport :send (env_3d)
+    if not s then return nil, "env_3d: "..err end
     log('M3DA-PROVISIONING', 'DEBUG', "Acknowledgment sent")
 
     log('M3DA-PROVISIONING', 'INFO', "Credential provisioning successful")

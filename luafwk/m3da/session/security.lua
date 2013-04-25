@@ -478,7 +478,8 @@ function M :start()
     elseif hmac.new{ name='md5', keyidx=M.IDX_PROVIS_KS } then
         -- registration password OK, no communication password yet
         local P = require 'm3da.session.provisioning'
-        if P.downloadkeys(self) then return self else return nil, errmsg end
+        local s, err = P.downloadkeys(self)
+        if s then return self else return nil, err end
     else
         return nil, "Neither provisioning nor authenticating crypto keys"
     end
