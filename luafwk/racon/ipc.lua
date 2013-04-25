@@ -56,7 +56,7 @@ function FIFO_MT:write(buffer)
         idx = idx + c
         sched.signal(self, "write")
         if idx == #buffer+1 then break end
-        event = sched.wait(self, "*")
+        local event = sched.wait(self, "*")
         if event ~= "write" and event ~= "read" then return nil, string.format("Event %s occured while writing", tostring(event)), idx end
     end
 
