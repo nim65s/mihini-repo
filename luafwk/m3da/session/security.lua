@@ -424,6 +424,10 @@ local function protector_factory (unprotected_func)
     --arg1: src_factory for send, outer env for parse
     return function(self, ...)
         checks('m3da.session')
+        if not self.started then
+            local s, errmsg = self :start()
+            if s then self.started = true else return s, errmsg end
+        end
         self.last_status = false -- to be filled in case of error
         local current_nonce = persist.load("security.nonce") or M.getnonce()
         local success, next_nonce = copcall(unprotected_func, self, current_nonce, ...)
@@ -473,15 +477,10 @@ M.optional_keys = {
 }
 
 function M :start()
-    if hmac.new{ name='md5', keyidx=M.IDX_AUTH_KS } then
-        return "OK" -- allready provisioned
-    elseif hmac.new{ name='md5', keyidx=M.IDX_PROVIS_KS } then
-        -- registration password OK, no communication password yet
+    if not hmac.new{ name='md5', keyidx=M.IDX_AUTH_KS } then
+        assert(hmac.new{ name='md5', keyidx=M.IDX_PROVIS_KS }) -- tested by session.new()
         local P = require 'm3da.session.provisioning'
-        local s, err = P.downloadkeys(self)
-        if s then return self else return nil, err end
-    else
-        return nil, "Neither provisioning nor authenticating crypto keys"
+        return P.downloadkeys(self)
     end
 end
 
@@ -494,12 +493,17 @@ end
 -- @return nil + error msg
 --
 function M.new(cfg)
-    local self = { waitingresponse = false }
+    local self = { waitingresponse = false; started = false }
+    if not (hmac.new{ name='md5', keyidx=M.IDX_AUTH_KS } or 
+            hmac.new{ name='md5', keyidx=M.IDX_PROVIS_KS }) then
+        return nil, "Neither provisioning nor authenticating crypto keys"
+    end 
     for key in pairs(M.mandatory_keys) do
         local val = cfg[key]
         if not val then return nil, 'missing config key '..key end
         self[key]=val
     end
+    
     for key in pairs(M.optional_keys) do self[key]=cfg[key] end
     setmetatable(self, MT)
 

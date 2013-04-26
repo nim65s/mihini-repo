@@ -185,12 +185,6 @@ function M.init()
     }
     if not M.session then return nil, err_msg end
 
-    if M.session.start then
-        local status
-        status, err_msg = require 'agent.netman'.withnetwork(M.session.start, M.session)
-        if not status then return nil, err_msg end
-    end
-
     -- Apply agent.config's settings
     if type(config.server.autoconnect) == "table" then
         log("SRVCON", "DETAIL", "Setting up connection policy")
