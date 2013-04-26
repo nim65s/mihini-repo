@@ -30,9 +30,15 @@ local base = _G
 
 module(...)
 
-bearers = {}
+bearers = { }
 defaultbearer = nil
 local failure_count
+
+initialized = false
+
+local function must_be_initialized()
+    if not initialized then sched.wait('NetworkManager', 'initialized') end
+end
 
 -- mount the bearer given as parameter
 local function mount(bearer)
@@ -155,6 +161,7 @@ end
 --    check_route:    perform a verify to validate the default route        --
 ------------------------------------------------------------------------------
 function connect(bearername, check_route)
+    must_be_initialized()
     lock.lock(_M)
     local ok, err = select(bearername, check_route)
     lock.unlock(_M)
@@ -169,25 +176,27 @@ end
 -- result, or `nil` + error message.
 ------------------------------------------------------------------------------
 function withnetwork(action, ...)
-    log("NETMAN", "DETAIL", "Network-dependent action: trying to connect...")
+    log("NETMAN", "DETAIL", "Network-dependent action: first try")
     local s, err
     local r = { action(...) }
     if not r[1] then
-        log("NETMAN", "WARNING", "Network-dependent action: action error, %q", r[2] or "unknown")
+        must_be_initialized()
+        local msg = r[2] or "unknown"
         lock.lock(_M)
         if defaultbearer then
             s, err = tcpping()
             if s then
                 -- the network was actually working but the action failed, no need to try again.
                 -- Just return the error of the previous call to action.
+                log("NETMAN", "WARNING", "Network-dependent action error %q; TCP works, WON'T retry", msg)
                 lock.unlock(_M)
                 return unpack(r)
             else
                 -- Otherwise, unmount the bearer to remount it and retry !
-                log("NETMAN", "WARNING", "TCP ping error, %q", err or "unknown")
                 defaultbearer:unmount()
             end
         end
+        log("NETMAN", "INFO", "Network-dependent action error %q; TCP broken; mount and retry", msg)
 
         -- Select the default bearer
         s, err = select(nil, true)
@@ -227,7 +236,7 @@ local function bearereventhook(ev, b)
     end
 end
 
--- hook on ra init
+-- hook on Agent init
 local function rahook()
     lock.lock(_M)
     failure_count = tonumber(config.network.maxfailure)
@@ -241,6 +250,8 @@ local function rahook()
             log("NETMAN", "ERROR", "%q, %s", tostring(k) or "?", err or "Cannot be initialized")
         end
     end
+    initialized = true
+    sched.signal('NetworkManager', 'initialized')
     select()
     lock.unlock(_M)
 end
