@@ -481,6 +481,8 @@ function M :start()
         assert(hmac.new{ name='md5', keyidx=M.IDX_PROVIS_KS }) -- tested by session.new()
         local P = require 'm3da.session.provisioning'
         return P.downloadkeys(self)
+    else
+        return 'ok'
     end
 end
 

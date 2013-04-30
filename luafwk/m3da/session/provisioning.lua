@@ -62,7 +62,9 @@ function M.downloadkeys(session)
     if not s then return nil, "env_1d: "..err end
 
     -- message 1S: receive server signing salt (neither signed nor ciphered)
-    local env_1s = assert(session :receive())
+    local env_1s
+    env_1s, err = session :receive()
+    if not env_1s then return nil, "env_1s: "..err end
     if env_1s.header.challenge then
         local msg = "Server won't re-provision the cipher+auth key"
         log('M3DA-PROVISIONING', 'ERROR', msg)
@@ -95,16 +97,16 @@ function M.downloadkeys(session)
     if not s then return nil, "env_2d: "..err end
 
     -- message 2S: receive peer ECC-DH pubkey and ciphered K, check signature (PROVIS_KS + device salt)
-    local env_2s
-    env_2s, err = session :receive()
+    local env_2s, err = session :receive()
     if not env_2s then return nil, err end
     log('M3DA-PROVISIONING', 'DEBUG', "Received authenticated server public ECC-DH key + ciphered provisionned key")
-    local hmac = assert(session :getauthentication(session.IDX_PROVIS_KS, 'hmac-md5'))
+    local hmac = session :getauthentication(session.IDX_PROVIS_KS, 'hmac-md5')
     local expected = hmac :update(env_2s.payload) :update(salt_device) :digest(true)
     assert (expected == env_2s.footer.autoreg_mac, "Bad server signature for 2nd provisioning msg")
     local env_2s_inner = m3da_deserialize(env_2s.payload)
-    local pubkey_server = assert(env_2s_inner.header.autoreg_pubkey)
-    local ctext = assert(env_2s_inner.header.autoreg_ctext)
+    local pubkey_server = env_2s_inner.header.autoreg_pubkey
+    local ctext = env_2s_inner.header.autoreg_ctext
+    if not pubkey_server or not ctext then return nil, "malformed provisioning response env_2s" end
 
     -- decipher K, compute KS and KD, put in store
     local secret = ecdh.getsecret(privkey_device, pubkey_server)
@@ -131,6 +133,9 @@ function M.downloadkeys(session)
     log('M3DA-PROVISIONING', 'DEBUG', "Acknowledgment sent")
 
     log('M3DA-PROVISIONING', 'INFO', "Credential provisioning successful")
+
+    log('M3DA-PROVISIONING', 'WARNING', "Temporization (workaround)")
+    sched.wait(10)
 
     return 'ok'
 end
