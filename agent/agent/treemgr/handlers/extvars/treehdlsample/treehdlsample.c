@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *     Sierra Wireless - initial API and implementation
+ *     Romain Perier for Sierra Wireless - initial API and implementation
  *******************************************************************************/
 
 /*
@@ -22,7 +22,7 @@
 #include <pthread.h>
 #include "swi_status.h"
 #include "swi_log.h"
-#include "extvars_hdl.h"
+#include "extvars.h"
 
 /* Define this macro to enable asynchronous notifications when a leaf's value changes.
  * When it is not defined notifications are done synchronously */
@@ -35,7 +35,11 @@
 typedef struct
 {
     ExtVars_id_t id;
-    uint64_t value;
+    union {
+      int i;
+      double d;
+      char *s;
+    } value;
     ExtVars_type_t type;
     int registered:1;
 }  treehdlvar_t;
@@ -47,13 +51,13 @@ typedef struct
 #endif
 
 static ExtVars_notify_t *notify;
-static ExtVars_ctx_t    *notify_ctx;
+static void *notify_ctx;
 static uint8_t all_vars_registered = 0;
 static treehdlvar_t treehdlvars[NVARS] = {
-  { .id = 1, .type = EXTVARS_TYPE_INT, .value = 0, .registered = 0 },
-  { .id = 2, .type = EXTVARS_TYPE_DOUBLE, .value = 0, .registered = 0 },
-  { .id = 4, .type = EXTVARS_TYPE_STR, .value = 0, .registered = 0 },
-  { .id = 8, .type = EXTVARS_TYPE_BOOL, .value = 0, .registered = 0 },
+  { .id = 1, .type = EXTVARS_TYPE_INT },
+  { .id = 2, .type = EXTVARS_TYPE_DOUBLE },
+  { .id = 4, .type = EXTVARS_TYPE_STR },
+  { .id = 8, .type = EXTVARS_TYPE_BOOL },
 };
 
 
@@ -110,7 +114,7 @@ static treehdlvar_t * register_treevar(ExtVars_id_t id)
 }
 
 /* This function is called when treemgr registers a new notification callback */
-static void treehdl_set_notifier(void *user_ctx, ExtVars_notify_t *f, ExtVars_ctx_t *ctx)
+void ExtVars_set_notifier (void *ctx, ExtVars_notify_t *f)
 {
     SWI_LOG("TREEHDL", DEBUG, "%s: notify = %p, notify_ctx = %p\n", __FUNCTION__, f, ctx);
     notify = f;
@@ -118,14 +122,14 @@ static void treehdl_set_notifier(void *user_ctx, ExtVars_notify_t *f, ExtVars_ct
 }
 
 /* This function is called when treemgr get the value attached to a leaf */
-static swi_status_t treehdl_get( void *user_ctx, ExtVars_id_t id, void** value, ExtVars_type_t* type)
+swi_status_t ExtVars_get_variable (ExtVars_id_t id, void**value, ExtVars_type_t *type)
 {
     SWI_LOG("TREEHDL", DEBUG, "%s(%d)\n", __FUNCTION__, id);
 
     treehdlvar_t *treehdlvar = get_treevar(id);
 
     if(treehdlvar == NULL) return SWI_STATUS_DA_NOT_FOUND;
-    if(value) *value = (treehdlvar->type == EXTVARS_TYPE_STR) ? (void *)treehdlvar->value : &treehdlvar->value;
+    if(value) *value = (treehdlvar->type == EXTVARS_TYPE_STR) ? (void *)treehdlvar->value.s : &treehdlvar->value.d;
     if(type)  *type  = treehdlvar->type;
     return SWI_STATUS_OK;
 }
@@ -133,7 +137,7 @@ static swi_status_t treehdl_get( void *user_ctx, ExtVars_id_t id, void** value, 
 /* This function is called when treemgr changes the value attached to a leaf. It supports
  * changing a variable type on the fly, synchronous/asynchronous notifications and dynamic storage (according to the defined macro, see above)
  */
-static swi_status_t treehdl_set(void *user_ctx, int nvars, ExtVars_id_t *vars, void **values, ExtVars_type_t *types)
+swi_status_t ExtVars_set_variables(int nvars, ExtVars_id_t *vars, void **values, ExtVars_type_t *types)
 {
     int inotified = 0, i = 0;
     static ExtVars_id_t notified_ids[NVARS];
@@ -142,25 +146,25 @@ static swi_status_t treehdl_set(void *user_ctx, int nvars, ExtVars_id_t *vars, v
 
     for(i = 0; i < nvars; i++) {
         int notifiable = 0;
-    treehdlvar_t *var = register_treevar(vars[i]);
+        treehdlvar_t *var = register_treevar(vars[i]);
 
         if(!var)
             return SWI_STATUS_ITEM_NOT_FOUND;
 
         var->id = vars[i];
-        if(types[i] != var->type && var->type == EXTVARS_TYPE_STR) {
-            free((void *)var->value);
-            var->value = 0;
+        if((types[i] != var->type) && (var->type == EXTVARS_TYPE_STR)) {
+            free(var->value.s);
+            var->value.s = NULL;
         }
 
         switch(types[i]) {
             case EXTVARS_TYPE_STR: {
         const char *newval = (const char *) values[i];
                 SWI_LOG("TREEHDL", DEBUG, "%s: Pushing string value \"%s\" for var %d\n", __FUNCTION__, newval, var->id);
-        // The type has changed or this is the same type and the value has changed
-                if(types[i] != var->type || (var->type == EXTVARS_TYPE_STR && strcmp((const char *)var->value, newval))) {
-                    free((void *)var->value);
-                    var->value = (uint64_t)strdup(newval);
+                // The type has changed or this is the same type and the value has changed (either this is the first initialization or another value)
+                if(types[i] != var->type || (var->type == EXTVARS_TYPE_STR && (var->value.s == 0 || strcmp((const char *)var->value.s, newval) ) ) ) {
+                    free((void *)var->value.s);
+                    var->value.s = strdup(newval);
                     notifiable = 1;
                 }
                 break;
@@ -168,9 +172,9 @@ static swi_status_t treehdl_set(void *user_ctx, int nvars, ExtVars_id_t *vars, v
             case EXTVARS_TYPE_INT: {
                 int newval = *(int *) values[i];
                 SWI_LOG("TREEHDL", DEBUG, "%s: Pushing int value %d for var %d\n", __FUNCTION__, newval, var->id);
-        // The type has changed or this is the same type and the value has changed
-                if(types[i] != var->type || (var->type == EXTVARS_TYPE_INT && (int)var->value != newval)) {
-                    var->value = (uint64_t)newval;
+                // The type has changed or this is the same type and the value has changed
+                if(types[i] != var->type || (var->type == EXTVARS_TYPE_INT && (int)var->value.i != newval)) {
+                    var->value.i = newval;
                     notifiable = 1;
                 }
                 break;
@@ -178,9 +182,9 @@ static swi_status_t treehdl_set(void *user_ctx, int nvars, ExtVars_id_t *vars, v
             case EXTVARS_TYPE_BOOL: {
                 int newval = *(int *) values[i];
                 SWI_LOG("TREEHDL", DEBUG, "%s: Pushing boolean value %d for var %d\n", __FUNCTION__, newval, var->id);
-        // The type has changed or this is the same type and the value has changed
-                if((types[i] != var->type) || (var->type == EXTVARS_TYPE_BOOL && ((int)var->value != newval))) {
-                    var->value = (uint64_t)newval & 0x1;
+                // The type has changed or this is the same type and the value has changed
+                if((types[i] != var->type) || (var->type == EXTVARS_TYPE_BOOL && ((int)var->value.i != newval))) {
+                    var->value.i = newval & 0x1;
                     notifiable = 1;
                 }
                 break;
@@ -188,17 +192,17 @@ static swi_status_t treehdl_set(void *user_ctx, int nvars, ExtVars_id_t *vars, v
             case EXTVARS_TYPE_DOUBLE: {
                 double newval = *(double *) values[i];
                 SWI_LOG("TREEHDL", DEBUG, "%s: Pushing double value %lf for var %d\n", __FUNCTION__, newval, var->id);
-        // The type has changed or this is the same type and the value has changed
-                if(types[i] != var->type || (var->type == EXTVARS_TYPE_DOUBLE && (double)var->value != newval)) {
-                    var->value = (uint64_t)newval;
+                // The type has changed or this is the same type and the value has changed
+                if(types[i] != var->type || (var->type == EXTVARS_TYPE_DOUBLE && (double)var->value.d != newval)) {
+                    var->value.d = newval;
                     notifiable = 1;
                 }
                 break;
-            }
-            case EXTVARS_TYPE_NIL:
+            } 
+           case EXTVARS_TYPE_NIL:
                 SWI_LOG("TREEHDL", DEBUG, "%s: Deleting var %d", __FUNCTION__, var->id);
                 notifiable = 1;
-            default:
+           default:
                 break;
         }
 
@@ -207,7 +211,7 @@ static swi_status_t treehdl_set(void *user_ctx, int nvars, ExtVars_id_t *vars, v
             SWI_LOG("TREEHDL", DEBUG, "%s: Notifications enabled, marking var %d for notification\n", __FUNCTION__, var->id);
             notified_ids[inotified] = var->id;
             notified_types[inotified]  = var->type;
-            notified_values[inotified] = (var->type == EXTVARS_TYPE_STR) ? (void *)var->value : &var->value;
+            notified_values[inotified] = (var->type == EXTVARS_TYPE_STR) ? (void *)var->value.s : &var->value.d;
             inotified++;
         }
     }
@@ -221,7 +225,7 @@ static swi_status_t treehdl_set(void *user_ctx, int nvars, ExtVars_id_t *vars, v
         memcpy(args->notified_values, notified_values, sizeof(void *) * NVARS);
         args->inotified = inotified;
         pthread_create(&t, NULL, notify_async, args);
-    pthread_detach(t);
+        pthread_detach(t);
 #else
         notify(notify_ctx, inotified, notified_ids, notified_values, notified_types);
 #endif
@@ -231,7 +235,7 @@ static swi_status_t treehdl_set(void *user_ctx, int nvars, ExtVars_id_t *vars, v
 
 /* These functions are called when treemgr requires notifications for a specific node
    or for all existing nodes attached to the root node (treehdlsample) */
-static swi_status_t treehdl_register_var(void *user_ctx, ExtVars_id_t id, int enable)
+swi_status_t ExtVars_register_variable(ExtVars_id_t id, int enable)
 {
     SWI_LOG("TREEHDL", DEBUG, "%s: id=%d, enable=%d\n", __FUNCTION__, id, enable);
 
@@ -242,7 +246,7 @@ static swi_status_t treehdl_register_var(void *user_ctx, ExtVars_id_t id, int en
     return SWI_STATUS_OK;
 }
 
-static swi_status_t treehdl_register_all( void *user_ctx, int enable)
+swi_status_t ExtVars_register_all(int enable)
 {
     SWI_LOG("TREEHDL", DEBUG, "%s\n", __FUNCTION__);
     all_vars_registered = enable;
@@ -251,7 +255,7 @@ static swi_status_t treehdl_register_all( void *user_ctx, int enable)
 
 // This function is called when the tree manager needs to list all existing nodes
 // attached to the root node (treehdlsample)
-static swi_status_t treehdl_list( void *user_ctx, int *nvars, ExtVars_id_t **vars)
+swi_status_t ExtVars_list(int *nvars, ExtVars_id_t **vars)
 {
     static int initialized = 0;
     static ExtVars_id_t _vars[NVARS];
@@ -266,28 +270,4 @@ static swi_status_t treehdl_list( void *user_ctx, int *nvars, ExtVars_id_t **var
     if (vars) *vars = _vars;
     if (nvars) *nvars = NVARS;
     return SWI_STATUS_OK;
-}
-
-// This is the entry point for the Lua module and the function
-// which initializes and export the public API to the extvars library
-int luaopen_agent_devman_extvars_treehdlsample(lua_State *L)
-{
-    int i;
-    struct ExtVars_API_t treehdl_api = {
-        .user_ctx = NULL,
-    .initialize = NULL,
-    .destroy = NULL,
-        .get = treehdl_get,
-    .get_release = NULL,
-        .set = treehdl_set,
-        .set_notifier = treehdl_set_notifier,
-        .list = treehdl_list,
-    .list_release = NULL,
-        .register_var = treehdl_register_var,
-        .register_all = treehdl_register_all
-    };
-    treehdlvars[2].value = (uint64_t)strdup("");
-    for (i = 4; i < NVARS; i++)
-        treehdlvars[i].type = EXTVARS_TYPE_NIL;
-    return ExtVars_return_handler(L, "agent.devman.extvars.treehdlsample", &treehdl_api);
 }

@@ -26,7 +26,7 @@ SET(HDL_DST ${CMAKE_INSTALL_PREFIX}/lua/agent/treemgr/handlers)
 # TODO: move with aleosstub
 # If aleosstub is built, install its map
 ADD_CUSTOM_TARGET(agent_treemgr_treehdlsample
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MAP_SRC}/treehdlsample.map$ {MAP_DST}/treehdlsample.map)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MAP_SRC}/treehdlsample.map ${MAP_DST}/treehdlsample.map)
 
 ADD_CUSTOM_TARGET(agent_treemgr_agentconfig
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${HDL_SRC}/agentconfig.lua ${HDL_DST}/agentconfig.lua

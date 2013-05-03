@@ -27,7 +27,7 @@ SET_TARGET_PROPERTIES(agent_versions PROPERTIES OUTPUT_NAME versions)
 ADD_SUBDIRECTORY(agent)
 
 ADD_CUSTOM_TARGET(agent ALL)
-ADD_DEPENDENCIES(agent agent_exec agent_modules)
+ADD_DEPENDENCIES(agent agent_exec agent_modules extvars)
 
 ADD_CUSTOM_COMMAND(TARGET agent POST_BUILD
     COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/crypto

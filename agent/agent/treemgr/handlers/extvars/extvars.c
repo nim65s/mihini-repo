@@ -8,33 +8,49 @@
  * Contributors:
  *     Laurent Barthelemy for Sierra Wireless - initial API and implementation
  *     Fabien Fleutot     for Sierra Wireless - initial API and implementation
+ *     Romain Perier      for Sierra Wireless - initial API and implementation
  *******************************************************************************/
+
+#include <stdlib.h>
+#include <errno.h>
+#include <dlfcn.h>
+#include <string.h>
+#include <pthread.h>
+#include <semaphore.h>
+
 #include "lua.h"
 #include "lauxlib.h"
-#include "extvars.h"
-#include "extvars_hdl.h"
-#include "pthread.h"
 #include "luasignal.h"
-#include <string.h> // strlen, strcpy
-#include <lstate.h> // G( L)->mainthread
+#include "lstate.h"
+#include "extvars.h"
 
-#define NOMALLOC // Depend on Lua allocator rather than malloc.h
+typedef struct
+{
+  char *name;
+  swi_status_t (*set)(int nvars, ExtVars_id_t *vars, void** values, ExtVars_type_t* types);
+  swi_status_t (*get) (ExtVars_id_t var, void **value, ExtVars_type_t *type);
+  swi_status_t (*register_var) (ExtVars_id_t var, int enable);
+  swi_status_t (*register_all) (int enable);
+  swi_status_t (*list)(int *nvars, ExtVars_id_t **vars);
+  swi_status_t (*get_release)(ExtVars_id_t var, void *value, ExtVars_type_t type);
+  swi_status_t (*list_release)(int nvars, ExtVars_id_t *vars);
+} ExtVars_Mod_t;
 
-#ifndef NOMALLOC
-#include <malloc.h>
-#endif
+static inline ExtVars_Mod_t *checkmod(lua_State *L)
+{
+    return (ExtVars_Mod_t *)luaL_checkudata(L, 1, "extvars_handler");
+}
 
 /* Static variables needed to handle and synchronize variable change notifications.
- * This structure is a signleton. */
+/ * This structure is a signleton. */
 #define NOTIFY_SIGEMITTER "ExtVars"
 #define NOTIFY_SIGEVENT   "CNotify"
 
-static struct notify_buffer_t {
-
-    int initialized;                   // set to zero before the first C ctx is loaded.
+static struct notify_buffer_t
+{
     pthread_t            lua_thread;   // thread in which the Lua VM runs
     pthread_mutex_t      inprogress;   // ensure there's only one notification in progress
-    pthread_mutex_t      handled;      // unlocked by Lua thread to signal handling completion
+    sem_t                handled;      // released by Lua thread to signal handling completion
     lua_State           *L;            // lua state, in which notifications can be handled
     LuaSignalCtx        *luasigctx;    // context for luasignal emissions
 
@@ -45,22 +61,7 @@ static struct notify_buffer_t {
     void               **values;       // variable values
     ExtVars_type_t      *types;        // variable types
 
-} notify_buffer = { 0 };               // ensure that initialize==0
-
-
-struct ExtVars_ctx_t {
-  const char *name;
-  void                           *user_ctx;
-  Extvars_destroy_t              *destroy;
-  ExtVars_get_variable_t         *get;
-  ExtVars_get_variable_release_t *get_release;
-  ExtVars_set_variables_t        *set;
-  ExtVars_list_t                 *list;
-  ExtVars_list_release_t         *list_release;
-  ExtVars_register_variable_t    *register_var;
-  ExtVars_register_all_t         *register_all;
-};
-
+} notify_buffer;
 
 #define RETURN_ERROR_NUMBER( name, i) do { \
     lua_pushnil( L); \
@@ -75,13 +76,7 @@ struct ExtVars_ctx_t {
 } while( 0)
 
 #define RETURN_OK do{ lua_pushstring( L, "ok"); return 1; } while( 0)
-
-/* Either retrieve an ExtVar ctx from proxy object at stack index i,
- * or throw an error, as do luaL_checkxxx() functions. */
-static ExtVars_ctx_t *checkctx( lua_State *L, int i) {
-    ExtVars_ctx_t *ctx = lua_touserdata( L, i);
-    return ctx;
-}
+#define RETURN_DA_NOT_FOUND do { lua_pushnil(L); lua_pushnil(L); return 2;} while(0)
 
 /* Return whether the object at specified stack index is a nil token. */
 static int isniltoken(lua_State *L, int index) {
@@ -102,15 +97,15 @@ static int isniltoken(lua_State *L, int index) {
 /* Called from `api_get`: add the list of every child id to children_set. */
 static int get_all_var_names( lua_State *L) {
     // Initial stack state: ctx, hpath=="" (irrelevant)
-    ExtVars_ctx_t *ctx = checkctx( L, 1);
+    ExtVars_Mod_t *mod = checkmod(L);
     int nvars, *vars, i;
     swi_status_t r;
 
     lua_newtable( L); // ctx, "", children_set
 
-    if( ! ctx->list) return 0; /* Var listing not implemented */
+    if( ! mod->list) return 0; /* Var listing not implemented */
 
-    r = ctx->list( ctx->user_ctx, & nvars, & vars);
+    r = mod->list(&nvars, &vars);
 
     if( r) RETURN_ERROR_NUMBER( "get", r);
 
@@ -121,36 +116,43 @@ static int get_all_var_names( lua_State *L) {
         lua_settable(    L, -3);      // ctx, "", children_set
     }
 
-    if( ctx->list_release) ctx->list_release( ctx->user_ctx, nvars, vars);
-
     lua_pushnil(   L);     // ctx, "", children_set, nil
     lua_pushvalue( L, -2); // ctx, "", children_set, nil, children_set
+    if (mod->list_release)
+        mod->list_release(nvars, vars);
     return 2;              // return nil, children_set
 }
 
 /* Called from `api_get`: push the appropriate value, retrieved from callback, on the Lua stack. */
 static int get_leaf_value( lua_State *L) {
-    // Initial stack state: ctx, numeric hpath
-    ExtVars_ctx_t *ctx = checkctx( L, 1);
+    ExtVars_Mod_t *mod = checkmod(L);
     int var = (int) lua_tonumber( L, 2);
     ExtVars_type_t  type;
     void       *value;
     swi_status_t   r;
 
-    if(!lua_isnumber(L, 2)) RETURN_ERROR_STRING( "Not a numeric variable name");
+    if(!lua_isnumber(L, 2)) RETURN_DA_NOT_FOUND;
 
-    r = ctx->get( ctx->user_ctx, var, & value, & type);
+    r = mod->get(var, & value, & type);
 
-    if( r) RETURN_ERROR_NUMBER( "get", r);
-
-    switch( type) {
-    case EXTVARS_TYPE_STR:    lua_pushstring(  L, (const char *) value); break;
-    case EXTVARS_TYPE_INT:    lua_pushinteger( L, *(int*)        value); break;
-    case EXTVARS_TYPE_DOUBLE: lua_pushnumber(  L, *(double*)     value); break;
-    case EXTVARS_TYPE_BOOL:   lua_pushboolean( L, *(int*)        value); break;
-    default:                  RETURN_ERROR_STRING( "Unknown ExtVars type"); // TODO get_release leak
+    if(r) {
+        if (r == SWI_STATUS_DA_NOT_FOUND) {
+            RETURN_DA_NOT_FOUND;
+        }
+        else {
+            RETURN_ERROR_NUMBER( "get", r);
+	}
     }
-    if( ctx->get_release) ctx->get_release( ctx->user_ctx, var, & value, & type);
+    switch( type) {
+        case EXTVARS_TYPE_STR:    lua_pushstring(  L, value ? (const char *) value : ""); break;
+        case EXTVARS_TYPE_INT:    lua_pushinteger( L, *(int*)        value); break;
+        case EXTVARS_TYPE_DOUBLE: lua_pushnumber(  L, *(double*)     value); break;
+        case EXTVARS_TYPE_BOOL:   lua_pushboolean( L, *(int*)        value); break;
+        case EXTVARS_TYPE_NIL:    lua_pushnil(L); break;
+        default:                  RETURN_ERROR_STRING( "Unknown ExtVars type"); // TODO get_release leak
+    }
+    if (mod->get_release)
+        mod->get_release(var, value, type);
     return 1;
 }
 
@@ -161,20 +163,21 @@ static int get_leaf_value( lua_State *L) {
  *
  * * the only non-leaf node is the root node, i.e. the tree is of depth 1 *
  * * each leaf name is a number. */
-static int api_get( lua_State *L) {
+static int api_get(lua_State *L)
+{
     // Initial stack state: ctx, hpath, children_set
     size_t len;
     luaL_checklstring( L, 2, & len); // We only want to know whether it's empty
-    if( 0 == len) return get_all_var_names( L);
-    else return get_leaf_value( L);
+    return (len == 0) ? get_all_var_names(L) : get_leaf_value(L);
 }
+
 
 /* Takes an hmap,
  * converts it into nvars / vars / values / types,
  * calls the corresponding `set` C callback. */
 static int api_set( lua_State *L) {
     // Initial stack state: ctx, hmap
-    ExtVars_ctx_t *ctx = checkctx( L, 1);
+    ExtVars_Mod_t *mod = checkmod(L);
     int n_entries = 0, n_ints = 0, n_numbers = 0;
     int val_false = 0, val_true = 1;
 
@@ -200,13 +203,13 @@ static int api_set( lua_State *L) {
             sizeof( ExtVars_type_t) * n_entries + /* types        */
             sizeof( int)            * n_ints    + /* ints         */
             sizeof( lua_Number)     * n_numbers;  /* doubles      */
-#    ifdef NOMALLOC
+#ifdef NOMALLOC
     void *alloc_ctx;
     lua_Alloc allocf = lua_getallocf( L, & alloc_ctx);
     void *chunk = allocf( alloc_ctx, NULL, 0, chunk_size);
-#    else
+#else
     void *chunk = malloc( chunk_size);
-    #endif
+#endif
     if( ! chunk) RETURN_ERROR_STRING( "Not enough memory");
 
     int            *variables = (int*)            chunk;
@@ -256,7 +259,7 @@ static int api_set( lua_State *L) {
         i++;
     } // ctx, hmap
 
-    swi_status_t r = ctx->set( ctx->user_ctx, n_entries, variables, values, types);
+    swi_status_t r = mod->set(n_entries, variables, values, types);
 
     /* Lua-allocated chunks are freed by reallocating them to a 0 size. */
 #ifdef NOMALLOC
@@ -268,15 +271,18 @@ static int api_set( lua_State *L) {
 }
 
 static int register_unregister( lua_State *L, int enable) {
-    ExtVars_ctx_t *ctx = checkctx( L, 1);
+    ExtVars_Mod_t *mod = checkmod(L);
     if( lua_isstring( L, 2) && lua_objlen( L, 2) == 0) {
-        if( ctx->register_all) {
-            swi_status_t r = ctx->register_all( ctx->user_ctx, enable);
+        if(mod->register_all) {
+	    swi_status_t r = mod->register_all(enable);
             if( r) RETURN_ERROR_NUMBER( "register", r);
         }
     } else {
-        if( ctx->register_var) {
-            swi_status_t r = ctx->register_var( ctx->user_ctx, luaL_checkint( L, 2), enable);
+      if (! lua_isnumber(L, 2)) {
+	    RETURN_OK;
+        }
+        else if(mod->register_var) {
+            swi_status_t r = mod->register_var(luaL_checkint( L, 2), enable);
             if( r) RETURN_ERROR_NUMBER( "register", r);
         }
     }
@@ -296,7 +302,6 @@ static int handle_notification( lua_State *L) {
     int i, r;
 
     // TODO: register notify in a faster-to-reach place
-
     lua_getglobal(  L, "require");                   // require
     lua_pushvalue(  L, -1);                          // require, require
     lua_pushstring( L, "sched");                     // require, require, "sched"
@@ -324,8 +329,8 @@ static int handle_notification( lua_State *L) {
         }                      // require, sched, run, notify, hname, hmap, id_string, value
         lua_settable( L, -3);  // require, sched, run, notify, hname, hmap[id_string=value]
     }                          // require, sched, run, notify, hname, hmap
-    r =lua_pcall( L, 3, 0, 0);
-    pthread_mutex_unlock( & notify_buffer.handled); /* Allow next notification. */
+    r = lua_pcall( L, 3, 0, 0);
+    sem_post(&notify_buffer.handled); /* Allow next notification. */
 
     if( r) { // require, sched, error_msg
         printf("Error during notification: %s\n", lua_tostring( L, -1));
@@ -346,107 +351,134 @@ static int handle_notification( lua_State *L) {
  *   the notification handler, and waits until the handling is completed; completion
  *   is signaled by the release of a dedicated `notify_buffer->handled` mutex.
  */
-static swi_status_t trigger_notification(
-        struct ExtVars_ctx_t *ctx,
-        int nvars, ExtVars_id_t* vars, void** values, ExtVars_type_t* types) {
+static swi_status_t trigger_notification(void *ctx, int nvars, ExtVars_id_t* vars, void** values, ExtVars_type_t* types) {
 
+    ExtVars_Mod_t *mod = (ExtVars_Mod_t *)ctx;
     /* make sure that only one notification is in progress. */
-    pthread_mutex_lock( & notify_buffer.inprogress);
+    pthread_mutex_lock(&notify_buffer.inprogress);
 
-    int in_lua_thread = (pthread_self() == notify_buffer.lua_thread);
-
-    notify_buffer.handler_name = ctx->name;
+    notify_buffer.handler_name = mod->name;
     notify_buffer.nvars        = nvars;
     notify_buffer.vars         = vars;
     notify_buffer.values       = values;
     notify_buffer.types        = types;
 
-    if( in_lua_thread) { /* Direct nested call */
-        handle_notification( notify_buffer.L);
+    if(pthread_self() == notify_buffer.lua_thread) { /* Direct nested call */
+        handle_notification(notify_buffer.L);
     } else { /* Triggered through a pre-subscribed Lua signal */
         LUASIGNAL_SignalT( notify_buffer.luasigctx, NOTIFY_SIGEMITTER, NOTIFY_SIGEVENT, NULL);
     }
 
-    /* If this function runs in the lua thread, the `handled` mutex has already been released by the
+    /* If this function runs in the lua thread, the `handled` semaphore has already been released by the
      * Lua notification handler.
      *
      * If this thread is not the lua thread, the lua signal sent above will eventually cause the lua
-     * handler to run, which will eventually unlock the `handled` mutex.
+     * handler to run, which will eventually release the `handled` sem.
      * Until this happens, the current thread pauses, and the notification ctx won't be altered. */
-    pthread_mutex_lock( & notify_buffer.handled);
+    sem_wait(&notify_buffer.handled);
 
-    /* `trigger_notification` can be called again. */
-    pthread_mutex_unlock( & notify_buffer.inprogress);
+    pthread_mutex_unlock(&notify_buffer.inprogress);
 
     return SWI_STATUS_OK;
 }
 
-int ExtVars_return_handler(lua_State *L, const char *module_name, const struct ExtVars_API_t* api) {
-    if( ! module_name) module_name = luaL_checkstring( L, 1);
 
-    void *udata = lua_newuserdata( L, sizeof( struct ExtVars_ctx_t) + strlen( module_name) + 1); // udata
+static luaL_Reg hdlr[] = {
+  {"get", api_get},
+  {"set", api_set},
+  {"register", api_register},
+  {"unregister", api_unregister},
+  {NULL, NULL}
+};
 
-    struct ExtVars_ctx_t *ctx = udata;
-    char *name_copy = (char *) (ctx + 1); // strcpy will need a char* dst, not a const char*
-    memset( ctx, 0, sizeof( * ctx));
-    strcpy( name_copy, module_name);
+static int l_load(lua_State *L)
+{
+  const char *name, *path;
+  void *handler;
+  ExtVars_Mod_t *mod;
+ 
+  name = luaL_checkstring(L, 1);
+  path = luaL_checkstring(L, 2);
+  handler = dlopen(path, RTLD_LAZY | RTLD_LOCAL);
 
-    ctx->name           = (const char *) name_copy;
-    ctx->user_ctx       = api->user_ctx;
-    ctx->destroy        = api->destroy;
-    ctx->get            = api->get;
-    ctx->get_release    = api->get_release;
-    ctx->set            = api->set;
-    ctx->list           = api->list;
-    ctx->list_release   = api->list_release;
-    ctx->register_var   = api->register_var;
-    ctx->register_all   = api->register_all;
+  if (handler == NULL) {
+    lua_pushnil(L);
+    lua_pushstring(L, dlerror());
+    return 2;
+  }
 
-    if( api->initialize)   api->initialize(   ctx->user_ctx);
-    if( api->set_notifier) api->set_notifier( ctx->user_ctx, trigger_notification, ctx);
-
-    /* Create the Lua handler. */
-    lua_newtable( L); // udata, mt
-#   define REG( name) lua_pushcfunction( L, api_##name); lua_setfield( L, -2, #name)
-    REG( get);
-    REG( set);
-    REG( register);
-    REG( unregister);
-#   undef REG
-    lua_pushvalue(    L, -1);            // udata, mt, mt
-    lua_setfield(     L, -2, "__index"); // udata, mt[__index=mt]
-    lua_setmetatable( L, -2);            // udata[metatable=mt]
-
-    /* Initialize the shared part of the notification buffer.
-     * Must happen only once, even if there are several handlers. */
-    if( ! notify_buffer.initialized) {
-        int r;
-        /* Save the main thread, not the current one which might be garbage collected. */
-        notify_buffer.L = G( L)->mainthread;
-        notify_buffer.lua_thread = pthread_self();
-
-        r = LUASIGNAL_Init( & notify_buffer.luasigctx, 18888, NULL, NULL);
-        if( r) RETURN_ERROR_NUMBER( "newhandler/luasignal", r);
-
-        r = pthread_mutex_init( & notify_buffer.handled, NULL);
-        if( r) RETURN_ERROR_NUMBER( "newhandler/mutex", r);
-        r = pthread_mutex_init( & notify_buffer.inprogress, NULL);
-        if( r) RETURN_ERROR_NUMBER( "newhandler/mutex", r);
-        pthread_mutex_lock( & notify_buffer.handled);
-
-        /* Subscribe the notification handler to the signal, for notifications
-         * triggered from outside the Lua thread. */
-        lua_getglobal(     L, "require");           // udata, require
-        lua_pushstring(    L, "sched");             // udata, require, "sched"
-        lua_call(          L, 1, 1);                // udata, sched
-        lua_getfield(      L, -1, "sighook");       // udata, sched, sighook
-        lua_pushstring(    L, NOTIFY_SIGEMITTER);   // udata, sched, sighook, emitter
-        lua_pushstring(    L, NOTIFY_SIGEVENT);     // udata, sched, sighook, emitter, event
-        lua_pushcfunction( L, handle_notification); // udata, sched, sighook, emitter, event, f
-        lua_call(          L, 3, 0);                // udata, sched
-        lua_pop(           L, 1);                   // udata
-
-        notify_buffer.initialized = 1;
+  swi_status_t (*init)(void) = dlsym(handler, "ExtVars_initialize");
+  if (init) {
+    swi_status_t res = init();
+    if (res) {
+      lua_pushnil(L);
+      lua_pushfstring(L, "ExtVars: Failed to initialize the treehandler %s [error code = %d]\n", path, res);
+      return 2;
     }
-    return 1; // udata
+  }
+
+  mod = (ExtVars_Mod_t *)lua_newuserdata(L, sizeof(ExtVars_Mod_t));
+  mod->name = strdup(name);
+  mod->set = dlsym(handler, "ExtVars_set_variables");
+  mod->get = dlsym(handler, "ExtVars_get_variable");
+  mod->register_var = dlsym(handler, "ExtVars_register_variable");
+  mod->register_all = dlsym(handler, "ExtVars_register_all");
+  mod->list = dlsym(handler, "ExtVars_list");
+  mod->get_release = dlsym(handler, "ExtVars_get_variable_release");
+  mod->list_release = dlsym(handler, "ExtVars_list_release");
+
+  if (mod->get == NULL) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "ExtVars: %s: missing required operation \"get\"", path);
+    return 2;
+  }
+
+  void (*set_notifier)(void *, ExtVars_notify_t *) = dlsym(handler, "ExtVars_set_notifier");
+  if (set_notifier)
+    set_notifier(mod, trigger_notification);
+
+  notify_buffer.L = G( L)->mainthread;
+  notify_buffer.lua_thread = pthread_self();
+  pthread_mutex_init(&notify_buffer.inprogress, NULL);
+  sem_init(&notify_buffer.handled, 0, 0);
+
+  
+  int r = LUASIGNAL_Init(&notify_buffer.luasigctx, 18888, NULL, NULL);
+  if(r) 
+    RETURN_ERROR_NUMBER( "newhandler/luasignal", r);
+
+  /* Subscribe the notification handler to the signal, for notifications
+   * triggered from outside the Lua thread. */
+  lua_getglobal(L, "require");
+  lua_pushstring(L, "sched");
+  lua_call(L, 1, 1);
+  lua_getfield(L, -1, "sighook");
+  lua_pushstring(L, NOTIFY_SIGEMITTER);
+  lua_pushstring(L, NOTIFY_SIGEVENT);
+  lua_pushcfunction(L, handle_notification);
+  lua_call(L, 3, 0);
+  lua_pop(L, 1);
+
+  luaL_getmetatable(L, "extvars_handler");
+  lua_setmetatable(L, -2);
+  return 1;
+}
+
+static const luaL_Reg R[] =
+{
+    { "load", l_load },
+    { NULL, NULL }
+};
+
+int luaopen_agent_treemgr_handlers_extvars(lua_State* L)
+{
+    luaL_newmetatable(L, "extvars_handler");
+
+    /* mt.__index = mt */
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -2, "__index");
+
+    luaL_register(L, NULL, hdlr);
+    luaL_register(L, "extvars", R);
+    return 1;
 }

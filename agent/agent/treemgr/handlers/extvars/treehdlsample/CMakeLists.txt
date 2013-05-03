@@ -17,4 +17,4 @@ INCLUDE_DIRECTORIES(
 )
 
 ADD_LUA_LIBRARY(treehdlsample EXCLUDE_FROM_ALL DESTINATION agent/devman/extvars treehdlsample.c)
-TARGET_LINK_LIBRARIES(treehdlsample lib_extvars lib_swi_log)
+TARGET_LINK_LIBRARIES(treehdlsample lib_swi_log)

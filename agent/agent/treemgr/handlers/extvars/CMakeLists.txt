@@ -21,8 +21,7 @@ INCLUDE_DIRECTORIES(
 )
 
 
-ADD_LIBRARY(lib_extvars SHARED EXCLUDE_FROM_ALL extvars.c)
-TARGET_LINK_LIBRARIES(lib_extvars lib_pointerlist lib_luasignal pthread)
-SET_TARGET_PROPERTIES(lib_extvars PROPERTIES OUTPUT_NAME extvars)
+ADD_LUA_LIBRARY(extvars DESTINATION agent/treemgr/handlers extvars.c)
+TARGET_LINK_LIBRARIES(extvars dl pthread lib_luasignal)
 
 ADD_SUBDIRECTORY (treehdlsample)
