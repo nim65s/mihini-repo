@@ -286,11 +286,12 @@ end
 -------------------------------------------------------------------------------
 -- Tries to send an unencrypted and unauthenticated error to the peer, with the
 -- status code explaining the failure.
+-- Disabled (unsupported by server).
 --
-function M :senderror()
-    local envelope = m3da.envelope{ id=self.localid, status=self.last_status or 500 }
-    local src = ltn12.source.chain(ltn12.source.empty(), envelope)
-    self.transport :send (src)
+function M :reporterror()
+    --local envelope = m3da.envelope{ id=self.localid, status=self.last_status or 500 }
+    --local src = ltn12.source.chain(ltn12.source.empty(), envelope)
+    --self.transport :send (src)
 end
 
 -------------------------------------------------------------------------------
@@ -439,7 +440,7 @@ local function protector_factory (unprotected_func)
             local errmsg = tostring(next_nonce)
             log('M3DA-SESSION', 'ERROR', "Failed with status %s: %q",
                 self.last_status or 500, errmsg)
-            if self.last_status ~= "NOREPORT" then self :senderror() end
+            if self.last_status ~= "NOREPORT" then self :reporterror() end
             return nil, errmsg
         end
     end
