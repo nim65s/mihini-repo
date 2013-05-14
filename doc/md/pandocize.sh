@@ -41,7 +41,7 @@ markdown_list="
 
 source_dir="."
 
-while getopts i:g o
+while getopts i:g: o
 do  case "$o" in
     i)  source_dir="$OPTARG";;
     g)  ga_tracker_path="$OPTARG";;

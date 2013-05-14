@@ -11,5 +11,5 @@
 #*******************************************************************************
 
 ADD_CUSTOM_TARGET(mdoc
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/pandocize.sh -i ${CMAKE_CURRENT_SOURCE_DIR} -g \${GA_TRACKER}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/pandocize.sh -i ${CMAKE_CURRENT_SOURCE_DIR} -g \"\${GA_TRACKER}\"
 )
