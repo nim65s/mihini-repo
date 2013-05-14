@@ -1,6 +1,6 @@
 #### Mihini Specifications
 
-This page regroup all stable specifications that are linked to the Embedded framework and Agent module
+This page regroups all stable specifications that are linked to the Embedded framework and Agent modules
 
 - Agent modules
     - [ConfigStore](agent/ConfigStore.html)
