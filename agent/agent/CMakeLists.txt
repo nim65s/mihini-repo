@@ -57,13 +57,14 @@ ADD_LUA_LIBRARY(test_agent DESTINATION tests EXCLUDE_FROM_ALL
     tests/config.lua
     tests/monitoring.lua
     tests/aleosstub.lua tests/time.lua
+    tests/extvars.lua
     tests/mediation.lua tests/mediationtestserver.lua tests/treemgr.lua
     tests/appcon.lua tests/treemgr/treemgr_table1.lua
     tests/treemgr/treemgr_table2.lua
     tests/update/update.lua
 )
 
-ADD_DEPENDENCIES(test_agent test_agent_treemgr_maps)
+ADD_DEPENDENCIES(test_agent test_agent_treemgr_maps treehdlsample)
 
 ADD_CUSTOM_TARGET(test_update_pkgs
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/tests/update/test_packages ${CMAKE_INSTALL_PREFIX}/update/tmp/test_packages

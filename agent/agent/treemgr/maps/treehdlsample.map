@@ -1,7 +1,6 @@
 treemgr agent.devman.extvars.treehdlsample
 
 treehdlsample=
-
 # Symbolic mapping, each var mapped to its logical name (mapping is done statically)
 treehdlsample.int_value = 1
 treehdlsample.double_value = 2

@@ -71,3 +71,4 @@ ADD_CUSTOM_TARGET(test_agent_treemgr_maps
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TREEMGR_TEST_DIR}/testramstore.map ${MAP_DST}/testramstore.map
 )
 
+ADD_DEPENDENCIES(test_agent_treemgr_maps agent_treemgr_treehdlsample)
