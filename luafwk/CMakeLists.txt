@@ -39,6 +39,7 @@ ADD_SUBDIRECTORY (gpio)
 ADD_SUBDIRECTORY (luacdb)
 ADD_SUBDIRECTORY (persist)
 ADD_SUBDIRECTORY (lua-yajl)
+ADD_SUBDIRECTORY (openaes)
 
 ADD_SUBDIRECTORY (racon)
 
@@ -65,6 +66,11 @@ ADD_LUA_LIBRARY(debugger debugger.lua debugintrospection.lua)
 INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
 ADD_LUA_LIBRARY(status status.c)
 TARGET_LINK_LIBRARIES(status lib_swi_statusname)
+
+INCLUDE_DIRECTORIES(${LIB_MIHINI_KEYSTORE_SOURCE_DIR} ${LIB_MD5_SOURCE_DIR})
+ADD_LUA_LIBRARY(hmacmd5 hmacmd5.c)
+TARGET_LINK_LIBRARIES(hmacmd5 lib_md5 lib_keystore)
+
 
 ADD_CUSTOM_TARGET(luafwk)
 ADD_DEPENDENCIES(luafwk mihini_misc mihini_linux bit32 luasignalcmd appmon_daemon serial racon_aliases status)

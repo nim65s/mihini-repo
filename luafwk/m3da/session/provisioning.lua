@@ -5,15 +5,12 @@ local m3da_deserialize = m3da.deserializer()
 
 require 'print'
 
-local cipher = require "crypto.cipher"
-local hmac   = require "crypto.hmac"
-local hash   = require "crypto.hash"
-local ecdh   = require "crypto.ecdh"
+local crypto = require 'm3da.session.security.crypto'
 
 local M = { }
 
 -------------------------------------------------------------------------------
--- Perform bitwise
+-- Performs bitwise XOR on two strings of same length, returns the result.
 local function xor_string(s1, s2)
     assert(#s1==#s2)
     local t1, t2 = { s1 :byte(1, -1) }, { s2 :byte(1, -1) }
@@ -49,11 +46,19 @@ function M.downloadkeys(session)
             handler :update (salt)
             return { autoreg_mac = handler :digest (true) }
         end
-        return handler:filter(), footer
+        
+        local f1 = handler:filter()
+        local function f2(x)
+            print("signing " .. sprint(x))
+            return f1(x)
+        end
+        
+        --return handler:filter(), footer
+        return f2, footer
     end
 
     -- message 1D: send device signing salt (neither signed nor ciphered)
-    local salt_device = session.getnonce()
+    local salt_device = crypto.getnonce()
     local env_1d = ltn12.source.chain(
         ltn12.source.empty(),
         m3da.envelope{ id = session.localid, autoreg_salt = salt_device })
@@ -76,7 +81,8 @@ function M.downloadkeys(session)
         log('M3DA-PROVISIONING', 'DEBUG', "Received server salt %s", sprint(salt_server))
     end
 
-    local privkey_device, pubkey_device = ecdh.new()
+    local privkey_device, pubkey_device = crypto.ecdh_new()
+    if not privkey_device then return nil, "ecdh: "..pubkey_device end
 
     -- message 2D: send signed ECC-DH pubkey (signed with PROVIS_KD + server salt)
     local env_2d_inner = m3da.envelope{ autoreg_pubkey=pubkey_device }
@@ -109,7 +115,7 @@ function M.downloadkeys(session)
     if not pubkey_server or not ctext then return nil, "malformed provisioning response env_2s" end
 
     -- decipher K, compute KS and KD, put in store
-    local secret = ecdh.getsecret(privkey_device, pubkey_server)
+    local secret = crypto.ecdh_getsecret(privkey_device, pubkey_server)
     local secret_md5 = hash.new 'md5' :update (secret) :digest(true)
     local K  = xor_string(secret_md5, ctext)
     log('M3DA-PROVISIONING', 'DEBUG', "Got provisionned key")
@@ -133,6 +139,7 @@ function M.downloadkeys(session)
     log('M3DA-PROVISIONING', 'DEBUG', "Acknowledgment sent")
 
     log('M3DA-PROVISIONING', 'INFO', "Credential provisioning successful")
+
     return 'ok'
 end
 

@@ -9,15 +9,14 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-PROJECT(CLIBS)
-ADD_SUBDIRECTORY (common)
-ADD_SUBDIRECTORY (luasignal)
-ADD_SUBDIRECTORY (bysant)
-ADD_SUBDIRECTORY (SerialFramework)
-ADD_SUBDIRECTORY (libtommath)
-ADD_SUBDIRECTORY (libtomcrypt)
-ADD_SUBDIRECTORY (keystore)
-ADD_SUBDIRECTORY (md5)
-ADD_SUBDIRECTORY (cdb)
-ADD_SUBDIRECTORY (yajl)
-ADD_SUBDIRECTORY (openaes)
+PROJECT(LIB_OPENAES)
+
+INCLUDE_DIRECTORIES(${LIB_OPENAES_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_OPENAES_SOURCE_DIR}/isaac)
+INCLUDE_DIRECTORIES(${LIB_MD5_SOURCE_DIR})
+
+ADD_LIBRARY(lib_openaes SHARED oaes_lib.c isaac/rand.c)
+SET_TARGET_PROPERTIES(lib_openaes PROPERTIES
+    OUTPUT_NAME openaes
+    COMPILE_FLAGS -fPIC) # necessary so that the lib can be used linked in a static code or a shared library
+TARGET_LINK_LIBRARIES(lib_openaes lib_keystore)

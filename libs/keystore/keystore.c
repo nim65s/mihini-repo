@@ -14,7 +14,11 @@
  ******************************************************************************/
 
 #include "keystore.h"
-#include "stdlib.h"
+#include <stdlib.h>
+#include <string.h>
+
+#define CRYPT_OK 0
+#define CRYPT_ERROR 1
 
 /* Define this to get verbose traces and sanity-checks when writing.
  * Warning: traces leak sensitive informations! */
@@ -26,7 +30,6 @@
 #define DBG_TRACE( args)
 #endif
 
-static int get_obfuscation_bin_key( int key_index, unsigned char *key);
 static unsigned char htod(char hex);
 static int get_obfuscated_bin_key(int key_index, unsigned char* obfuscated_bin_key);
 static int set_obfuscated_bin_keys( int first_index, int n_keys, unsigned const char *obfuscated_bin_keys);
@@ -61,7 +64,8 @@ static char *k2s(unsigned char *k) {
  * *WARNING*: In Lua, key indexes are 1-based, whereas in C they are 0-based.
  *   Key number n in Lua is called n-1 in C.
  *
- * @param nonce salt string
+ * @param nonce salt stringint keystore_obfuscate( int index, unsigned char *obfuscated_bin_key, unsigned char *plain_bin_key) {
+ *
  * @param size_nonce number of characters in nonce
  * @param idx_K key index of the main password key (0-based)
  * @param key_CK where the cipher key is written
@@ -69,12 +73,11 @@ static char *k2s(unsigned char *k) {
  *   (128 bits or 256 bits).
  * @return CRYPT_OK or CRYPT_ERROR
  */
-int get_cipher_key(unsigned char* nonce, int size_nonce, int idx_K, unsigned char* key_CK, int size_CK) {
+int get_cipher_key(const unsigned char* nonce, size_t size_nonce, int idx_K, unsigned char* key_CK, int size_CK) {
     unsigned char key_K[16];
 
     /* Preliminary sanity checks */
     if( ! key_CK || ! nonce) return CRYPT_ERROR;
-    if (register_hash( & md5_desc) == -1) return CRYPT_ERROR;
     if(128/8 != size_CK && 256/8 != size_CK) return CRYPT_ERROR;
 
     /* Retrieve keys keyidxL and keyidxR (read and decipher from file,
@@ -84,24 +87,23 @@ int get_cipher_key(unsigned char* nonce, int size_nonce, int idx_K, unsigned cha
     DBG_TRACE(( "\nget_cipher_key()\nPlain cipher key K =\t%s\n", k2s( key_K)));
 
     /* Part common to 128 and 256 bits keys: CK[0...15] = MD5(K, nonce). */
-    hmac_state hmac;
-    int hash = find_hash( "md5");
-    unsigned long sixteen = 16;
-
-    if(( hmac_init( & hmac, hash, (const unsigned char*) key_K, 16))) goto failure;
-    if(( hmac_process( & hmac, nonce, size_nonce))) goto failure;
-    if(( hmac_done( & hmac, key_CK, & sixteen))) goto failure;
+    if(( keystore_hmac_md5( key_K, nonce, size_nonce, key_CK))) goto failure;
 
     DBG_TRACE(( "nonce (size=%d) =\t%s\n", size_nonce, k2s( nonce)));
-
     DBG_TRACE(( "hmac(K, nonce) =\t%s\n", k2s( key_CK)));
 
     /* Part specific to 256 bits keys: CK[16...31] = MD5(K, nonce..nonce). */
     if(256/8 == size_CK) {
-        if(( hmac_init( & hmac, hash, (const unsigned char*) key_K, 16))) goto failure;
-        if(( hmac_process( & hmac, nonce, size_nonce))) goto failure;
-        if(( hmac_process( & hmac, nonce, size_nonce))) goto failure;
-        if(( hmac_done( & hmac, key_CK+16, & sixteen))) goto failure;
+        unsigned char *nonce_twice = malloc(2*size_nonce);
+        if( ! nonce_twice) goto failure;
+        memcpy( nonce_twice, nonce, size_nonce);
+        memcpy( nonce_twice+size_nonce, nonce, size_nonce);
+        int status = keystore_hmac_md5(
+                (const unsigned char *) key_K,
+                (const unsigned char *) nonce_twice, 2*size_nonce,
+                key_CK+16);
+        free( nonce_twice);
+        if( status) goto failure;
     }
 
     memset( key_K, 0, sizeof( key_K));
@@ -112,52 +114,6 @@ int get_cipher_key(unsigned char* nonce, int size_nonce, int idx_K, unsigned cha
     return CRYPT_ERROR;
 }
 
-
-/* Puts the obfuscation key in `obfuscation_bin_key`.
- *
- * No sensitive local variable that can be cleared.
- *
- * @param key_index the 0-based index of the key whose (des)obfuscation is
- *   requested. different key indexes should have different obfuscated
- *   representations, to avoid making it obvious when the same key is used at
- *   several places.
- * @param obfuscation_bin_key where the obfuscation/desobfuscation key is written.
- * @return CRYPT_OK (cannot fail)
- */
-static int get_obfuscation_bin_key( int key_index, unsigned char *obfuscation_bin_key) {
-    unsigned const char unrotated_obfuscation_key[16] = {
-        0x12, 0x95, 0xF2, 0xDC,
-        0x21, 0x59, 0x2F, 0xCD,
-        0x95, 0x21, 0xDC, 0x2F,
-        0xFE, 0xDA, 0xBE, 0xBE };
-    int i;
-    for( i = 0; i < 16; i++) {
-        obfuscation_bin_key[i] = unrotated_obfuscation_key[(i + key_index) % 16];
-    }
-    return CRYPT_OK;
-}
-
-/* Initializes a symmetric ECB cipher context, to obfuscate or deobfuscate keys.
- * Used by `get_plain_bin_key` and `set_plain_bin_keys`.
- *
- * Sensitive local variables to clean: none
- *
- * @param ecb_ctx the encryption context to initialize.
- * @param obfuscation_bin_key the key to use for obfuscation.
- * @return CRYPT_OK or CRYPT_ERROR.
- */
-static int get_ecb_obfuscator(
-        symmetric_ECB *ecb_ctx,
-        unsigned const char *obfuscation_bin_key) {
-    if( register_cipher( & aes_desc) == -1) return CRYPT_ERROR;
-
-    if( ecb_start(
-        find_cipher( "aes"),
-        (const unsigned char*) obfuscation_bin_key,
-        16, 0, ecb_ctx))
-        return CRYPT_ERROR;
-    else return CRYPT_OK;
-}
 
 /* Retrieves the key at `key_index` from file, and deobfuscates it. Resulting plain
  * key is written in plain_bin_key.
@@ -170,31 +126,13 @@ static int get_ecb_obfuscator(
  * @return CRYPT_OK or CRYPT_ERROR.
  */
 int get_plain_bin_key( int key_index, unsigned char* plain_bin_key) {
-     unsigned char obfuscation_bin_key[16], obfuscated_bin_key[16];
+     unsigned char obfuscated_bin_key[16];
 
      DBG_TRACE(( "\nGetting key #%d\n", key_index));
+     if( get_obfuscated_bin_key( key_index, obfuscated_bin_key)) return CRYPT_ERROR;
+     DBG_TRACE(( "Obfuscated key #%d =\t%s\n", key_index, k2s(obfuscated_bin_key)));
 
-    if( get_obfuscation_bin_key( key_index, obfuscation_bin_key)) return CRYPT_ERROR;
-
-    DBG_TRACE(( "Obfuscation key #%d =\t%s\n", key_index, k2s(obfuscation_bin_key)));
-
-    symmetric_ECB ecb_ctx;
-    if( get_ecb_obfuscator( & ecb_ctx, (unsigned const char *) obfuscation_bin_key)) {
-        memset( obfuscation_bin_key, 0, 16);
-        return CRYPT_ERROR;
-    }
-
-    if( get_obfuscated_bin_key( key_index, obfuscated_bin_key)) goto failure;
-    DBG_TRACE(( "Obfuscated key #%d =\t%s\n", key_index, k2s(obfuscated_bin_key)));
-    if( ecb_decrypt( obfuscated_bin_key, plain_bin_key, 16, & ecb_ctx)) goto failure;
-    DBG_TRACE(( "Plain key #%d =   \t%s\n", key_index, k2s(plain_bin_key)));
-
-    memset( obfuscation_bin_key, 0, 16);
-    return CRYPT_OK;
-
-    failure:
-    memset( obfuscation_bin_key, 0, 16);
-    return CRYPT_ERROR;
+     return keystore_deobfuscate( key_index, plain_bin_key, obfuscated_bin_key);
 }
 
 /* Obfuscates and writes the keys `key_index ... key_index + n_keys - 1` in the file.
@@ -207,8 +145,7 @@ int get_plain_bin_key( int key_index, unsigned char* plain_bin_key) {
  * @return CRYPT_OK or CRYPT_ERROR.
  */
 int set_plain_bin_keys(int first_index, int n_keys, unsigned const char *plain_bin_keys) {
-    unsigned char obfuscation_bin_key[16], *obfuscated_bin_keys=NULL;
-    symmetric_ECB ecb_ctx;
+    unsigned char *obfuscated_bin_keys=NULL;
     int status = CRYPT_ERROR; // will be updated to CRYPT_OK when everything will have succeeded
 
     obfuscated_bin_keys = malloc( 16 * n_keys);
@@ -218,12 +155,7 @@ int set_plain_bin_keys(int first_index, int n_keys, unsigned const char *plain_b
     DBG_TRACE(( "\nSetting keys #%d...#%d\n", first_index, first_index+n_keys-1));
     int i;
     for( i=0; i<n_keys; i++) {
-        if( get_obfuscation_bin_key( first_index+i, obfuscation_bin_key)) goto cleanup;
-        DBG_TRACE(( "Obfuscation key #%d =\t%s\n", first_index+i, k2s(obfuscation_bin_key)));
-        if( get_ecb_obfuscator( & ecb_ctx, obfuscation_bin_key)) goto cleanup;
-        if( ecb_encrypt( plain_bin_keys + 16*i, obfuscated_bin_keys + 16*i, 16, & ecb_ctx)) goto cleanup;
-        DBG_TRACE(( "Plain key #%d =   \t%s\n", first_index+i, k2s((unsigned char*) plain_bin_keys + 16*i)));
-        DBG_TRACE(( "Obfuscated key #%d =\t%s\n", first_index+i, k2s(obfuscated_bin_keys + 16*i)));
+        if( keystore_obfuscate( first_index+i, obfuscated_bin_keys + 16*i, plain_bin_keys + 16*i)) goto cleanup;
     }
 
     if( set_obfuscated_bin_keys( first_index, n_keys, obfuscated_bin_keys)) goto cleanup;
@@ -250,9 +182,6 @@ int set_plain_bin_keys(int first_index, int n_keys, unsigned const char *plain_b
         memset( obfuscated_bin_keys, 0, 16);
         free( obfuscated_bin_keys);
     }
-    memset( obfuscation_bin_key, 0, 16);
-    memset( & ecb_ctx, 0, sizeof( ecb_ctx));
-
     return status;
 }
 
