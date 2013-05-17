@@ -44,6 +44,7 @@ local tests = {
   monitoring  = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, -- Disabled
   --time        = { target = {"native"}, environment = "agent", TestPolicy = "OnCommit"}, --needs root user rights
   --appcon      = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, --needs root user rights
+  extvars     = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"},
 
   --Legacy simulated target tests
   --
