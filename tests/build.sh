@@ -46,7 +46,7 @@ cd $DESTDIR
 cmake -DPLATFORM=default $RA_SVNDIR
 
 #Build Agent and tests suites
-make testsauto lua all
+make testsauto mihini_misc lua all
 makeret=$?
 if [ $makeret -ne 0 ]; then
     echo "Make error"

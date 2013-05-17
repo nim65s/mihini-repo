@@ -13,7 +13,6 @@ local tests = {
   --luafwk tests
   --
   bysant      = { target = {"native"}, environment = {"agent", "luafwk"}, TestPolicy = "OnCommit"},
-  crypto      = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"},
   luatobin    = { target = {"native"}, environment = {"agent", "luafwk"}, TestPolicy = "OnCommit"},
   posixsignal = { target = {"native"}, environment = {"agent", "luafwk"}, TestPolicy = "OnCommit"},
   rpc         = { target = {"native"}, environment = {"agent", "luafwk"}, TestPolicy = "OnCommit"},
@@ -45,6 +44,9 @@ local tests = {
   --time        = { target = {"native"}, environment = "agent", TestPolicy = "OnCommit"}, --needs root user rights
   --appcon      = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, --needs root user rights
   extvars     = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"},
+  
+  -- integration tests
+  --crypto      = { target = {"native"}, environment = {"agent"}, TestPolicy = "Daily"},
 
   --Legacy simulated target tests
   --

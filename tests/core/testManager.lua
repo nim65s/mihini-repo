@@ -175,25 +175,6 @@ function managerapi:displayresults()
 
   local stats = self.results
 
-  -- results table has the following content:
-  -- {
-  --   targets = {
-  --     target1results = {testtypes1},
-  --     target2results = {},
-  --     target1results = {}},
-  --   all = {
-  --     nbpassedtests,
-  --     nbfailedtests,
-  --     nberrortests,
-  --     nbtestsuites,
-  --     nbabortedtestsuites,
-  --     passedtests = {},
-  --     failedtests = {},
-  --     abortedtestsuites
-  --     }
-  -- }
-  --
-
   print(" ")
   print(string.rep("=", 41).." Automated Unit Test Report "..string.rep("=", 41))
 
@@ -226,91 +207,91 @@ end
 -- Tests Management
 --------------------------------------------------------------------------------
 
--- Function: loadtestsontarget
--- Description: Load all tests corresponding to "environment" on the target. rpcclient must not be a valid object.
--- Return: success if no error occured, raise an error otherwise
-local function loadtestsontarget(tests, environment, rpcclient)
-  assert(tests, "Tests list has to be a valid table")
-  assert(environment, "environment has to be specified")
-  assert(rpcclient, "RPC client has to be valid")
-
-  if not tests[environment] then
-    print('No tests defined for environment '..environment)
-  else
-    for key, value in pairs(tests[environment]) do
-      rpcclient:call('require', 'tests.'..value)
-      print(value .." loaded")
-    end
-  end
-
-  return "success"
-end
-
--- Function: runluafwktests
--- Description: Run the luafwk specific tests for the current target. Store the results in the target table
--- Return: Nothing
-local function runluafwktests(testmgt, target)
-  print("	Running luafwk tests")
-  target:install()
-
-  target:startlua()
-
-  sched.wait(3)
-  local rpcclient = target:getrpc(true)
-  loadtestsontarget(target.testslist, "luafwk", rpcclient)
-
-  rpcclient:call('startLuaFwkTests')
-  target.luafwkresults = rpcclient:call('LuaFWKgettestsResults')
-  sched.wait(1)
-
-  target:stop()
-end
-
--- Function: runagenttests
--- Description: Run the Reagy Agent local tests for the current target. Store the results in the target table
--- Return: Nothing
-local function runagenttests(testmgt, target)
-  print("	Running agent tests")
-  target:install()
-
-  -- start the Agent on the target
-  target:start()
-
-  sched.wait(10)
-
-  ---------------------------------------
-  -- Initialize the environment on the target. Load a test framework and all defined tests to run
-  local rpcclient = target:getrpc(false)
-  local res,err = rpcclient:call('require', 'tests.embtests')
-  if err then print("ERROR - Loading embedded tests fwk error: "..err) end
-
-  -- Load all tests to run
-  loadtestsontarget(target.testslist, "agent", rpcclient)
-
-  -- Execute tests and retrieve results from remote client
-  --assert(rpcclient:call('runTests'), "ERROR - starting tests on DuT error: ")
-  res, err = rpcclient:call('runTests')
-
-  res,err = rpcclient:call('getResults')
-  assert(res,err, "ERROR - getting tests results error: ")
-
-  --store results in the table
-  target.agentresults = res
-  target:stop()
-end
-
--- Function: runhosttests
--- Description: Run tests of the Ready Agent with communications between the host and the server. Store the results in the target table
--- Return: Nothing
-local function runhosttests(testmgt, target)
-  print("	Running host tests")
-  target:install()
-
-  target:start()
-
-  --target.hostresults
-  target:stop()
-end
+-- -- Function: loadtestsontarget
+-- -- Description: Load all tests corresponding to "environment" on the target. rpcclient must not be a valid object.
+-- -- Return: success if no error occured, raise an error otherwise
+-- local function loadtestsontarget(tests, environment, rpcclient)
+--   assert(tests, "Tests list has to be a valid table")
+--   assert(environment, "environment has to be specified")
+--   assert(rpcclient, "RPC client has to be valid")
+-- 
+--   if not tests[environment] then
+--     print('No tests defined for environment '..environment)
+--   else
+--     for key, value in pairs(tests[environment]) do
+--       rpcclient:call('require', 'tests.'..value)
+--       print(value .." loaded")
+--     end
+--   end
+-- 
+--   return "success"
+-- end
+-- 
+-- -- Function: runluafwktests
+-- -- Description: Run the luafwk specific tests for the current target. Store the results in the target table
+-- -- Return: Nothing
+-- local function runluafwktests(testmgt, target)
+--   print("	Running luafwk tests")
+--   target:install()
+-- 
+--   target:startlua()
+-- 
+--   sched.wait(3)
+--   local rpcclient = target:getrpc(true)
+--   loadtestsontarget(target.testslist, "luafwk", rpcclient)
+-- 
+--   rpcclient:call('startLuaFwkTests')
+--   target.luafwkresults = rpcclient:call('LuaFWKgettestsResults')
+--   sched.wait(1)
+-- 
+--   target:stop()
+-- end
+-- 
+-- -- Function: runagenttests
+-- -- Description: Run the Reagy Agent local tests for the current target. Store the results in the target table
+-- -- Return: Nothing
+-- local function runagenttests(testmgt, target)
+--   print("	Running agent tests")
+--   target:install()
+-- 
+--   -- start the Agent on the target
+--   target:start()
+-- 
+--   sched.wait(10)
+-- 
+--   ---------------------------------------
+--   -- Initialize the environment on the target. Load a test framework and all defined tests to run
+--   local rpcclient = target:getrpc(false)
+--   local res,err = rpcclient:call('require', 'tests.embtests')
+--   if err then print("ERROR - Loading embedded tests fwk error: "..err) end
+-- 
+--   -- Load all tests to run
+--   loadtestsontarget(target.testslist, "agent", rpcclient)
+-- 
+--   -- Execute tests and retrieve results from remote client
+--   --assert(rpcclient:call('runTests'), "ERROR - starting tests on DuT error: ")
+--   res, err = rpcclient:call('runTests')
+-- 
+--   res,err = rpcclient:call('getResults')
+--   assert(res,err, "ERROR - getting tests results error: ")
+-- 
+--   --store results in the table
+--   target.agentresults = res
+--   target:stop()
+-- end
+-- 
+-- -- Function: runhosttests
+-- -- Description: Run tests of the Ready Agent with communications between the host and the server. Store the results in the target table
+-- -- Return: Nothing
+-- local function runhosttests(testmgt, target)
+--   print("	Running host tests")
+--   target:install()
+-- 
+--   target:start()
+-- 
+--   --target.hostresults
+--   target:stop()
+-- end
 
 -- Function: processresults
 -- Description: Aggregate the results to the entire result table. Store the target's results in the table and also sum them with the global other ones
