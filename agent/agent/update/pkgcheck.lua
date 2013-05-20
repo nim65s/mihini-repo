@@ -128,7 +128,7 @@ end
 local checkpackage = function ()
     local f = socket.protect(checkpkg);
     local res, err = f();
-    if not f then
+    if not res then
         log("UPDATE", "INFO", "checkpackage failed: %s", tostring(err))
         return state.stepfinished("failure", 400, string.format("checkpackage: internal error: %s", tostring(err)))
     end
