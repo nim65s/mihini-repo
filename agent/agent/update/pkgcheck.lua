@@ -121,7 +121,7 @@ local function checkpkg()
     data.currentupdate.manifest = manifest
     --no need to call savecurrentupdate: stepfinished will do it for us
     log("UPDATE", "INFO", "Software Update Package from %s protocol is accepted.", data.currentupdate.infos.proto)
-    state.stepfinished("success")
+    return state.stepfinished("success")
 end
 
 -- this should not be necessary but we want to be sure that none of those operation crashes

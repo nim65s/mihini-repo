@@ -502,6 +502,8 @@ function stepfinished(result, resultcode, resultdetails)
     common.savecurrentupdate();
     --start next step
     stepstart()
+
+    return "ok"
 end
 
 
