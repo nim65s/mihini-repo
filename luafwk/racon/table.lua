@@ -168,23 +168,28 @@ end
 -- When a consolidation is declared, a new table (*destination*), whose column
 -- names must be a subset of the *source* table column names, will be created.
 -- Everytime the source table is consolidated, it will flush everything from
--- source and create in a single row  in destination. The values in this row
+-- source and create in a single row in destination. The values in this row
 -- depend on *consolidation method* (average value, minimum, median, ...) which
 -- is set for each column.
 --
 -- A table can have only one consolidation table (trying to set a consolidation
 -- twice will result in a error).
 --
+--     Example : 
+--     --create the polices:
+--     agent.config.data.policy.everyminute={period=60}  --consolidation policy every minute
+--     agent.config.data.policy.every10minutes={period=10*60}  --sending data policy every 10 minutes
 --     --create source and destination tables
 --     local src = asset:newTable('example', {'timestamp', 'temp'}, 'ram', 'never')
---     local dst = src:newConsolidation('consolidated',
---                  { timestamp='median', temp='mean' })
+--     local dst = src:newConsolidation('consolidated', 
+--             { timestamp='median', temp='mean' }, 'everyminute', 'every10minutes')
 --     -- fill data into src
 --     src:pushRow{ timestamp=1, temp=25 }
 --     src:pushRow{ timestamp=2, temp=28 }
 --     src:pushRow{ timestamp=3, temp=25 }
---     src:consolidate() -- will create the row { timestamp=2, temp=26 }
---     dst:send()        -- send only consolidated data to server
+--     
+--     --Every minute, the source table will be consolidated and a row { timestamp=2, temp=26 } will be created in destination
+--     --Every 10 minutes, the consolidated data destination will be sent to server
 --
 -- The data can be consolidated by:
 --
