@@ -538,6 +538,15 @@ end
 --todo to remove:
 local INIT_DONE
 
+local function rest_localupdate_handler(params, payload)
+   return "Not implemented yet"
+end
+
+
+local function rest_status_handler(params, payload)
+   return "Not implemented yet"
+end
+
 --init
 local function init()
     if not INIT_DONE then
@@ -574,6 +583,16 @@ local function init()
             -- or look for local update
             sched.sighook("Agent", "InitDone", function() sched.run(localupdate) end )
         end
+
+	-- register rest commands
+	if type(config.rest) == "table" and config.rest.activate == true then
+	   local rest = require 'agent.rest'
+	   rest.register("update$", "POST", rest_localupdate_handler)
+	   rest.register("update$", "GET", rest_status_handler)
+	else
+	   rest_localupdate_handler = nil
+	   rest_status_handler = nil
+	end
     else
         log("UPDATE", "INFO", "Update service init was already done!")
     end

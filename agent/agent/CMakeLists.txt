@@ -13,7 +13,7 @@
 
 ADD_LUA_LIBRARY(agent_modules DESTINATION agent
     init.lua modem.lua time.lua config.lua mediation.lua netman.lua migration.lua
-    appcon.lua bearer.lua boot.lua autoexec.lua system.lua)
+    appcon.lua bearer.lua boot.lua autoexec.lua system.lua rest.lua)
 
 ADD_LUA_LIBRARY(agent_srvcon DESTINATION agent
     srvcon.lua)
@@ -45,7 +45,7 @@ ADD_DEPENDENCIES(agent_modules
     checks coxpcall lfs log pack
     mihini_linux #posixsignal, fdwrapper etc.
     shell_telnet rpc_sched log_tools
-    ntp
+    ntp web
 
     # Target-specific config
     agent_platform

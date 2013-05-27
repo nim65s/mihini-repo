@@ -99,16 +99,27 @@ function web.handle_request (cx, env)
    env.response_headers = h
 
    if env.method=='POST' then -- get params from body
-       web.handle_post_body (env)
+      web.handle_post_body (env)
+   elseif env.method=='PUT' then
+      web.handle_put_body(env)
    end
 
    local page = web.site[env.url]
-   if not page then web.send_error (env, 404, "Not found"); return end
+   if not page then
+      for pattern, map in pairs(web.site) do
+	 if pattern ~= "" and env.url:match(pattern) then
+	    page = map
+	    break
+	 end
+      end
+   end
+
+   if not page then web.send_error (env, 404, "Not found"); return end 
    if type(page) ~= 'table' then page={content=page} end
 
    env.page = page
 
-   local content = page.content or page[1] or ''
+   local content = page.content or page[1] or nil
    local static_page = type(content)=='string'
 
    -- Setup default response and headers
@@ -143,7 +154,15 @@ function web.handle_request (cx, env)
          end
       end
 
-      content (echo, env)
+      if content ~= nil then
+	 if page.request_type and page.request_type == env.method then
+	    content (echo, env)
+	 elseif not page.request_type then
+	    content (echo, env)
+	 end
+      elseif type(page.contents) == "table" and type(page.contents[env.method]) == "function" then
+	 page.contents[env.method](echo, env)
+      end
       cx :send "0\r\n\r\n" -- Send the terminating empty chunk
    end
 
@@ -248,7 +267,6 @@ end
 -- keep the raw body in env.body.
 -------------------------------------------------------------------------------
 function web.handle_post_body(env)
-    -- TODO: support also PUT, and everything bearing a body actually
     -- TODO: support chunked encoding
     assert (env.method=='POST', "This page must be accessed with POST")
     local rh = env.request_headers
@@ -269,6 +287,35 @@ function web.handle_post_body(env)
     end
     if not data then
         log('WEB','ERROR', "Can't retrieve POST parameters: %q", msg)
+        return { }
+    else
+        env.body = data
+        local ct = rh['content-type']
+        if ct and ct :match 'urlencoded' then env.params = web.url.decode(data) end
+    end
+end
+
+function web.handle_put_body(env)
+    -- TODO: support chunked encoding
+    assert (env.method=='PUT', "This page must be accessed with PUT")
+    local rh = env.request_headers
+    local h_cl, h_cx, h_te =
+        rh['content-length'],
+        rh['connection'],
+        rh['transfer-encoding']
+    local len = h_cl and tonumber(h_cl)
+    local data, msg
+    if len and len>0 then
+        log( 'WEB', 'INFO', "Getting %d bytes of PUT data", len)
+        data, msg = env.channel :receive (len)
+    elseif h_te == "chunked" or h_cx :match "TE" then
+        data, msg = web.read_chunks (env.channel)
+    else
+        log('WEB','ERROR', "Body encoding not supported in PUT handler: env=%s", siprint(2,env))
+        return { }
+    end
+    if not data then
+        log('WEB','ERROR', "Can't retrieve PUT parameters: %q", msg)
         return { }
     else
         env.body = data

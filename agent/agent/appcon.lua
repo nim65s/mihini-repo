@@ -425,6 +425,16 @@ local function init()
     persist.save("ApplicationList", application_list)
     sched.sigrunonce("Agent", "InitDone",  initapps )
     afpathprovisioning()
+
+    -- register rest commands
+    if type(config.rest) == "table" and config.rest.activate == true then
+       local rest = require 'agent.rest'
+       rest.register("application$", "GET", list)
+       rest.register("application/[%w%.]+", "GET", status)
+       rest.register("application/[%w%.]+/start", "PUT", function(params) return start(params:gsub("/start", "")) end)
+       rest.register("application/[%w%.]+/stop", "PUT", function(params) return stop(params:gsub("/stop", "")) end)
+       rest.register("application/[%w%.]+/configure", "PUT", function(params, payload) local id = params:gsub("/configure", ""); return configure(id, payload) end)
+    end
     return "ok"
 end
 
