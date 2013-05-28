@@ -53,6 +53,12 @@ ADD_CUSTOM_TARGET(agent_treemgr_dummy_status_report
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MAP_SRC}/dummystatusreport.map ${MAP_DST}/dummystatusreport.map
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${HDL_SRC}/dummystatusreport.lua ${HDL_DST}/dummystatusreport.lua)
 
+ADD_CUSTOM_TARGET(agent_treemgr_gpio
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MAP_SRC}/gpio.map ${MAP_DST}/gpio.map
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${HDL_SRC}/gpio.lua ${HDL_DST}/gpio.lua)
+
+ADD_DEPENDENCIES(agent_treemgr_gpio gpio)
+
 ADD_DEPENDENCIES(agent_treemgr
     agent_treemgr_agentconfig
     agent_treemgr_monitoring
@@ -61,6 +67,7 @@ ADD_DEPENDENCIES(agent_treemgr
     # agent_treemgr_ramstore
     # agent_treemgr_time
     # agent_treemgr_dummy_status_report
+    # agent_treemgr_gpio
 )
 
 SET(TREEMGR_TEST_DIR ${MIHINI_AGENT_SOURCE_DIR}/agent/tests/treemgr)
