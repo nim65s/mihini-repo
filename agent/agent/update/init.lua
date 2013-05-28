@@ -538,13 +538,22 @@ end
 --todo to remove:
 local INIT_DONE
 
-local function rest_localupdate_handler(params, payload)
-   return "Not implemented yet"
+local function rest_localupdate_handler()
+    return localupdate(nil, false)
 end
 
 
 local function rest_status_handler(params, payload)
-   return "Not implemented yet"
+    return getstatus(payload)
+end
+
+local function update_sink()
+   return function(chunk, err)
+            local handle = io.open(common.dropdir .. "/updatepackage.tar", "a")
+	    local ret = (not chunk) and 1 or handle:write(chunk)
+	    handle:close()
+	    return ret
+	  end
 end
 
 --init
@@ -587,7 +596,7 @@ local function init()
 	-- register rest commands
 	if type(config.rest) == "table" and config.rest.activate == true then
 	   local rest = require 'agent.rest'
-	   rest.register("update$", "POST", rest_localupdate_handler)
+	   rest.register("update$", "POST", rest_localupdate_handler, update_sink())
 	   rest.register("update$", "GET", rest_status_handler)
 	else
 	   rest_localupdate_handler = nil
