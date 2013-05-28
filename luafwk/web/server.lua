@@ -98,12 +98,6 @@ function web.handle_request (cx, env)
    local h = { } -- response headers
    env.response_headers = h
 
-   if env.method=='POST' then -- get params from body
-      web.handle_post_body (env)
-   elseif env.method=='PUT' then
-      web.handle_put_body(env)
-   end
-
    local page = web.site[env.url]
    if not page then
       for pattern, map in pairs(web.site) do
@@ -118,6 +112,12 @@ function web.handle_request (cx, env)
    if type(page) ~= 'table' then page={content=page} end
 
    env.page = page
+
+   if env.method=='POST' then -- get params from body
+      web.handle_post_body (env)
+   elseif env.method=='PUT' then
+      web.handle_put_body(env)
+   end
 
    local content = page.content or page[1] or nil
    local static_page = type(content)=='string'
@@ -275,23 +275,39 @@ function web.handle_post_body(env)
         rh['connection'],
         rh['transfer-encoding']
     local len = h_cl and tonumber(h_cl)
-    local data, msg
+    local data, msg, res
+
     if len and len>0 then
         log( 'WEB', 'INFO', "Getting %d bytes of POST data", len)
-        data, msg = env.channel :receive (len)
+	if env.page.sink then
+	   local src = socket.source("by-length", env.channel, len)
+	   res, msg = ltn12.pump.all(src, env.page.sink)
+	   if not res then log("WEB", "ERROR", "Body decoding error while sending data to page sink (by-length)") end
+	else
+	   data, msg = env.channel :receive (len)
+	end
     elseif h_te == "chunked" or h_cx :match "TE" then
-        data, msg = web.read_chunks (env.channel)
+        if env.page.sink then
+	   local src = socket.source("http-chunked", env.channel, env.request_headers)
+	   res, msg = ltn12.pump.all(src, env.page.sink)
+	   if not res then log("WEB", "ERROR", "Body decoding error while sending data to page sink (http-chunked)") end
+	else
+	   data, msg = web.read_chunks (env.channel)
+	end
     else
         log('WEB','ERROR', "Body encoding not supported in POST handler: env=%s", siprint(2,env))
         return { }
     end
-    if not data then
-        log('WEB','ERROR', "Can't retrieve POST parameters: %q", msg)
-        return { }
-    else
-        env.body = data
-        local ct = rh['content-type']
-        if ct and ct :match 'urlencoded' then env.params = web.url.decode(data) end
+
+    if not env.page.sink then
+       if not data then
+	  log('WEB','ERROR', "Can\'t retrieve POST parameters: %q", msg)
+	  return { }
+       else
+	  env.body = data
+	  local ct = rh['content-type']
+	  if ct and ct :match 'urlencoded' then env.params = web.url.decode(data) end
+       end
     end
 end
 
