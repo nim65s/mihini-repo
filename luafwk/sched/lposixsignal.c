@@ -456,41 +456,45 @@ int socket_select(t_socket n, fd_set *rfds, fd_set *wfds, fd_set *efds,
 }
 
 static int global_select(lua_State *L, const sigset_t* mask, int sigreceived) {
-    int rtab, wtab, itab, ret, ndirty;
+    int rtab, wtab, etab, itab, ret, ndirty;
     t_socket max_fd;
-    fd_set rset, wset;
+    fd_set rset, wset, eset;
     t_timeout tm;
-    double t = luaL_optnumber(L, 3, -1);
-    FD_ZERO(&rset); FD_ZERO(&wset);
-    lua_settop(L, 3);
+    double t = luaL_optnumber(L, 4, -1);
+    FD_ZERO(&rset); FD_ZERO(&wset); FD_ZERO(&eset);
+    lua_settop(L, 4);
     lua_newtable(L); itab = lua_gettop(L);
     lua_newtable(L); rtab = lua_gettop(L);
     lua_newtable(L); wtab = lua_gettop(L);
+    lua_newtable(L); etab = lua_gettop(L);
     max_fd = collect_fd(L, 1, SOCKET_INVALID, itab, &rset);
     ndirty = check_dirty(L, 1, rtab, &rset);
     t = ndirty > 0? 0.0: t;
     timeout_init(&tm, t, -1);
     timeout_markstart(&tm);
     max_fd = collect_fd(L, 2, max_fd, itab, &wset);
+    max_fd = collect_fd(L, 3, max_fd, itab, &eset);
     //printf("+enter select\n");
     if (sigreceived) {
         ret = -1;
     } else {
-        ret = socket_select(max_fd+1, &rset, &wset, NULL, &tm, mask);
+        ret = socket_select(max_fd+1, &rset, &wset, &eset, &tm, mask);
     }
     //printf("+exit select\n");
     if (ret > 0 || ndirty > 0) {
         return_fd(L, &rset, max_fd+1, itab, rtab, ndirty);
         return_fd(L, &wset, max_fd+1, itab, wtab, 0);
+        return_fd(L, &eset, max_fd+1, itab, etab, 0);
         make_assoc(L, rtab);
         make_assoc(L, wtab);
-        return 2;
+        make_assoc(L, etab);
+        return 3; //3 values pushed: 3 result tables
     } else if (ret == 0) {
         lua_pushstring(L, "timeout");
-        return 3;
+        return 4; //4 values pushed: 3 result tables + timeout msg
     } else {
         lua_pushstring(L, strerror(errno));
-        return 3;
+        return 4; //4 values pushed: 3 result tables + errno msg
     }
 }
 /* LUA SOCKET EXPORT*/

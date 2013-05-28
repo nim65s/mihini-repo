@@ -17,7 +17,9 @@ local fdt = {
     wait_read  = { },
     read_func = { },
     wait_write = { },
-    write_func = { }
+    write_func = { },
+    wait_except = { },
+    except_func = { }
 }
 proc.fd = fdt
 
@@ -31,7 +33,7 @@ local monotonic_time = require 'sched.timer.core'.time
 local math_min = math.min
 
 ------------------------------------------------------------------------------
--- Add a file descriptor to a watch list (wait_read or wait_write)
+-- Add a file descriptor to a watch list (wait_read, wait_write or wait_except)
 ------------------------------------------------------------------------------
 local function add_watch(rw, fd, func)
   local t = fdt["wait_"..rw]
@@ -44,7 +46,7 @@ local function add_watch(rw, fd, func)
 end
 
 ------------------------------------------------------------------------------
--- Remove a file descriptor from a watch list (wait_read or wait_write)
+-- Remove a file descriptor from a watch list (wait_read, wait_write or wait_excep)
 ------------------------------------------------------------------------------
 local function remove_watch(rw, fd)
   local t = fdt["wait_"..rw]
@@ -71,15 +73,17 @@ end
 function sched.fd.close(fd)
   remove_watch("read", fd) -- need to keep those remove_watch because some may have been added with when_fd function
   remove_watch("write", fd)
+  remove_watch("except", fd)
   sched.signal(fd, "closed")
 end
 
 ------------------------------------------------------------------------------
 -- local helper function
 -- Wait for a file descriptor to be readable / writable
--- Block until the readable/writable condition is met or the timeout expires
--- Return true when readable/writable or nil followed by the error message
--- which is "timeout" when the given timeout expired
+-- Block until the readable/writable/exception condition is met or the timeout
+-- expires.
+-- Return true when readable/writable/have exception or nil followed by the 
+-- error message which is "timeout" when the given timeout expired.
 ------------------------------------------------------------------------------
 local function wait_fd(rw, fd, timelimit, timedelay)
   local stat, msg = add_watch(rw, fd)
@@ -114,15 +118,24 @@ function sched.fd.wait_writable(fd, timelimit, timedelay)
   return wait_fd("write", fd, timelimit, timedelay)
 end
 
+------------------------------------------------------------------------------
+--
+------------------------------------------------------------------------------
+function sched.fd.wait_exception(fd, timelimit, timedelay)
+  return wait_fd("except", fd, timelimit, timedelay)
+end
+
 
 ------------------------------------------------------------------------------
 -- local helper function
 -- Register func to be called whenever the file descriptor fd is
--- readable/writable func is a function that can return "again" (or
--- something equivalent to true) in order to be called again if the
--- file descriptor is readable/writable again If func return false or
--- nil then the file descriptor is de-registered automatically Calling
--- this function with func=nil de-register the given file descriptor
+-- readable/writable/have exception. 
+-- func is a function that can return "again" (or something equivalent to true)
+-- in order to be called again if the file descriptor is 
+-- readable/writable/have exception again.
+-- If func return false or nil then the file descriptor is de-registered 
+-- automatically.
+-- Calling this function with func=nil de-register the given file descriptor
 ------------------------------------------------------------------------------
 local function when_fd(rw, fd, func)
   if func then
@@ -146,11 +159,17 @@ function sched.fd.when_writable(fd, func)
   return when_fd("write", fd, func)
 end
 
-
+------------------------------------------------------------------------------
+--
+------------------------------------------------------------------------------
+function sched.fd.when_exception(fd, func)
+  return when_fd("except", fd, func)
+end
 
 ------------------------------------------------------------------------------
--- Block on file descriptors until some are readable or the other are writable
---    see wait_read/wait_write list
+-- Block on file descriptors until some are readable or some are writable or
+-- some have exceptions.
+--    see wait_read/wait_write/wait_except list
 -- wait until timeout is reached.
 ------------------------------------------------------------------------------
 local function notify_fd(rw, notified)
@@ -167,19 +186,20 @@ end
 
 ------------------------------------------------------------------------------
 -- the 'require' is performed inside `sched.fd.step`, then the select
--- function is memoized in `socket_select`, in order to avoid a
+-- function is memorized in `fd_select`, in order to avoid a
 -- circular dependency.
 ------------------------------------------------------------------------------
-local socket_select
+local fd_select
 function sched.fd.step(timeout)
-  if not socket_select then local psignal = require 'sched.posixsignal'; socket_select = psignal.select; end -- executed once at first call only !
+  if not fd_select then local psignal = require 'sched.posixsignal'; fd_select = psignal.select; end -- executed once at first call only !
 
-  local can_read, can_write, msg = socket_select(fdt.wait_read, fdt.wait_write, timeout)
+  local can_read, can_write, has_except, msg = fd_select(fdt.wait_read, fdt.wait_write, fdt.wait_except, timeout)
 
   if msg=='timeout' then return 'timeout' end
 
   notify_fd("read", can_read)
   notify_fd("write", can_write)
+  notify_fd("except", has_except)
 end
 
 return sched.fd
