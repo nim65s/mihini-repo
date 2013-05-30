@@ -117,7 +117,12 @@ function M.dosession()
     end
     M.pendingcallbacks = { }
     lock.unlock(M)
-    return status
+
+    if status >= 200 and status <= 299 then
+        return "ok"
+    else
+        return nil, "unexpected status code " .. tostring(r)
+    end
 end
 
 -- Obsolete: former support for data sending through SMS.
