@@ -59,11 +59,11 @@ for md in $markdown_list; do
 	    ln -s ${source_dir}/${category_dir}/images ${category_dir}/images
     fi
 
-    if [ ! -e default.css ]; then
+    if [ ! -e ${category_dir}/default.css ]; then
         ln -s ${source_dir}/default.css ${category_dir}/default.css
     fi
 
-    if [[ -n "$ga_tracker_path" ]]; then
+    if [ -n "$ga_tracker_path" ]; then
         pandoc --standalone --css="default.css" --include-in-header="$ga_tracker_path" --highlight-style=tango ${source_dir}/$md -o ${output}.html || exit 1
     else
         echo "${source_dir}/$md"
