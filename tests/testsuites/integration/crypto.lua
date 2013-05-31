@@ -206,7 +206,7 @@ local function testRegistration(uid, auth, encrypt, key, name)
 
   -- Check results
   u.assert_not_nil(rescon, err)
-  -- TEMP u.assert_equal("ok", rescon) -- "ok" is expected as the only correct result of "agent.srvcon.connect()"
+  u.assert_equal("ok", rescon) -- "ok" is expected as the only correct result of "agent.srvcon.connect()"
   u.assert_not_nil(status)
   u.assert_equal("SUCCESS", status)
 end
@@ -259,8 +259,8 @@ local function testResetToFactory(deviceUID, auth, encrypt, key, name)
   targetManager:stop()
   
   -- Check results
-  -- TEMP u.assert_not_nil(rescon, err)
-  -- TEMP u.assert_equal("ok", rescon) -- "ok" is expected as the only correct result of "agent.srvcon.connect()"
+  u.assert_not_nil(rescon, err)
+  u.assert_equal("ok", rescon) -- "ok" is expected as the only correct result of "agent.srvcon.connect()"
   u.assert_not_nil(status)
   u.assert_equal("SUCCESS", status)
   

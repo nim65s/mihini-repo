@@ -46,8 +46,9 @@ local tests = {
   extvars     = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"},
   
   -- integration tests
-  --crypto      = { target = {"native"}, environment = {"agent"}, TestPolicy = "Daily"},
+  crypto      = { target = {"native"}, environment = {"integration"}, TestPolicy = "Daily"},
 
+  -- end to end tests
   --Legacy simulated target tests
   --
   racoon_serialization = { target = {"linux_x86", "linux_amd64"}, environment = {"agent"}, TestPolicy = "OnCommit"},

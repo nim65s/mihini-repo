@@ -23,12 +23,16 @@ SOURCECODE_DIR=$ROOT_DIR
 
 PROFILE=
 TARGET=default
+NO_CLEAN=0
 
-while getopts 'dmt:C:' OPTION
+while getopts 'dnmt:C:' OPTION
 do
     case $OPTION in
     d)    PROFILE="Debug"
           echo '>>> Set DEBUG option to TRUE'
+                ;;
+    n)    NO_CLEAN=1
+          echo ">>> No clean option activated"
                 ;;
     m)    PROFILE="MinSizeRel"
           echo '>>> Set Minimum Size release option to TRUE'
@@ -39,7 +43,7 @@ do
     C)    BUILD_DIR="$OPTARG"
           echo ">>> Set BUILD DIRECTORY to $OPTARG"
                 ;;
-    *)    printf "Usage: %s: [-d] [-m] [-t target] [-C target_dir]\n" $(basename $0) >&2
+    *)    printf "Usage: %s: [-d] [-n] [-m] [-t target] [-C target_dir]\n" $(basename $0) >&2
             exit 2
                 ;;
     esac
@@ -71,14 +75,18 @@ fi
 SOURCECODE_DIR=$ROOT_DIR
 
 #clean build directory
+#clean build directory
 if [  -d $BUILD_DIR ]
 then
-    rm -fr $BUILD_DIR
-    ret=$?
-    if [ $ret -ne 0 ]
+    if [ $NO_CLEAN -ne 1 ]
     then
-        echo "Command \"rm -fr $BUILD_DIR\" failed"
-        exit $ret
+      rm -fr $BUILD_DIR
+      ret=$?
+      if [ $ret -ne 0 ]
+      then
+          echo "Command \"rm -fr $BUILD_DIR\" failed"
+          exit $ret
+      fi
     fi
 fi
 
