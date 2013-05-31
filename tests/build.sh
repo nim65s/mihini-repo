@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #*******************************************************************************
 # Copyright (c) 2012 Sierra Wireless and others.
 # All rights reserved. This program and the accompanying materials
@@ -9,7 +11,6 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-#!/bin/bash
 
 usage()
 {
