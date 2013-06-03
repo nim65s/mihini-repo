@@ -22,29 +22,28 @@ local function deserialize(str)
    return str and yajl.to_value('['..str..']')[1] or yajl.null
 end
 
-function M.register(URL, type, handler, payload_sink)
-   log("REST", "DEBUG", "Registering handler %p on URL %s for type %s", handler, URL, type)
+function M.register(URL, rtype, handler, payload_sink)
+   log("REST", "DEBUG", "Registering handler %p on URL %s for type %s", handler, URL, rtype)
 
    local closure = function (echo, env)
                        local payload = payload_sink and nil or deserialize(env.body)
                        local res, err = handler(env.url:find("/") and env.url:match("/.*"):sub(2) or nil, payload)
-                       if not res then
-                           if err and type(err) == "string" then
-                               log("WEB", "ERROR", "Unexpected error while executing Rest request %s [err=%d]", env.url, err)
-			   end
-                           return
-	               end
+                       if not res and type(err) == "string" then
+                           log("REST", "ERROR", "Unexpected error while executing rest request %s: %s", env.url, err)
+                           return res, err
+                       end
 	               echo(serialize(res))
+		       return "ok"
                    end
 
    if not web.site[URL] then
       web.site[URL] = {
-	 request_type = type,
+	 request_type = rtype,
 	 content = closure,
-	 sink = (type == "POST" or type == "PUT") and payload_sink or nil
+	 sink = (rtype == "POST" or rtype == "PUT") and payload_sink or nil
       }
    else
-      web.site[URL].contents = { ["" .. web.site[URL].request_type .. ""] = web.site[URL].content, ["" .. type .. ""] = closure }
+      web.site[URL].contents = { ["" .. web.site[URL].request_type .. ""] = web.site[URL].content, ["" .. rtype .. ""] = closure }
       web.site[URL].content = nil
       web.site[URL].request_type = nil
    end

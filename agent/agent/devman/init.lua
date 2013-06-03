@@ -126,11 +126,14 @@ end
 
 local function rest_get_handler(params)
    local v, l = treemgr.get(params)
+   if not v and type(l) == "string" then
+      return v, l
+   end
    return { niltoken(v), l }
 end
 
 local function rest_set_handler(params, payload)
-   local res, err = treemgr.set(params, payload)
+   return treemgr.set(params, payload)
 end
 
 function M.init(cfg)

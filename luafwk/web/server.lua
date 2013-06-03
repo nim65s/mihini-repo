@@ -128,42 +128,58 @@ function web.handle_request (cx, env)
    if   static_page
    then h["Content-Length"] = #content
    else h["Transfer-Encoding"] = "chunked" end
-   env.response = "HTTP/1.1 200 OK"
 
    -- execute the header function, if any
    local hf = page.header
    if hf then assert(type(hf)=='function'); hf(env) end
 
-   -- Send the response and headers
-   cx :send (env.response.."\r\n")
-   for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
-   cx :send '\r\n' -- end of headers
-
    if static_page then
-       cx :send (content)
+      -- Send the response and headers
+      env.response = "HTTP/1.1 200 OK"
+      cx :send (env.response.."\r\n")
+      for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
+      cx :send '\r\n' -- end of headers
+      cx :send (content) -- send the static page
    else
+      local res
       local err = env.error_msg
       if err then
          cx :send (string.format ("%X\r\n%s\r\n0\r\n\r\n", #err, err))
          return
       end
+      local headers_sent = false
       local function echo(...)
+	 if not headers_sent then
+	     env.response = "HTTP/1.1 200 OK"
+	     cx :send (env.response.."\r\n")
+	     for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
+	     cx :send '\r\n' -- end of headers
+	     headers_sent = true
+	 end
          local chunk = table.concat{...}
          if #chunk>0 then
             cx :send (string.format ("%X\r\n", #chunk)..chunk.."\r\n")
          end
       end
 
+      res = nil
+      err = nil
       if content ~= nil then
 	 if page.request_type and page.request_type == env.method then
-	    content (echo, env)
+	    res, err = content (echo, env)
 	 elseif not page.request_type then
-	    content (echo, env)
+	    res, err = content (echo, env)
 	 end
       elseif type(page.contents) == "table" and type(page.contents[env.method]) == "function" then
-	 page.contents[env.method](echo, env)
+	 res, err = page.contents[env.method](echo, env)
       end
-      cx :send "0\r\n\r\n" -- Send the terminating empty chunk
+
+      if not res and type(err) == "string" then
+	 web.send_error (env, 500, "Internal Server Error: " .. err);
+	 return
+      else
+	 cx :send "0\r\n\r\n" -- Send the terminating empty chunk
+      end
    end
 
    -- Connection closing or survival
