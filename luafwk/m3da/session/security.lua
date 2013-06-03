@@ -434,13 +434,13 @@ local function protector_factory (unprotected_func)
         --local success, next_nonce = coxpcall(function() return unprotected_func(self, current_nonce, ...) end, debug.traceback)
         if success then -- success
             persist.save("security.nonce", next_nonce)
-            return 'ok'
+            return self.last_status or 200
         else
             local errmsg = tostring(next_nonce)
             log('M3DA-SESSION', 'ERROR', "Failed with status %s: %q",
                 self.last_status or 500, errmsg)
             if self.last_status ~= "NOREPORT" then self :senderror() end
-            return nil, errmsg
+            return self.last_status or 500
         end
     end
 end
