@@ -538,8 +538,13 @@ end
 --todo to remove:
 local INIT_DONE
 
-local function rest_localupdate_handler()
-    return localupdate(nil, false)
+local function rest_localupdate_handler(env)
+    local sync = false
+    local params = env["params"]
+    if params["sync"] and tonumber(params["sync"]) == 1 then
+        sync = true
+    end
+    return localupdate(nil, sync)
 end
 
 
@@ -599,7 +604,7 @@ local function init()
 	-- register rest commands
 	if type(config.rest) == "table" and config.rest.activate == true then
 	   local rest = require 'agent.rest'
-	   rest.register("update$", "POST", rest_localupdate_handler, update_sink())
+	   rest.register("update[/%w%?]*$", "POST", rest_localupdate_handler, update_sink())
 	   rest.register("update$", "GET", rest_status_handler)
 	else
 	   rest_localupdate_handler = nil
