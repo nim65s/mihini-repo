@@ -124,16 +124,19 @@ local function EMPUnregisterVariable(assetid, dt_id)
     else return errnum 'UNKNOWN_ERROR', (err or "unknown error") end
 end
 
-local function rest_get_handler(params)
-   local v, l = treemgr.get(params)
+local function rest_get_handler(env)
+   local v, l = treemgr.get(env["suburl"])
    if not v and type(l) == "string" then
       return v, l
    end
    return { niltoken(v), l }
 end
 
-local function rest_set_handler(params, payload)
-   return treemgr.set(params, payload)
+local function rest_set_handler(env)
+   if not env["payload"] then
+      return nil, "missing value"
+   end
+   return treemgr.set(env["suburl"], env["payload"])
 end
 
 function M.init(cfg)

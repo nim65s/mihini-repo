@@ -27,7 +27,9 @@ function M.register(URL, rtype, handler, payload_sink)
 
    local closure = function (echo, env)
                        local payload = payload_sink and nil or deserialize(env.body)
-                       local res, err = handler(env.url:find("/") and env.url:match("/.*"):sub(2) or nil, payload)
+                       local suburl = env.url:find("/") and env.url:match("/.*"):sub(2) or nil
+                       local environment = { ["suburl"] = suburl, ["params"] = env.params, ["payload"] = payload}
+                       local res, err = handler(environment)
                        if not res and type(err) == "string" then
                            log("REST", "ERROR", "Unexpected error while executing rest request %s: %s", env.url, err)
                            return res, err

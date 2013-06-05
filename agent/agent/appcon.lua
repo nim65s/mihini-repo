@@ -430,10 +430,10 @@ local function init()
     if type(config.rest) == "table" and config.rest.activate == true then
        local rest = require 'agent.rest'
        rest.register("application$", "GET", list)
-       rest.register("application/[%w%.]+", "GET", status)
-       rest.register("application/[%w%.]+/start", "PUT", function(params) return start(params:gsub("/start", "")) end)
-       rest.register("application/[%w%.]+/stop", "PUT", function(params) return stop(params:gsub("/stop", "")) end)
-       rest.register("application/[%w%.]+/configure", "PUT", function(params, payload) local id = params:gsub("/configure", ""); return configure(id, payload) end)
+       rest.register("application/[%w%.]+", "GET", function(env) return status(env["suburl"]) end)
+       rest.register("application/[%w%.]+/start", "PUT", function(env) return start(env["suburl"]:gsub("/start", "")) end)
+       rest.register("application/[%w%.]+/stop", "PUT", function(env) return stop(env["suburl"]:gsub("/stop", "")) end)
+       rest.register("application/[%w%.]+/configure", "PUT", function(env) local id = env["suburl"]:gsub("/configure", ""); return configure(id, env["payload"]) end)
     end
     return "ok"
 end

@@ -543,8 +543,11 @@ local function rest_localupdate_handler()
 end
 
 
-local function rest_status_handler(params, payload)
-    return getstatus(payload)
+local function rest_status_handler(env)
+    if not env["payload"] then
+        return nil, "missing application identifier"
+    end
+    return getstatus(env["payload"])
 end
 
 local function update_sink()
