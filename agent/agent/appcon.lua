@@ -305,8 +305,18 @@ local function status(id)
     else
         local res,err = sndcmd("status "..app.app_id_daemon, true)
         if res then
-            res = res :match "appname=%[%d-%] privileged=%[%d-%] (.*)"
-            return res or nil,  not res and "error while getting application info from appmon_daemon: status command parsing error" or nil
+            if not res :match "appname=%[%d-%] privileged=%[%d-%] (.*)" then
+                return nil, "error while getting application info from appmon_daemon: status command parsing error"
+            end
+	    local t = {}
+            -- for each substring of the form "key=value"
+            for i in res:gmatch("%w+=%[[%w /%-%.]+]") do
+                -- 1. extract the key, then extract the value
+                -- 2. remove brackets from value
+                -- 3. t[key] = value
+                t[i:gsub("=%[[%w /%-%.]+]", "")] = i:gsub("%w+=", ""):gsub("%[([%w /%-%.]+)]", "%1")
+            end
+            return t
         else return nil, err or "error while getting application info from appmon_daemon: status command failed" end
     end
 end
