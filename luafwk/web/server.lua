@@ -101,7 +101,7 @@ function web.handle_request (cx, env)
    local page = web.site[env.url]
    if not page then
       for pattern, map in pairs(web.site) do
-	 if pattern ~= "" and env.url:match(pattern) and map.request_type == env.method then
+	 if pattern ~= "" and env.url:match(pattern) then
 	    page = map
 	    break
 	 end

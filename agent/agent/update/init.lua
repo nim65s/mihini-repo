@@ -549,10 +549,12 @@ end
 
 
 local function rest_status_handler(env)
-    if not env["payload"] then
-        return nil, "missing application identifier"
+    local sync = false
+    local params = env["params"]
+    if params["sync"] and tonumber(params["sync"]) == 1 then
+        sync = true
     end
-    return getstatus(env["payload"])
+    return getstatus(sync)
 end
 
 local function update_sink()
@@ -605,7 +607,7 @@ local function init()
 	if type(config.rest) == "table" and config.rest.activate == true then
 	   local rest = require 'agent.rest'
 	   rest.register("update[/%w%?]*$", "POST", rest_localupdate_handler, update_sink())
-	   rest.register("update$", "GET", rest_status_handler)
+	   rest.register("update[/%w%?]*$", "GET", rest_status_handler)
 	else
 	   rest_localupdate_handler = nil
 	   rest_status_handler = nil
