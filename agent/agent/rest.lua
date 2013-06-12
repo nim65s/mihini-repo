@@ -37,39 +37,24 @@ function M.register(URL, rtype, handler, payload_sink)
 	               echo(serialize(res))
 		       return "ok"
                    end
-
-   if not web.site[URL] then
-      web.site[URL] = {
-	 request_type = rtype,
-	 content = closure,
-	 sink = (rtype == "POST" or rtype == "PUT") and payload_sink or nil
-      }
-   elseif web.site[URL].content then
-      web.site[URL].contents = { ["" .. web.site[URL].request_type .. ""] = web.site[URL].content, ["" .. rtype .. ""] = closure }
-      web.site[URL].content = nil
-      web.site[URL].request_type = nil
-   else
-      web.site[URL].contents[rtype] = closure
-   end
+     if not web.pattern[URL] then
+        web.pattern[URL] = { }
+     end
+     web.pattern[URL]["".. rtype ..""] = { ["content"] = closure, ["sink"] = (rtype == "POST" or rtype == "PUT") and payload_sink or nil }
    return "ok"
 end
 
 function M.unregister(URL, rtype, handler)
    log("REST", "DEBUG", "Unregistering handler %p on URL %s for type %s", handler, URL, rtype)
 
-   if not web.site[URL] then
+   if not web.pattern[URL] then
       return nil, "resource does not exist"
    end
-   if web.site[URL].content then
-      web.site[URL] = nil
-   else
-      web.site[URL].contents[rtype] = nil
-      local i = 0
-      for k, v in web.site[URL].contents do  i = i + 1 end
-      if i == 0 then
-	 web.site[URL].contents = nil
-	 web.site[URL] = nil
-      end
+   web.pattern[URL][rtype] = nil
+   local i = 0
+   for k, v in web.pattern[URL] do  i = i + 1 end
+   if i == 0 then
+      web.pattern[URL]  = nil
    end
 end
 

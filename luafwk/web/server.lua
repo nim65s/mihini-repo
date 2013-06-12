@@ -14,6 +14,7 @@ require 'socket'
 if global then global "web" end
 web = web or { }
 web.site = web.site or {[""]="Nothing in httproot, try <a href='/map.html'>map</a>"}
+web.pattern = {}
 
 -- For backward compatibility
 WEBSITE = web.site
@@ -100,7 +101,7 @@ function web.handle_request (cx, env)
 
    local page = web.site[env.url]
    if not page then
-      for pattern, map in pairs(web.site) do
+      for pattern, map in pairs(web.pattern) do
 	 if pattern ~= "" and env.url:match(pattern) then
 	    page = map
 	    break
@@ -108,8 +109,10 @@ function web.handle_request (cx, env)
       end
    end
 
-   if not page then web.send_error (env, 404, "Not found"); return end 
+   if not page then web.send_error (env, 404, "Not found"); return end
    if type(page) ~= 'table' then page={content=page} end
+   if page[env.method] then page = page[env.method] end
+   if not page.content then web.send_error (env, 404, "Not found"); return end
 
    env.page = page
 
@@ -164,19 +167,9 @@ function web.handle_request (cx, env)
 
       res = nil
       err = nil
-      if content ~= nil then
-	 if page.request_type and page.request_type == env.method then
-	    res, err = content (echo, env)
-	 elseif not page.request_type then
-	    res, err = content (echo, env)
-	 end
-      elseif type(page.contents) == "table" and type(page.contents[env.method]) == "function" then
-	 res, err = page.contents[env.method](echo, env)
-      end
-
+      res, err = content(echo, env)
       if not res and type(err) == "string" then
-	 web.send_error (env, 500, "Internal Server Error: " .. err);
-	 return
+	 web.send_error (env, 500, err)
       else
 	 cx :send "0\r\n\r\n" -- Send the terminating empty chunk
       end
