@@ -64,6 +64,11 @@
     shell.editmode = "edit" -- can be "line" if the trivial line by line mode is wanted
     shell.historysize = 30  -- only valid for edit mode,
 
+    -- Rest related settings
+    rest = {}
+    rest.activate = true
+    rest.port = 8080
+
     -- Time related settings
     time = {}
     -- activate Time Services: periodic polling only for now, sync can always be done using synchronize API on demand.

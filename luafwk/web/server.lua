@@ -14,6 +14,7 @@ require 'socket'
 if global then global "web" end
 web = web or { }
 web.site = web.site or {[""]="Nothing in httproot, try <a href='/map.html'>map</a>"}
+web.pattern = {}
 
 -- For backward compatibility
 WEBSITE = web.site
@@ -98,17 +99,30 @@ function web.handle_request (cx, env)
    local h = { } -- response headers
    env.response_headers = h
 
-   if env.method=='POST' then -- get params from body
-       web.handle_post_body (env)
+   local page = web.site[env.url]
+   if not page then
+      for pattern, map in pairs(web.pattern) do
+	 if pattern ~= "" and env.url:match(pattern) then
+	    page = map
+	    break
+	 end
+      end
    end
 
-   local page = web.site[env.url]
    if not page then web.send_error (env, 404, "Not found"); return end
    if type(page) ~= 'table' then page={content=page} end
+   if page[env.method] then page = page[env.method] end
+   if not page.content then web.send_error (env, 404, "Not found"); return end
 
    env.page = page
 
-   local content = page.content or page[1] or ''
+   if env.method=='POST' then -- get params from body
+      web.handle_post_body (env)
+   elseif env.method=='PUT' then
+      web.handle_put_body(env)
+   end
+
+   local content = page.content or page[1] or nil
    local static_page = type(content)=='string'
 
    -- Setup default response and headers
@@ -117,34 +131,48 @@ function web.handle_request (cx, env)
    if   static_page
    then h["Content-Length"] = #content
    else h["Transfer-Encoding"] = "chunked" end
-   env.response = "HTTP/1.1 200 OK"
 
+   -- Setting the default response status
+   env.response = "HTTP/1.1 200 OK"
    -- execute the header function, if any
    local hf = page.header
    if hf then assert(type(hf)=='function'); hf(env) end
 
-   -- Send the response and headers
-   cx :send (env.response.."\r\n")
-   for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
-   cx :send '\r\n' -- end of headers
-
    if static_page then
-       cx :send (content)
+      -- Send the response and headers
+      cx :send (env.response.."\r\n")
+      for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
+      cx :send '\r\n' -- end of headers
+      cx :send (content) -- send the static page
    else
+      local res
       local err = env.error_msg
       if err then
          cx :send (string.format ("%X\r\n%s\r\n0\r\n\r\n", #err, err))
          return
       end
+      local headers_sent = false
       local function echo(...)
+	 if not headers_sent then
+	     cx :send (env.response.."\r\n")
+	     for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
+	     cx :send '\r\n' -- end of headers
+	     headers_sent = true
+	 end
          local chunk = table.concat{...}
          if #chunk>0 then
             cx :send (string.format ("%X\r\n", #chunk)..chunk.."\r\n")
          end
       end
 
-      content (echo, env)
-      cx :send "0\r\n\r\n" -- Send the terminating empty chunk
+      res = nil
+      err = nil
+      res, err = content(echo, env)
+      if not res and type(err) == "string" then
+	 web.send_error (env, 500, err)
+      else
+	 cx :send "0\r\n\r\n" -- Send the terminating empty chunk
+      end
    end
 
    -- Connection closing or survival
@@ -248,7 +276,6 @@ end
 -- keep the raw body in env.body.
 -------------------------------------------------------------------------------
 function web.handle_post_body(env)
-    -- TODO: support also PUT, and everything bearing a body actually
     -- TODO: support chunked encoding
     assert (env.method=='POST', "This page must be accessed with POST")
     local rh = env.request_headers
@@ -257,18 +284,63 @@ function web.handle_post_body(env)
         rh['connection'],
         rh['transfer-encoding']
     local len = h_cl and tonumber(h_cl)
-    local data, msg
+    local data, msg, res
+
     if len and len>0 then
         log( 'WEB', 'INFO', "Getting %d bytes of POST data", len)
-        data, msg = env.channel :receive (len)
+	if env.page.sink then
+	   local src = socket.source("by-length", env.channel, len)
+	   res, msg = ltn12.pump.all(src, env.page.sink)
+	   if not res then log("WEB", "ERROR", "Body decoding error while sending data to page sink (by-length)") end
+	else
+	   data, msg = env.channel :receive (len)
+	end
     elseif h_te == "chunked" or h_cx :match "TE" then
-        data, msg = web.read_chunks (env.channel)
+        if env.page.sink then
+	   local src = socket.source("http-chunked", env.channel, env.request_headers)
+	   res, msg = ltn12.pump.all(src, env.page.sink)
+	   if not res then log("WEB", "ERROR", "Body decoding error while sending data to page sink (http-chunked)") end
+	else
+	   data, msg = web.read_chunks (env.channel)
+	end
     else
         log('WEB','ERROR', "Body encoding not supported in POST handler: env=%s", siprint(2,env))
         return { }
     end
+
+    if not env.page.sink then
+       if not data then
+	  log('WEB','ERROR', "Can\'t retrieve POST parameters: %q", msg)
+	  return { }
+       else
+	  env.body = data
+	  local ct = rh['content-type']
+	  if ct and ct :match 'urlencoded' then env.params = web.url.decode(data) end
+       end
+    end
+end
+
+function web.handle_put_body(env)
+    -- TODO: support chunked encoding
+    assert (env.method=='PUT', "This page must be accessed with PUT")
+    local rh = env.request_headers
+    local h_cl, h_cx, h_te =
+        rh['content-length'],
+        rh['connection'],
+        rh['transfer-encoding']
+    local len = h_cl and tonumber(h_cl)
+    local data, msg
+    if len and len>0 then
+        log( 'WEB', 'INFO', "Getting %d bytes of PUT data", len)
+        data, msg = env.channel :receive (len)
+    elseif h_te == "chunked" or h_cx :match "TE" then
+        data, msg = web.read_chunks (env.channel)
+    else
+        log('WEB','ERROR', "Body encoding not supported in PUT handler: env=%s", siprint(2,env))
+        return { }
+    end
     if not data then
-        log('WEB','ERROR', "Can't retrieve POST parameters: %q", msg)
+        log('WEB','ERROR', "Can't retrieve PUT parameters: %q", msg)
         return { }
     else
         env.body = data

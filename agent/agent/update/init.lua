@@ -538,6 +538,34 @@ end
 --todo to remove:
 local INIT_DONE
 
+local function rest_localupdate_handler(env)
+    local sync = false
+    local params = env["params"]
+    if params["sync"] and tonumber(params["sync"]) == 1 then
+        sync = true
+    end
+    return localupdate(nil, sync)
+end
+
+
+local function rest_status_handler(env)
+    local sync = false
+    local params = env["params"]
+    if params["sync"] and tonumber(params["sync"]) == 1 then
+        sync = true
+    end
+    return getstatus(sync)
+end
+
+local function update_sink()
+   return function(chunk, err)
+            local handle = io.open(common.dropdir .. "/updatepackage.tar", "a")
+	    local ret = (not chunk) and 1 or handle:write(chunk)
+	    handle:close()
+	    return ret
+	  end
+end
+
 --init
 local function init()
     if not INIT_DONE then
@@ -574,6 +602,16 @@ local function init()
             -- or look for local update
             sched.sighook("Agent", "InitDone", function() sched.run(localupdate) end )
         end
+
+	-- register rest commands
+	if type(config.rest) == "table" and config.rest.activate == true then
+	   local rest = require 'agent.rest'
+	   rest.register("update[/%w%?]*$", "POST", rest_localupdate_handler, update_sink())
+	   rest.register("update[/%w%?]*$", "GET", rest_status_handler)
+	else
+	   rest_localupdate_handler = nil
+	   rest_status_handler = nil
+	end
     else
         log("UPDATE", "INFO", "Update service init was already done!")
     end

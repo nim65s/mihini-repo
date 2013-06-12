@@ -320,6 +320,9 @@ local function initialize()
     scheduleinit{name="AutoExec", mod="autoexec", initflag=c"autoexec.activate",
                  reqdep= {"DeviceManagement"}, optdep = {"ApplicationContainer", "SMS", "NetworkManager" }}
 
+    -- Start the rest module
+    scheduleinit{name="Rest", mod="rest", initflag=c"rest.activate"}
+
     -- Launch the Init process
     startInitProcess()
 end
