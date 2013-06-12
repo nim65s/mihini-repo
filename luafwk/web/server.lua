@@ -132,13 +132,14 @@ function web.handle_request (cx, env)
    then h["Content-Length"] = #content
    else h["Transfer-Encoding"] = "chunked" end
 
+   -- Setting the default response status
+   env.response = "HTTP/1.1 200 OK"
    -- execute the header function, if any
    local hf = page.header
    if hf then assert(type(hf)=='function'); hf(env) end
 
    if static_page then
       -- Send the response and headers
-      env.response = "HTTP/1.1 200 OK"
       cx :send (env.response.."\r\n")
       for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
       cx :send '\r\n' -- end of headers
@@ -153,7 +154,6 @@ function web.handle_request (cx, env)
       local headers_sent = false
       local function echo(...)
 	 if not headers_sent then
-	     env.response = "HTTP/1.1 200 OK"
 	     cx :send (env.response.."\r\n")
 	     for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
 	     cx :send '\r\n' -- end of headers
