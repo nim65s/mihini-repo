@@ -69,6 +69,14 @@
     rest.activate = true
     rest.port = 8080
 
+    -- Uncomment these lines to either activate
+    -- http digest authentication
+    --rest.authentication = {}
+    --rest.authentication.realm = "username@localhost"
+    --rest.authentication.ha1 = "your hash here"
+    --rest.restricted_uri = {}
+    --rest.restricted_uri["*"] = true
+
     -- Time related settings
     time = {}
     -- activate Time Services: periodic polling only for now, sync can always be done using synchronize API on demand.

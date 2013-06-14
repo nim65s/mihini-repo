@@ -40,7 +40,13 @@ function M.register(URL, rtype, handler, payload_sink)
      if not web.pattern[URL] then
         web.pattern[URL] = { }
      end
-     web.pattern[URL]["".. rtype ..""] = { ["content"] = closure, ["sink"] = (rtype == "POST" or rtype == "PUT") and payload_sink or nil }
+     web.pattern[URL]["".. rtype ..""] = {
+                ["content"] = closure,
+                ["authentication"] = config.rest.restricted_uri and config.rest.restricted_uri["*"] or nil,
+                ["realm"] = config.rest.authentication and config.rest.authentication.realm or nil,
+                ["ha1"]   = config.rest.authentication and config.rest.authentication.ha1 or nil,
+                ["sink"] = (rtype == "POST" or rtype == "PUT") and payload_sink or nil
+     }
    return "ok"
 end
 

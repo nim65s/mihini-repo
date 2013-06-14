@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------
 
 require 'socket'
+local hash = require 'crypto.hash'
 
 if global then global "web" end
 web = web or { }
@@ -18,6 +19,65 @@ web.pattern = {}
 
 -- For backward compatibility
 WEBSITE = web.site
+
+local NONCES = {}
+
+function web.md5(input)
+   local d = hash.new("md5")
+   d = d:update(input)
+   return d:digest()
+end
+
+local function new_nonce()
+   local f = io.open("/dev/urandom", "r")
+   local value = f:read(64)
+   local output = ""
+   for c in value:gmatch(".") do 
+      output = output .. string.format("%x", string.byte(c))
+   end
+   local nonce = web.md5(output)
+   f:close()
+   return nonce
+end
+
+local function send_unauthorized(cx, realm)
+   local ip = cx:getpeername()
+   if not NONCES[ip]["nonce"] then
+      NONCES[ip]["nonce"] = new_nonce()
+      NONCES[ip]["opaque"] = new_nonce()
+   end
+   cx:send("HTTP/1.1 401 Unauthorized\r\n")
+   cx:send('WWW-Authenticate: Digest realm="'..realm..'", qop="auth,auth-int", nonce="'..NONCES[ip]["nonce"]..'", opaque="'..NONCES[ip]["opaque"]..'"\r\n')
+   cx:send("\r\n")
+end
+
+local function check_auth(ip, auth, ha1)
+   if NONCES[ip]["nonce"] ~= auth["nonce"] then
+      return false
+   end
+   if NONCES[ip]["opaque"] ~= auth["opaque"] then
+      return false
+   end
+   local ha2, response
+
+   if auth["algorithm"] == "MD5-sess" then
+      ha1 = web.md5(ha1 .. ":" .. auth["nonce"] .. ":" .. auth["cnonce"])
+   end
+
+   if auth["qop"] == "auth" or not auth["qop"] then
+      ha2 = web.md5(auth["method"] .. ":" .. auth["uri"])
+   end
+
+   if auth["qop"] == "auth" or auth["qop"] == "auth-int" then
+      response = web.md5(ha1 .. ":" .. auth["nonce"] .. ":" .. auth["nc"] .. ":" .. auth["cnonce"] .. ":" .. auth["qop"] .. ":" .. ha2)
+   elseif not auth["qop"] then
+      response = web.md5(ha1 .. ":" .. auth["nonce"] .. ":" .. ha2)
+   end
+   if response ~= auth["response"] then
+      return false
+   end
+   return true
+end
 
 -------------------------------------------------------------------------------
 -- web.start()
@@ -58,14 +118,14 @@ end
 -------------------------------------------------------------------------------
 function web.handle_connection (cx)
    while true do
-      log('WEB', 'DEBUG', "Connection waiting for another request on %s", tostring(cx))
+      log('WEB', 'INFO', "Connection waiting for another request on %s", tostring(cx))
 
       -- Set environment variables from the request
-
       local url, url_params, version, ext
       local line, msg = cx :receive '*l'
       if not line then
          log('WEB', 'INFO', "Ending connection: socket %s", msg)
+         NONCES[cx] = nil
          cx :close()
          break
       end
@@ -115,6 +175,36 @@ function web.handle_request (cx, env)
    if not page.content then web.send_error (env, 404, "Not found"); return end
 
    env.page = page
+
+   if page["authentication"] then
+      local ip = cx:getpeername()
+      local realm = page["realm"]
+
+      if not NONCES[ip] then
+         NONCES[ip] = {}
+      end
+      if not NONCES[ip]["nonce"] then
+         send_unauthorized(cx, realm)
+         return
+      end
+
+      local h_auth = env.request_headers["authorization"]
+      local auth = {}
+      if not h_auth then
+         send_unauthorized(cx, realm)
+         return
+      end
+
+      for i in h_auth:gmatch("%w+=[%w@%-\"/%.]*") do
+         auth[i:gsub("=[%w@%-\"/%.]*", "")] = i:gsub("%w+=", ""):gsub('"', "")
+      end
+      auth["method"] = env.method
+
+      if not check_auth(ip, auth, page["ha1"]) then
+         send_unauthorized(cx, realm)
+         return
+      end
+   end
 
    if env.method=='POST' then -- get params from body
       web.handle_post_body (env)
