@@ -69,13 +69,23 @@
     rest.activate = true
     rest.port = 8080
 
-    -- Uncomment these lines to either activate
+    -- Uncomment these lines to activate
     -- http digest authentication
     --rest.authentication = {}
     --rest.authentication.realm = "username@localhost"
     --rest.authentication.ha1 = "your hash here"
     --rest.restricted_uri = {}
+    -- Either globally
     --rest.restricted_uri["*"] = true
+
+    -- Or per URI
+    --rest.restricted_uri["devicetree/[%w.]+"] = true
+    --rest.restricted_uri["application$"] = true
+    --rest.restricted_uri["application/[%w%.]+"] = true
+    --rest.restricted_uri["application/[%w%.]+/start"] = true
+    --rest.restricted_uri["application/[%w%.]+/stop"] = true
+    --rest.restricted_uri["application/[%w%.]+/configure"] = true
+    --rest.restricted_uri["update[/%w%?]*$"] = true
 
     -- Time related settings
     time = {}

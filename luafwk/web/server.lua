@@ -125,7 +125,6 @@ function web.handle_connection (cx)
       local line, msg = cx :receive '*l'
       if not line then
          log('WEB', 'INFO', "Ending connection: socket %s", msg)
-         NONCES[cx] = nil
          cx :close()
          break
       end
@@ -204,6 +203,7 @@ function web.handle_request (cx, env)
          send_unauthorized(cx, realm)
          return
       end
+      NONCES[ip] = {}
    end
 
    if env.method=='POST' then -- get params from body
