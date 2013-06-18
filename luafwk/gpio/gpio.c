@@ -15,6 +15,13 @@
  It provides `read`, `write`, and `register` methods,
  as well as GPIO configuration and listing features.
 
+ This module is mainly based on Linux kernel userspace mapping to act on GPIOs.<br />
+ See [Kernel GPIO doc](http://kernel.org/doc/Documentation/gpio.txt), "Sysfs Interface
+ for Userspace" chapter.<br />
+ Please check you device system comes with this capability before using this module.
+ Also, pay attention to access rights to /sys/class/gpio files, and check that the process
+ running this module has correct user rights to access those files.
+
  @module gpio
  */
 
@@ -186,7 +193,7 @@ static char* getgpiopath(int id, const char* func)
 
 //TODO: move doc about register into Lua source where top level API is implemented.
 // this l_newgpio is just a part of implementation of register
-// this can be moved when luadocumentor support module doc generation from several/various
+// this doc can be moved when luadocumentor support module doc generation from several/various
 // source files.
 // Main point here is to create the userdata containing GPIO fd.
 static int l_newgpio(lua_State* L)
@@ -414,6 +421,17 @@ static inline int checkps(lua_State* L, const char* table_field, const char* gpi
 /**
  Configures the GPIO parameters.
 
+ The parameters that can be set are:
+
+ * `direction`: the direction of the GPIO; input or output
+ * `edge`: this setting describes when embedded application will be notified for changes:
+   never, on rising edge (from inactive to active) or falling edge (from active to inactive).
+ * `activelow`: This setting describes how to interpret the GPIO value:
+   Is high voltage value (e.g.: 3.3V or 5V) to be interpreted as "active"/"on" (the default behavior i.e. `activelow` set to "0")
+   or as "inactive"/"off" (`activelow` set to "1").
+
+ Before calling this function:
+
  *    Required configuration:<br>
  If no previous configuration (neither automatic nor explicit) has been done for
  this GPIO, then the first explicit call to @{#gpio.configure} must contain the `direction`
@@ -423,11 +441,12 @@ static inline int checkps(lua_State* L, const char* table_field, const char* gpi
  @param id GPIO id as a number
 
  @param config a map with fields:
- - `edge`: accepted value: "none", "rising", "falling", "both".
- Beware: changing edge value on a GPIO monitored for change (using register API).
+
+ * `edge`: accepted value: "none", "rising", "falling", "both".
+  Beware: changing edge value on a GPIO monitored for change (using @{#gpio.register} API).
  will alter the way notifications are done for this GPIO.
- - `direction`: accepted values (string): "in", "out".
- - `activelow`: accepted values (string): "0", "1".
+ * `direction`: accepted values (string): "in", "out".
+ * `activelow`: accepted values (string): "0", "1".
 
  @return "ok" when successful
  @return `nil` followed by an error message otherwise
@@ -511,6 +530,8 @@ static int readconfigfile(lua_State* L, int gpioid, const char* param)
 
 /***************************************************************************
  Retrieves GPIO configuration.
+
+ See @{#gpio.configure} for available settings.
 
  @function [parent=#gpio] getconfig
 
@@ -663,6 +684,7 @@ int setparam(int id, const char* param, const char* value)
   //write the "command"
   size_t len = strlen(value);
   res = write(fd, value, len);
+
   //clean unnecessary resources
   close(fd);
   free(file);
