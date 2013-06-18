@@ -52,6 +52,9 @@ link $HOME_RA/luafwk/serialframework/modbus/modbustcp.lua doctmp/modbustcp.lua
 link $HOME_RA/luafwk/timer.lua doctmp/timer.lua
 link $HOME_RA/luafwk/niltoken.lua doctmp/niltoken.lua
 
+link $HOME_RA/luafwk/gpio/gpio.c   doctmp/gpio.c
+#link $HOME_RA/luafwk/gpio/gpio.lua doctmp/gpio.lua
+
 
 link $HOME_RA/luafwk/racon/init.lua doctmp/airvantage.lua
 link $HOME_RA/luafwk/racon/asset/init.lua doctmp/airvantage/asset.lua
