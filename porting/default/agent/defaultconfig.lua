@@ -67,7 +67,7 @@
     -- Rest related settings
     rest = {}
     rest.activate = true
-    rest.port = 8080
+    rest.port = 8357
 
     -- Time related settings
     time = {}
