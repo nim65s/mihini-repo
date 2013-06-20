@@ -51,3 +51,8 @@ ADD_LUA_LIBRARY(m3da_session DESTINATION m3da/session session/default.lua)
 ADD_LUA_LIBRARY(m3da_session_security DESTINATION m3da/session session/security.lua session/provisioning.lua)
 ADD_DEPENDENCIES(m3da_session_security m3da_bysant crypto_cipher crypto_hmac crypto_hash crypto_rng crypto_ecdh)
 
+INSTALL(TARGETS lib_bysant_lua LIBRARY DESTINATION lib)
+INSTALL(TARGETS bysant_core LIBRARY DESTINATION lua/m3da/bysant)
+INSTALL(FILES bysant.lua DESTINATION lua/m3da)
+INSTALL(FILES session/default.lua session/provisioning.lua session/security.lua DESTINATION lua/m3da/session)
+INSTALL(FILES transport/httpserver.lua transport/tcpserver.lua transport/http.lua transport/tcp.lua DESTINATION lua/m3da/transport)

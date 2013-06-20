@@ -16,3 +16,5 @@ ADD_PUBLIC_HEADER(Swi_DeviceTree swi_devicetree.h)
 TARGET_LINK_LIBRARIES(Swi_DeviceTree Emp lib_yajl)
 
 ADD_UNIT_TEST(dt_test dt_test.c RUNTIME_DEPENDENCIES Swi_DeviceTree lib_swi_log)
+INSTALL(TARGETS Swi_DeviceTree LIBRARY DESTINATION lib)
+INSTALL(FILES swi_devicetree.h DESTINATION itf)

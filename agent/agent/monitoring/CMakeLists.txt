@@ -19,3 +19,4 @@ ADD_DEPENDENCIES(agent_monitoring
     agent_devman
     agent_config
     socket_sched)
+INSTALL(FILES init.lua DESTINATION lua/agent/monitoring)

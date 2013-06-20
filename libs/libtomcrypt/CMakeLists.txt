@@ -169,3 +169,4 @@ SET_TARGET_PROPERTIES(lib_tomcrypt PROPERTIES
     COMPILE_FLAGS "-fPIC") #necessary so that the lib can be used linked in a static code or a shared library
 
 TARGET_LINK_LIBRARIES(lib_tomcrypt lib_tommath)
+INSTALL(TARGETS lib_tomcrypt LIBRARY DESTINATION lib)

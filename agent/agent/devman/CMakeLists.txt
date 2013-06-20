@@ -18,3 +18,4 @@ ADD_DEPENDENCIES(agent_devman
     racon)
 
 ADD_SUBDIRECTORY(cmds)
+INSTALL(FILES init.lua DESTINATION lua/agent/devman)

@@ -18,3 +18,5 @@ TARGET_LINK_LIBRARIES(Swi_AirVantage Emp lib_yajl lib_swi_log)
 
 ADD_UNIT_TEST(av_test av_test.c RUNTIME_DEPENDENCIES Swi_AirVantage lib_swi_log lualib)
 
+INSTALL(TARGETS Swi_AirVantage LIBRARY DESTINATION lib)
+INSTALL(FILES swi_airvantage.h DESTINATION itf)

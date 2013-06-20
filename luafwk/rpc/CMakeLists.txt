@@ -18,5 +18,6 @@ ADD_LUA_LIBRARY(rpc_sched DESTINATION rpc sched.lua)
 ADD_DEPENDENCIES(rpc_sched rpc_common socket_sched)
 
 ADD_LUA_LIBRARY(rpc_nosched DESTINATION rpc nosched.lua)
-ADD_DEPENDENCIES(rpc_nosched rpc_common  socket)
+ADD_DEPENDENCIES(rpc_nosched rpc_common socket)
 
+INSTALL(FILES builtinsignatures.lua common.lua init.lua nosched.lua proxy.lua sched.lua DESTINATION lua/rpc)

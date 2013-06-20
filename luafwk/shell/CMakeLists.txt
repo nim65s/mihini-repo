@@ -15,3 +15,4 @@ ADD_SUBDIRECTORY(telnet)
 
 ADD_LUA_LIBRARY(shell_telnet DESTINATION shell shell/telnet.lua)
 ADD_DEPENDENCIES(shell_telnet sched socket_sched telnet)
+INSTALL(FILES shell/telnet.lua DESTINATION lua/shell)

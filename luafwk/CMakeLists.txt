@@ -67,3 +67,5 @@ TARGET_LINK_LIBRARIES(status lib_swi_statusname)
 
 ADD_CUSTOM_TARGET(luafwk)
 ADD_DEPENDENCIES(luafwk mihini_misc mihini_linux bit32 luasignalcmd appmon_daemon serial racon_aliases status)
+INSTALL(TARGETS status LIBRARY DESTINATION lua)
+INSTALL(FILES niltoken.lua posixsignal.lua strict.lua sms.lua serial/at.lua devicetree.lua fdwrapper.lua airvantage.lua system.lua unittest.lua debugger.lua debugintrospection.lua timer.lua print.lua DESTINATION lua)

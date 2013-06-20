@@ -23,3 +23,4 @@ TARGET_LINK_LIBRARIES(appmon_daemon lib_pointerlist lib_swi_log)
 
 ADD_DEFINITIONS(-Wall)
 
+INSTALL(TARGETS appmon_daemon RUNTIME DESTINATION bin)

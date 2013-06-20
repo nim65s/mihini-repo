@@ -15,3 +15,5 @@ PROJECT(MIHINI_SERIAL)
 
 ADD_LUA_LIBRARY(serial serial.c serial.lua at.lua)
 ADD_DEPENDENCIES(serial sched serial_core fdwrapper)
+INSTALL(TARGETS serial LIBRARY DESTINATION lua)
+INSTALL(FILES serial.lua DESTINATION lua)

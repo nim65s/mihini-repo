@@ -16,3 +16,5 @@ ADD_PUBLIC_HEADER(Swi_System swi_system.h)
 TARGET_LINK_LIBRARIES(Swi_System Emp lib_yajl)
 ADD_UNIT_TEST(sys_test sys_test.c TEST_DEPENDENCY system_stubs RUNTIME_DEPENDENCIES Swi_System lib_swi_log)
 
+INSTALL(TARGETS Swi_System LIBRARY DESTINATION lib)
+INSTALL(FILES swi_system.h DESTINATION itf)

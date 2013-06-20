@@ -130,3 +130,4 @@ SET_TARGET_PROPERTIES(lib_tommath PROPERTIES
     OUTPUT_NAME tommath
     COMPILE_FLAGS "-fPIC") #necessary so that the lib can be used linked in a static code or a shared library
 
+INSTALL(TARGETS lib_tommath LIBRARY DESTINATION lib)

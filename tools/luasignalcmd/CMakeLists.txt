@@ -24,3 +24,4 @@ TARGET_LINK_LIBRARIES(luasignalcmd lib_luasignal lib_swi_log pthread)
 
 ADD_DEFINITIONS(-Wall)
 
+INSTALL(TARGETS luasignalcmd RUNTIME DESTINATION bin)

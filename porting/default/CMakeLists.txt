@@ -24,3 +24,5 @@ ADD_CUSTOM_COMMAND(TARGET agent_platform POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/GPRS ${CMAKE_INSTALL_PREFIX}/bin/GPRS
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/ETH ${CMAKE_INSTALL_PREFIX}/bin/ETH
 )
+
+INSTALL(TARGETS socket_platform agent_platform LIBRARY DESTINATION lua)

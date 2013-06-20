@@ -26,3 +26,6 @@ SET_TARGET_PROPERTIES(lib_swi_log PROPERTIES OUTPUT_NAME Swi_log)
 
 ADD_LIBRARY(lib_swi_statusname SHARED swi_statusname.c)
 SET_TARGET_PROPERTIES(lib_swi_statusname PROPERTIES OUTPUT_NAME Swi_statusname)
+INSTALL(FILES swi_status.h DESTINATION itf)
+INSTALL(TARGETS lib_swi_log LIBRARY DESTINATION lib)
+INSTALL(TARGETS lib_swi_statusname LIBRARY DESTINATION lib)

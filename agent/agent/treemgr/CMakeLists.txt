@@ -72,3 +72,6 @@ ADD_CUSTOM_TARGET(test_agent_treemgr_maps
 )
 
 ADD_DEPENDENCIES(test_agent_treemgr_maps agent_treemgr_treehdlsample)
+INSTALL(FILES build.lua db.lua init.lua table.lua DESTINATION lua/agent/treemgr)
+INSTALL(FILES handlers/agentconfig.lua handlers/appcon.lua handlers/cellular.lua handlers/constant.lua handlers/functable.lua handlers/table.lua handlers/update.lua DESTINATION lua/agent/treemgr/handlers)
+INSTALL(FILES ${MAP_SRC}/agentconfig.map ${MAP_SRC}/appcon.map ${MAP_SRC}/update.map DESTINATION resources)
