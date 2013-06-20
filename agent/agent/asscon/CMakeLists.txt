@@ -14,3 +14,4 @@ ADD_LUA_LIBRARY(agent_asscon DESTINATION agent/asscon
 
 ADD_DEPENDENCIES(agent_asscon
     sched pack stagedb persist m3da_bysant messaging mime returncodes)
+INSTALL(FILES init.lua datamanager.lua sms.lua DESTINATION lua/agent/asscon)

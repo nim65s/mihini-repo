@@ -15,3 +15,5 @@ ADD_LUA_LIBRARY(racon DESTINATION racon
     =asset/init.lua =asset/tree.lua common.lua
     empparser.lua init.lua ipc.lua table.lua system.lua devicetree.lua sms.lua)
 ADD_DEPENDENCIES(racon yajl)
+INSTALL(FILES common.lua empparser.lua init.lua ipc.lua table.lua system.lua devicetree.lua sms.lua DESTINATION lua/racon)
+INSTALL(FILES asset/init.lua asset/tree.lua DESTINATION lua/racon/asset)

@@ -71,3 +71,4 @@ ADD_CUSTOM_TARGET(test_update_pkgs
 )
 ADD_DEPENDENCIES(test_agent test_update_pkgs agent_update_tools)
 
+INSTALL(FILES rest.lua config.lua modem.lua migration.lua boot.lua srvcon.lua netman.lua system.lua time.lua mediation.lua bearer.lua init.lua autoexec.lua appcon.lua DESTINATION lua/agent)

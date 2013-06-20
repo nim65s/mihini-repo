@@ -13,3 +13,4 @@ PROJECT(MIHINI_COXPCALL)
 
 ADD_LUA_LIBRARY(coxpcall coxpcall.lua)
 ADD_DEPENDENCIES(coxpcall utils)
+INSTALL(FILES coxpcall.lua DESTINATION lua)

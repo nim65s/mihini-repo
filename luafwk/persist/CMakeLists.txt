@@ -13,3 +13,4 @@ PROJECT(MIHINI_PERSIST)
 
 ADD_LUA_LIBRARY(persist DESTINATION persist init.lua file.lua)
 ADD_DEPENDENCIES(persist luatobin)
+INSTALL(FILES init.lua file.lua DESTINATION lua/persist)

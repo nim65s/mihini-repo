@@ -38,3 +38,7 @@ ADD_LUA_LIBRARY(socket_core DESTINATION socket ${SOCKET_CORE_SRC})
 SET_TARGET_PROPERTIES(socket_core PROPERTIES OUTPUT_NAME core)
 ADD_DEPENDENCIES(socket socket_core socket_platform)
 
+INSTALL(TARGETS mime LIBRARY DESTINATION lua)
+INSTALL(TARGETS socket_core LIBRARY DESTINATION lua/socket)
+install(FILES socket/http.lua socket/url.lua socket/ftp.lua socket/tp.lua socket/smtp.lua DESTINATION lua/socket)
+INSTALL(FILES ltn12.lua mime.lua socket.lua DESTINATION lua)

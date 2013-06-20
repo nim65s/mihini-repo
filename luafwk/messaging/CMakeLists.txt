@@ -17,4 +17,7 @@ ADD_LUA_LIBRARY(messaging messaging.lua messaginghal.lua)
 ADD_LUA_LIBRARY(smspdu smspdu.c)
 ADD_DEPENDENCIES(messaging smspdu)
 
+INSTALL(TARGETS smspdu LIBRARY DESTINATION lua)
+INSTALL(FILES messaging.lua messaginghal.lua DESTINATION lua)
+
 ENDIF()

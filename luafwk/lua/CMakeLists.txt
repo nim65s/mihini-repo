@@ -81,3 +81,6 @@ TARGET_LINK_LIBRARIES(luac dl m)
 ### bit32 bit manipulation library, back-ported from Lua 5.2
 
 ADD_LUA_LIBRARY(bit32 lbitlib.c)
+INSTALL(TARGETS lualib LIBRARY DESTINATION lib)
+INSTALL(TARGETS lua luac RUNTIME DESTINATION bin)
+INSTALL(TARGETS bit32 LIBRARY DESTINATION lua)

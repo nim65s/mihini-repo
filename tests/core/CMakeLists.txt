@@ -16,3 +16,4 @@ ADD_LUA_LIBRARY(tester DESTINATION tester
   testerTools.lua
   platformAPI.lua
 )
+INSTALL(FILES testMain.lua testManager.lua targetManager.lua testerTools.lua platformAPI.lua DESTINATION lua/tester)

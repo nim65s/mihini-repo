@@ -16,3 +16,4 @@ ADD_LUA_LIBRARY(web EXCLUDE_FROM_ALL DESTINATION web
 ADD_LUA_LIBRARY(web_auth EXCLUDE_FROM_ALL DESTINATION web/auth
     auth/basic.lua auth/digest.lua)
 ADD_DEPENDENCIES(web sched socket_sched)
+INSTALL(FILES server.lua auth.lua compile.lua session.lua template.lua DESTINATION lua/web)

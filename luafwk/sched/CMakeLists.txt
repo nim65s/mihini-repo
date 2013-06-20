@@ -40,3 +40,8 @@ ADD_LUA_LIBRARY(sched_timer_core DESTINATION sched/timer timer_core.c)
 TARGET_LINK_LIBRARIES(sched_timer_core lualib rt)
 SET_TARGET_PROPERTIES (sched_timer_core PROPERTIES OUTPUT_NAME core)
 ADD_DEPENDENCIES(sched sched_timer_core)
+
+INSTALL(TARGETS sched_posixsignal LIBRARY DESTINATION lua/sched)
+INSTALL(TARGETS sched_timer_core LIBRARY DESTINATION lua/sched/timer)
+INSTALL(TARGETS sched_exec_core LIBRARY DESTINATION lua/sched/exec)
+INSTALL(FILES exec.lua timer.lua pipe.lua daemon.lua platform.lua fd.lua lock.lua init.lua DESTINATION lua/sched)

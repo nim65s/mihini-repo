@@ -10,3 +10,4 @@
 #*******************************************************************************
 
 ADD_LUA_LIBRARY(telnet history.c actions.c buffers.c editor.c teel.c telnet.c)
+INSTALL(TARGETS telnet LIBRARY DESTINATION lua)

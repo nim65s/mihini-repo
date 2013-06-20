@@ -17,7 +17,7 @@ build-essential libreadline5-dev
 $ apt-get install cmake build-essential libreadline5-dev
 ```
 
-#### Fedora 
+#### Fedora
 You have to install the "Development Tools" package
 group and the cmake and readline-devel packages
 
@@ -63,14 +63,14 @@ you may want to write your own toolchain file, to handle the specifics of your e
 > * We strongly recommend that you use a the toolchain that was generated
 >   while creating the kernel/rootfs of the Linux system running on your
 >   device !
-> * When not cross compiling (the executable is intended to run on the compiling PC), 
->   the "build-essential" package or its equivalent provides most of what's needed; 
+> * When not cross compiling (the executable is intended to run on the compiling PC),
+>   the "build-essential" package or its equivalent provides most of what's needed;
 >   as a result, toolchain.default.cmake is almost empty.
 
 
 Build
 =====
-    
+
 #### Build the software
 
 You are strongly advised to run next line outside from MihiniAgentSources folder
@@ -140,7 +140,7 @@ You should see the logs of the Mihini Agent, something similar to:
 2013-03-12 16:14:48 GENERAL-INFO: Agent successfully initialized
 ```
 
-> **INFO** 
+> **INFO**
 >
 > According to the version you downloaded and you built, the header of the Agent might change (it includes version, git revision)
 
@@ -154,7 +154,7 @@ You can interact with the Mihini Agent by connecting to the Lua shell.
 $ telnet localhost
 ```
 
-Once connected to the shell, you can execute Lua instructions. 
+Once connected to the shell, you can execute Lua instructions.
 For instance, you can change a Mihini Agent config parameter:
 
 ```bash

@@ -12,7 +12,7 @@
 #*******************************************************************************
 
 # Usage:
-# build.sh <build target>
+# build.sh [-d] [-n] [-m ] [-t <build target>] [-C target_dir]
 
 
 EXEC_DIR=$(pwd)
@@ -36,7 +36,7 @@ do
                 ;;
     m)    PROFILE="MinSizeRel"
           echo '>>> Set Minimum Size release option to TRUE'
-	        ;;
+                ;;
     t)    TARGET="$OPTARG"
           echo ">>> Set TARGET type to $OPTARG"
                 ;;

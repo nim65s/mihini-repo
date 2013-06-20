@@ -25,3 +25,4 @@ ADD_LUA_LIBRARY(extvars DESTINATION agent/treemgr/handlers extvars.c)
 TARGET_LINK_LIBRARIES(extvars dl pthread lib_luasignal)
 
 ADD_SUBDIRECTORY (treehdlsample)
+INSTALL(TARGETS extvars LIBRARY DESTINATION lua/agent/treemgr/handlers)

@@ -33,3 +33,4 @@ ADD_DEPENDENCIES(agent_devman_cmds
     niltoken
     persist)
 
+INSTALL(FILES appcon.lua ExecuteScript.lua LogUpload.lua ReadNode.lua Reboot.lua ResetToFactoryDefault.lua SoftwareUpdate.lua TCPRemoteConnect.lua DESTINATION lua/agent/devman/cmds)

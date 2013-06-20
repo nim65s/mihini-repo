@@ -26,4 +26,6 @@ SET_TARGET_PROPERTIES(lib_swi_log PROPERTIES OUTPUT_NAME Swi_log)
 ADD_LIBRARY(lib_returncodes SHARED returncodes.c)
 SET_TARGET_PROPERTIES(lib_returncodes PROPERTIES OUTPUT_NAME returncodes)
 ADD_PUBLIC_HEADER(lib_returncodes returncodes.h)
-
+INSTALL(FILES returncodes.h DESTINATION itf)
+INSTALL(TARGETS lib_swi_log LIBRARY DESTINATION lib)
+INSTALL(TARGETS lib_returncodes LIBRARY DESTINATION lib)
