@@ -125,7 +125,8 @@ local function EMPUnregisterVariable(assetid, dt_id)
 end
 
 local function rest_get_handler(env)
-   local v, l = treemgr.get(env["suburl"])
+   local node = env["suburl"]:gsub("/", "%.")
+   local v, l = treemgr.get(node)
    if not v and type(l) == "string" then
       return v, l
    end
@@ -136,7 +137,8 @@ local function rest_set_handler(env)
    if not env["payload"] then
       return nil, "missing value"
    end
-   return treemgr.set(env["suburl"], env["payload"])
+   local node = env["suburl"]:gsub("/", "%.")
+   return treemgr.set(node, env["payload"])
 end
 
 function M.init(cfg)
