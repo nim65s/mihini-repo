@@ -6,7 +6,10 @@
 -- http://www.eclipse.org/legal/epl-v10.html
 --
 -- Contributors:
---     Sierra Wireless - initial API and implementation
+--     Laurent Barthelemy for Sierra Wireless - initial API and implementation
+--     Fabien Fleutot     for Sierra Wireless - initial API and implementation
+--     Minh Giang         for Sierra Wireless - initial API and implementation
+--     Romain Perier      for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
@@ -18,21 +21,6 @@
 -- This module relies on an internal background service known as the Mihini
 -- Agent, which is responsible for queuing data, managing the flush timers
 -- and sending the data to the remote AirVantage server. Many of the APIs in
--------------------------------------------------------------------------------
--- Copyright (c) 2012 Sierra Wireless and others.
--- All rights reserved. This program and the accompanying materials
--- are made available under the terms of the Eclipse Public License v1.0
--- which accompanies this distribution, and is available at
--- http://www.eclipse.org/legal/epl-v10.html
---
--- Contributors:
---     Laurent Barthelemy for Sierra Wireless - initial API and implementation
---     Fabien Fleutot     for Sierra Wireless - initial API and implementation
---     Minh Giang         for Sierra Wireless - initial API and implementation
---     Romain Perier      for Sierra Wireless - initial API and implementation
--------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------
 -- this module relay the data to the Agent; the Agent then manages
 -- the data as described.
 --
@@ -48,9 +36,6 @@
 --
 -- Moreover, methods `setUpdateHook` and `sendUpdateResult` are provided to let application handle
 -- software update requests from the AirVantage servers in a custom way.
---
--- **NOTE:** The AirVantage APIs are currently in BETA and are subject to
--- change in the subsequent release.
 --
 -- @module airvantage.asset
 --
