@@ -99,3 +99,6 @@ exit 0
 EOF
 
 chmod +x /etc/init.d/mihini
+
+echo "/opt/mihini/lib" > /etc/ld.so.conf.d/01-mihini.conf
+ldconfig

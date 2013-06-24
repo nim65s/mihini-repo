@@ -10,6 +10,7 @@
 #     Guilhem Saurel for Sierra Wireless - initial script
 #*******************************************************************************
 
-rm -rf /{var/,}opt/mihini /etc/init.d/mihini
+rm -rf /{var/,}opt/mihini /etc/init.d/mihini /etc/ld.so.conf.d/01-mihini.conf
 
 userdel mihini
+ldconfig
