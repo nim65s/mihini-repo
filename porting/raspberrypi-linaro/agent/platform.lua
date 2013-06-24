@@ -32,6 +32,7 @@ function M.getupdateplatformcomponent()
 function M.getdeviceid()
     local io = require "io"
     local string = require "string"
+    local deviceId
     for line in io.lines('/proc/cpuinfo') do
         if string.find(line, 'Serial') then
             deviceId = string.sub(line, 11)
