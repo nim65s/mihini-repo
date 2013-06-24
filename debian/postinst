@@ -52,6 +52,10 @@ case "\$1" in
     start)
         if [ ! "`pidof \$DAEMON`" ]
         then
+            export LUA_PATH="/opt/mihini/lua/?.lua;/opt/mihini/lua/?/init.lua"
+            export LUA_CPATH="/opt/mihini/lua/?.so"
+            export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/mihini/lib
+
             \$DAEMON -a \$AGENT -w \$ROOTDIR -u mihini -g mihini -n 5 2>&1 | logger -t Mihini &
             if [ "\$?" -eq 0  ]
             then
@@ -72,11 +76,13 @@ case "\$1" in
         log_daemon_msg "Stopping \$NAME daemon"
         killproc \$DAEMON
         log_end_msg \$?
+        sleep 1
         ;;
 
     restart)
         \$0 stop
         \$0 start
+        sleep 1
         \$0 status
         ;;
 
