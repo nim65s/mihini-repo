@@ -71,7 +71,10 @@ the "start" sequences are following :
 As the application container receives a request to stop an application,
 the "stop" sequences are following :
 
-![](images/Application_Container_stop.png)\
+![](images/Application_Container_stop.png)
+
+\
+
 
 3. API
 ======
