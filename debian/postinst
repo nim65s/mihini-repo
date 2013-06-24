@@ -92,7 +92,8 @@ case "\$1" in
         ;;
 
     purge)
-        log_daemon_msg "Not Yet Implemented…"
+        rm -rf /var/opt/mihini/persist/*
+        log_daemon_msg "Mihini's persist folder cleared"
         ;;
 
     *)
