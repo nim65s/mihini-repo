@@ -53,12 +53,7 @@
     --Address on which the agent is accepting connection in order to communicate with the assets
     --Pattern is accepted: can be set to "*" to accept connection from any address, by default shell accepts only localhost connection.
     --agent.assetaddress = "*"
-    agent.deviceId = "012345678901234"
-    for line in io.lines('/proc/cpuinfo') do
-        if string.find(line, 'Serial') then
-            agnt.deviceId = string.sub(line, 11)
-        end
-    end
+    agent.deviceId = ""  --set deviceId to nil/empty string -> deviceId will be generated using agent.platform.getdeviceid()
 
     agent.signalport = 18888 -- port used for LUASIGNAL fwk (Linux only)
 

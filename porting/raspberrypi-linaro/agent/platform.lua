@@ -8,6 +8,7 @@
 -- Contributors:
 --     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 --     Fabien Fleutot     for Sierra Wireless - initial API and implementation
+--     Guilhem Saurel     for Sierra Wireless - deviceId()
 -------------------------------------------------------------------------------
 
 --- Agent port to Linux : porting and wrappers functions
@@ -29,7 +30,15 @@ function M.getupdateplatformcomponent()
     end
 
 function M.getdeviceid()
-    return nil
+    local io = require "io"
+    local string = require "string"
+    for line in io.lines('/proc/cpuinfo') do
+        if string.find(line, 'Serial') then
+            deviceId = string.sub(line, 11)
+        end
+    end
+    log("agent.platform", "INFO", "getdeviceid: deviceId set [%s]", deviceId);
+    return deviceId
 end
 
 
