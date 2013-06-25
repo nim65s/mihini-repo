@@ -62,7 +62,7 @@ function M.init()
    if initialiazed == true then
       return nil, "already initialiazed"
    end
-   web.start(config.rest.port and config.rest.port or 8080)
+   web.start(config.rest.port and config.rest.port or 8357)
    initialiazed = true
    return "ok"
 end
