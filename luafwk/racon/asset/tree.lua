@@ -267,7 +267,7 @@ local function emp_handler_SendData(data)
     if ticket~=0 and status~='async' then -- Immediate acknowledgement, can be OK or KO
         log("RACON-ASSET-TREE", "INFO", "Asset tree acknowledges ticket %d (path:'%s', status:'%s')",
         tostring(ticket), tostring(path), tostring(status))
-        --airvantage.acknowledge deals with status value conversion if needed
+        --racon.acknowledge deals with status value conversion if needed
         require 'racon'.acknowledge(ticket, status, msg)
         status = tonumber(status) or (status and 0 or -1) --emp status, we may want to force 0 or -1 only
     elseif status=='async' then -- Handler will take care of acknowledgement itself

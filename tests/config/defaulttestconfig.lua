@@ -28,7 +28,7 @@ local tests = {
   --system      = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"},  -- Pas au bon endroit
   --devicetree  = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"},  -- Pas au bon endroit
   --sms         = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, need stub? + activate SMS in test config ?
-  --airvantage  = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, -- "ref to hessian: deprecated, update by using bysant/m3da"
+  --racon       = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, -- "ref to hessian: deprecated, update by using bysant/m3da"
   --airvantage_perf = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, -- not available in test build for now
   --asset_tree  = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, --asset_tree.lua:17 module 'hessian.awtda' not found
   --emp         = { target = {"native"}, environment = {"agent"}, TestPolicy = "OnCommit"}, -- not available in test build for now

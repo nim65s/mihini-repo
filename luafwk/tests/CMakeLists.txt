@@ -21,7 +21,7 @@ ADD_LUA_LIBRARY(test_racon DESTINATION tests EXCLUDE_FROM_ALL
     stagedb.lua devicetree.lua sms.lua system.lua)
 
 ADD_UNIT_TEST(asset_tree asset_tree.lua TEST_TYPE non-standalone TEST_DEPENDENCY system_stubs)
-ADD_UNIT_TEST(airvantage airvantage.lua)
+ADD_UNIT_TEST(racon racon.lua)
 ADD_UNIT_TEST(devicetree devicetree.lua)
 ADD_UNIT_TEST(sms sms.lua TEST_DEPENDENCY messaging_stubs)
 ADD_UNIT_TEST(system system.lua TEST_DEPENDENCY system_stubs)

@@ -13,7 +13,7 @@ local system = require 'agent.system'
 function Reboot(asset, data, path, ticket)
     local status
     if ticket and ticket ~= 0 then
-        require'airvantage'.acknowledge(ticket, 0, "Reboot command succeeded", "on_boot", true) --ack to server after rebooting device
+        require'racon'.acknowledge(ticket, 0, "Reboot command succeeded", "on_boot", true) --ack to server after rebooting device
         status = "async"
     else status = "ok" end
 

@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- Copyright (c) 2012 Sierra Wireless and others.
+-- Copyright (c) 2013 Sierra Wireless and others.
 -- All rights reserved. This program and the accompanying materials
 -- are made available under the terms of the Eclipse Public License v1.0
 -- which accompanies this distribution, and is available at
@@ -9,9 +9,9 @@
 --     Romain Perier for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
-local airvantage = require 'airvantage'
+local racon = require 'racon'
 local u = require 'unittest'
-local t = u.newtestsuite("airvantage")
+local t = u.newtestsuite("racon")
 local waiting_notification = 1
 
 local function updateNotificationCb(package, version, url, parameters)
@@ -25,7 +25,7 @@ local function dataWritingCb()
 end
 
 function t :setup()
-   assert(airvantage.init())
+   assert(racon.init())
 end
 
 function t :teardown()
@@ -34,48 +34,48 @@ end
 
 function t :test_01_Init()
    -- Initializing the library many times must work
-   assert(airvantage.init())
-   assert(airvantage.init())
-   assert(airvantage.init())
+   assert(racon.init())
+   assert(racon.init())
+   assert(racon.init())
 end
 
 function t :test_02_TriggerPolicy()
    -- Trigger default policy
-   assert(airvantage.triggerPolicy(nil))
+   assert(racon.triggerPolicy(nil))
    -- Trigger one existing policy
-   assert(airvantage.triggerPolicy("now"))
+   assert(racon.triggerPolicy("now"))
    -- Trigger "never" policy: must fail
-   u.assert_nil(airvantage.triggerPolicy("never"))
+   u.assert_nil(racon.triggerPolicy("never"))
    -- Trigger unknown policy: must fail
-   u.assert_nil(airvantage.triggerPolicy("plop"))
+   u.assert_nil(racon.triggerPolicy("plop"))
 end
 
 function t: test_03_connectToServer()
    -- Test using sync connection
-   assert(airvantage.connectToServer())
-   assert(airvantage.connectToServer(nil))
-   assert(airvantage.connectToServer(0))
+   assert(racon.connectToServer())
+   assert(racon.connectToServer(nil))
+   assert(racon.connectToServer(0))
 
-   assert(airvantage.connectToServer(10))
+   assert(racon.connectToServer(10))
    -- Test using negative latency
    -- expected behavior here: negative value casted into unsigned int
    -- resulting value above INT_MAX, the max value accepted, so it's rejected
-   u.assert_nil(airvantage.connectToServer(-5))
+   u.assert_nil(racon.connectToServer(-5))
    
    -- Test using too big latency:
    -- expected behavior here: rejected
-   u.assert_nil(airvantage.connectToServer(2^31 + 1))
+   u.assert_nil(racon.connectToServer(2^31 + 1))
 end
 
 function t: test_04_Create_Start_Close()
-   local asset = airvantage.newAsset("TOTO")
+   local asset = racon.newAsset("TOTO")
    assert(asset)
    assert(asset:start())
    assert(asset:close())
 end
 
 function t: test_05_asset_pushData()
-   local asset = airvantage.newAsset("TOTO")
+   local asset = racon.newAsset("TOTO")
    assert(asset)
    assert(asset:start())
 
@@ -88,18 +88,18 @@ function t: test_05_asset_pushData()
    assert(asset:pushData("toto7", 47.455555, "now"))
    assert(asset:pushData("toto8", "foo", "now"))
    assert(asset:pushData("toto8", { nil }, "now"))
-   assert(airvantage.triggerPolicy("*"))
+   assert(racon.triggerPolicy("*"))
    assert(asset:close())
 end
 
 function t: test_06_Acknowledge()
-   assert(airvantage.acknowledge(0, 0, "BANG BANG BANG", "now", 0))
-   assert(airvantage.triggerPolicy("now"))
+   assert(racon.acknowledge(0, 0, "BANG BANG BANG", "now", 0))
+   assert(racon.triggerPolicy("now"))
 end
 
 function t: test_07_UpdateNotification()
    local rpc = require 'rpc'
-   local asset = airvantage.newAsset("TOTO")
+   local asset = racon.newAsset("TOTO")
    assert(asset)
 
    assert(asset:start())
@@ -110,7 +110,7 @@ function t: test_07_UpdateNotification()
 end
 
 function t: test_08_TableManipulation()
-   local asset = airvantage.newAsset("TOTO")
+   local asset = racon.newAsset("TOTO")
    assert(asset)
 
    assert(asset:start())

@@ -35,7 +35,7 @@ link()
 cd $BASEDIR
 
 mkdir -p doctmp/utils/ltn12
-mkdir doctmp/airvantage
+mkdir doctmp/racon
 
 link $HOME_RA/luafwk/sched/init.lua doctmp/sched.lua
 link $HOME_RA/luafwk/log/init.lua doctmp/log.lua
@@ -56,11 +56,11 @@ link $HOME_RA/luafwk/gpio/gpio.c   doctmp/gpio.c
 #link $HOME_RA/luafwk/gpio/gpio.lua doctmp/gpio.lua
 
 
-link $HOME_RA/luafwk/racon/init.lua doctmp/airvantage.lua
-link $HOME_RA/luafwk/racon/asset/init.lua doctmp/airvantage/asset.lua
+link $HOME_RA/luafwk/racon/init.lua doctmp/racon.lua
+link $HOME_RA/luafwk/racon/asset/init.lua doctmp/racon/asset.lua
 link $HOME_RA/luafwk/racon/system.lua doctmp/system.lua
 link $HOME_RA/luafwk/racon/sms.lua doctmp/sms.lua
-link $HOME_RA/luafwk/racon/table.lua doctmp/airvantage/table.lua
+link $HOME_RA/luafwk/racon/table.lua doctmp/racon/table.lua
 link $HOME_RA/luafwk/racon/devicetree.lua doctmp/devicetree.lua
 
 
@@ -95,7 +95,7 @@ link $HOME_RA/luafwk/luasocket/luasocket.luadoc doctmp/socket.lua
 link $HOME_RA/luafwk/lfs/lfs.luadoc doctmp/lfs.lua
 
 # mkdir doc/luafwk
-# mkdir doc/airvantage
+# mkdir doc/racon
 # mkdir doc/liblua
 # mkdir doc/socket
 # mkdir doc/lfs
@@ -113,7 +113,7 @@ cp lua5.1-execution-environment/lua/5.1/api/*.lua doctmp/
 cd luadocumentor
 lua luadocumentor.lua -f doc -d ../Lua_User_API_doc ../doctmp || exit 1
 lua luadocumentor.lua -f api -d ../Lua_User_API_doc ../doctmp || exit 1
-# lua luadocumentor.lua -d ../doc/airvantage ../doctmp/airvantage
+# lua luadocumentor.lua -d ../doc/racon ../doctmp/racon
 # lua luadocumentor.lua -d ../doc/liblua ../doctmp/liblua
 # lua luadocumentor.lua -d ../doc/socket ../doctmp/socket
 # lua luadocumentor.lua -d ../doc/lfs ../doctmp/lfs

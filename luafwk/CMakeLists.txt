@@ -44,7 +44,7 @@ ADD_SUBDIRECTORY (racon)
 
 # Some different names have been chosen for Racon services. They're aliased here:
 ADD_LUA_LIBRARY(racon_aliases
-    system.lua airvantage.lua devicetree.lua sms.lua)
+    system.lua devicetree.lua sms.lua)
 ADD_DEPENDENCIES(racon_aliases racon)
 
 ADD_LUA_LIBRARY(mihini_misc

@@ -30,7 +30,7 @@ markdown_list="
     agent/Using_treemgr_handlers_for_asset_management.md
     agent/Remote_Script.md
     agent/Monitoring.md
-    agent_connector_libraries/Airvantage_Lua_library.md
+    agent_connector_libraries/Racon_Lua_library.md
     agent_connector_libraries/Embedded_Micro_Protocol_EMP.md
 	agent_connector_libraries/Agent_UserGuide.md
     utilitary_libraries/Lua_RPC.md

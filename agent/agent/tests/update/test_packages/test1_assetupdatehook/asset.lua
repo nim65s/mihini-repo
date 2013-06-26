@@ -11,7 +11,7 @@
 
 --be aware that testname is used as asset name, and must be set accordingly in Manifest
 local testname="update_test_01_assetupdatehook"
-local airvantage = require"airvantage"
+local racon = require"racon"
 local sched = require"sched"
 
 local asset
@@ -32,7 +32,7 @@ local function unload()
 end
 
 local function load()
-    asset  = assert(airvantage.newasset(testname))
+    asset  = assert(racon.newasset(testname))
     assert(asset:setupdatehook(uhook))
     assert(asset:start())
 end

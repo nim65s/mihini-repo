@@ -13,7 +13,7 @@
 local dev      = require 'agent.devman'
 local tm       = require 'agent.treemgr'
 local srvcon   = require 'agent.srvcon'
-local airvantage   = require 'racon'
+local racon    = require 'racon'
 local upath    = require 'utils.path'
 local niltoken = require 'niltoken'
 
