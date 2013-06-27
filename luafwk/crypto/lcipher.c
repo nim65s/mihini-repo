@@ -274,27 +274,27 @@ static int Lnew(lua_State* L) {
     return 1;
 }
 
-static int ciphertext(SCipher* cipher, unsigned char* text, size_t text_size) {
+static int ciphertext(SCipher* cipher, const unsigned char* src, unsigned char *dst, size_t text_size) {
     switch (cipher->chain.name) {
     case CHAIN_ECB:
         if (cipher->desc.mode == MODE_ENC) {
-            return ecb_encrypt(text, text, text_size, (symmetric_ECB*)cipher->state);
+            return ecb_encrypt(src, dst, text_size, (symmetric_ECB*)cipher->state);
         } else {
-            return ecb_decrypt(text, text, text_size, (symmetric_ECB*)cipher->state);
+            return ecb_decrypt(src, dst, text_size, (symmetric_ECB*)cipher->state);
         }
         break;
     case CHAIN_CBC:
         if (cipher->desc.mode == MODE_ENC) {
-            return cbc_encrypt(text, text, text_size, (symmetric_CBC*)cipher->state);
+            return cbc_encrypt(src, dst, text_size, (symmetric_CBC*)cipher->state);
         } else {
-            return cbc_decrypt(text, text, text_size, (symmetric_CBC*)cipher->state);
+            return cbc_decrypt(src, dst, text_size, (symmetric_CBC*)cipher->state);
         }
         break;
     case CHAIN_CTR:
         if (cipher->desc.mode == MODE_ENC) {
-            return ctr_encrypt(text, text, text_size, (symmetric_CTR*)cipher->state);
+            return ctr_encrypt(src, dst, text_size, (symmetric_CTR*)cipher->state);
         } else {
-            return ctr_decrypt(text, text, text_size, (symmetric_CTR*)cipher->state);
+            return ctr_decrypt(src, dst, text_size, (symmetric_CTR*)cipher->state);
         }
         break;
     default:
@@ -306,8 +306,12 @@ static int ciphertext(SCipher* cipher, unsigned char* text, size_t text_size) {
 static int Lprocess(lua_State* L) {
     SCipher* cipher = luaL_checkudata(L, 1, MYTYPE);
     size_t text_size;
-    unsigned char* text = (unsigned char*) luaL_checklstring(L, 2, &text_size);
-    CHECK(ciphertext(cipher, text, text_size));
+    const unsigned char* src = (const unsigned char*) luaL_checklstring(L, 2, &text_size);
+    unsigned char *dst = malloc( text_size);
+    if( ! dst) { lua_pushnil( L); lua_pushstring( L, "not enough memory"); return 2; }
+    CHECK(ciphertext(cipher, src, dst, text_size));
+    lua_pushlstring( L, (const char *) dst, text_size);
+    free( dst);
     return 1;
 }
 
@@ -348,7 +352,7 @@ static int aes_filter_dec(lua_State* L) {
         // printf("\ndec[nil]");
         // cipher if data in partial
         if (partial_size > 0) {
-            CHECK(ciphertext(cipher, partial, partial_size));
+            CHECK(ciphertext(cipher, partial, partial, partial_size));
             // apply padding
             switch (cipher->padding.name) {
             case PADDING_PKCS5:
@@ -382,7 +386,7 @@ static int aes_filter_dec(lua_State* L) {
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         if ((partial_size == cipher->chunk_size) && (pt_size > 0)) {
-            CHECK(ciphertext(cipher, partial, partial_size));
+            CHECK(ciphertext(cipher, partial, partial, partial_size));
             luaL_addlstring(&b, (const char *) partial, partial_size);
             partial_size = 0;
         }
@@ -395,7 +399,7 @@ static int aes_filter_dec(lua_State* L) {
             }
             memcpy(partial, pt + size_tmp, partial_size);
             if (size_tmp > 0) {
-                CHECK(ciphertext(cipher, pt, size_tmp));
+                CHECK(ciphertext(cipher, pt, pt, size_tmp));
                 luaL_addlstring(&b, (const char *) pt, size_tmp);
             }
         }
@@ -426,7 +430,7 @@ static int aes_filter_enc(lua_State* L) {
         }
         // cipher if data in partial
         if (partial_size > 0) {
-            CHECK(ciphertext(cipher, partial, partial_size));
+            CHECK(ciphertext(cipher, partial, partial, partial_size));
             lua_pushlstring(L, (const char *) partial, partial_size);
         } else {
             lua_pushnil(L);
@@ -449,7 +453,7 @@ static int aes_filter_enc(lua_State* L) {
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         if (partial_size == cipher->chunk_size) {
-            CHECK(ciphertext(cipher, partial, partial_size));
+            CHECK(ciphertext(cipher, partial, partial, partial_size));
             luaL_addlstring(&b, (const char *) partial, partial_size);
             partial_size = 0;
         }
@@ -460,7 +464,7 @@ static int aes_filter_enc(lua_State* L) {
                 memcpy(partial, pt + size_tmp, partial_size);
             }
             if (size_tmp > 0) {
-                CHECK(ciphertext(cipher, pt, size_tmp));
+                CHECK(ciphertext(cipher, pt, pt, size_tmp));
                 luaL_addlstring(&b, (const char *) pt, size_tmp);
             }
         }
