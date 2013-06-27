@@ -20,7 +20,9 @@ local SENDERP = "33606060606"
 local MESSAGEP= "TEST MESSAGE"
 
 local function sms_handler(sender, message)
-   receivedSMS = 1
+   if sender == SENDERP and message == MESSAGEP then
+      receivedSMS = 1
+   end
 end
 
 function t :setup()
@@ -28,7 +30,7 @@ function t :setup()
 end
 
 function t :teardown()
-   assert(receivedSMS == 1)
+   u.assert_equal(receivedSMS, 1)
 end
 
 function t :test_Register()
