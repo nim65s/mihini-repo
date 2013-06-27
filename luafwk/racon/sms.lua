@@ -38,7 +38,7 @@ end
 
 -- Receive an SMS notification from racon
 local function emp_handler_NewSMS (payload)
-    local emmitter, message, id = unpack(payload)
+    local emitter, message, id = unpack(payload)
     for _, v in pairs(M.notifysmsid) do
        if v.regId == id then
       v.cb(emitter, message)
