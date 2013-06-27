@@ -10,14 +10,10 @@
 #*******************************************************************************
 PROJECT(LIB_MIHINI_KEYSTORE)
 
-INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
-
-INCLUDE_DIRECTORIES(${LIB_TOMCRYPT_SOURCE_DIR}/headers)
-INCLUDE_DIRECTORIES(${LIB_TOMMATH_SOURCE_DIR})
-INCLUDE_DIRECTORIES(${LIB_MD5_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR} ${LIB_MD5_SOURCE_DIR})
 
 #SET(KEYSTORE_SRC keystore.c aes_obfuscator.c get_obfuscation_bin_key.c hmac_md5_rfc.c)
-SET(KEYSTORE_SRC keystore.c dummy_obfuscator.c get_obfuscation_bin_key.c hmac_md5_rfc.c)
+SET(KEYSTORE_SRC keystore.c dummy_obfuscator.c hmac_md5_rfc.c)
 
 ADD_LIBRARY(lib_keystore SHARED ${KEYSTORE_SRC})
 # TARGET_LINK_LIBRARIES(lib_keystore m)

@@ -19,6 +19,8 @@
 #include <time.h>
 #include <sys/timeb.h>
 #include <unistd.h>
+#include <malloc.h>
+#include <string.h>
 #include "lauxlib.h"
 
 /* Build a random seed for pseudo-random generator. */
@@ -42,7 +44,6 @@ static void get_seed( char buf[RANDSIZ + 1] )
 
 /* Initialize ISAAC pseudo-random generator. */
 static void rand_init( randctx *rctx) {
-    ub4 _i = 0;
     char _seed[RANDSIZ + 1];
     get_seed( _seed );
     memset( rctx->randrsl, 0, RANDSIZ );

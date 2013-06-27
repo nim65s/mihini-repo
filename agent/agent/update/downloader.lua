@@ -12,7 +12,7 @@
 
 local common = require"agent.update.common"
 local io = require "io"
-local hash = require "crypto.hash"
+local hash = require "hmacmd5"
 local lfs = require "lfs"
 local ltn12 = require "ltn12"
 local http = require "socket.http"
@@ -233,7 +233,7 @@ function start_m3da_download()
     data.currentupdate.updatefile=updatepath
     common.savecurrentupdate()
 
-    local md5 = hash.new("md5")
+    local md5 = hash.md5()
     local md5filter = md5:filter()
 
     --we get the headers of package
@@ -367,13 +367,12 @@ function start_m3da_download()
         end -- : downloading is not needed anymore
 
 
-        local checksum = md5:digest()
+        local bin_checksum = md5:digest()
+        local hex_checksum = bin :gsub('.', function(k) return string.format('%02x',k:byte()) end)
 
-        --lower the character chain before comparison
-        checksum = string.lower(checksum)
         data.currentupdate.infos.signature = string.lower(data.currentupdate.infos.signature)
 
-        if checksum ~= data.currentupdate.infos.signature then
+        if hex_checksum ~= data.currentupdate.infos.signature then
             return state.stepfinished("failure", 553, "Download: signature mismatch for update archive")
         end
 
