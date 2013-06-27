@@ -10,15 +10,15 @@
 -------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
--- Airvantage objects handling staging database tables, to buffer, consolidate
+-- Racon objects handling staging database tables, to buffer, consolidate
 -- and send structured data.
 --
--- @{#table} instances should be created with @{airvantage.asset#(asset).newTable}.
+-- @{#table} instances should be created with @{racon.asset#(asset).newTable}.
 --
 --**NOTE:** The @{#table} API is currently in BETA, and is subject to change in
 -- the subsequent release.
 --
--- @module airvantage.table
+-- @module racon.table
 --
 
 local common = require 'racon.common'
@@ -58,7 +58,7 @@ local MT_TABLE = { __type='racon.table' }; MT_TABLE.__index=MT_TABLE
 -- @field asfloat boolean to force encoding of doubles as float (default: false).
 --
 -- @field consolidation consolidation method, mandatory for
---  table:@{airvantage.table#(table).newConsolidation} calls. Possible values are `first`,
+--  table:@{racon.table#(table).newConsolidation} calls. Possible values are `first`,
 --  `last`, `max`, `mean`, `median`, `middle`, `min`, `sum`.
 --
 -- **Note:** QuasiPeriodic Vector is **not** part of AWT-DA 2 and should not be
@@ -71,10 +71,10 @@ local MT_TABLE = { __type='racon.table' }; MT_TABLE.__index=MT_TABLE
 --------------------------------------------------------------------------------
 -- Creates and returns a @{#table} instance.
 --
--- @function [parent=#airvantage.asset] newTable
+-- @function [parent=#racon.asset] newTable
 -- @param self
 -- @param path (relative to the asset root) where the data will be sent.
--- @param columns list of either @{airvantage.table#columnspec} or column names (to
+-- @param columns list of either @{racon.table#columnspec} or column names (to
 --  use default values).
 -- @param storage either "file" or "ram", how the table must be persisted.
 -- @param sendPolicy name of the policy controlling when the table content is
@@ -114,7 +114,7 @@ end
 
 --------------------------------------------------------------------------------
 -- Adds a row of data to the table.
--- The table needs to be created with @{airvantage.asset}:newTable().
+-- The table needs to be created with @{racon.asset}:newTable().
 --
 -- @function [parent=#table] pushRow
 -- @param self
@@ -168,23 +168,28 @@ end
 -- When a consolidation is declared, a new table (*destination*), whose column
 -- names must be a subset of the *source* table column names, will be created.
 -- Everytime the source table is consolidated, it will flush everything from
--- source and create in a single row  in destination. The values in this row
+-- source and create in a single row in destination. The values in this row
 -- depend on *consolidation method* (average value, minimum, median, ...) which
 -- is set for each column.
 --
 -- A table can have only one consolidation table (trying to set a consolidation
 -- twice will result in a error).
 --
+--     Example : 
+--     --create the polices:
+--     agent.config.data.policy.everyminute={period=60}  --consolidation policy every minute
+--     agent.config.data.policy.every10minutes={period=10*60}  --sending data policy every 10 minutes
 --     --create source and destination tables
 --     local src = asset:newTable('example', {'timestamp', 'temp'}, 'ram', 'never')
---     local dst = src:newConsolidation('consolidated',
---                  { timestamp='median', temp='mean' })
+--     local dst = src:newConsolidation('consolidated', 
+--             { timestamp='median', temp='mean' }, 'everyminute', 'every10minutes')
 --     -- fill data into src
 --     src:pushRow{ timestamp=1, temp=25 }
 --     src:pushRow{ timestamp=2, temp=28 }
 --     src:pushRow{ timestamp=3, temp=25 }
---     src:consolidate() -- will create the row { timestamp=2, temp=26 }
---     dst:send()        -- send only consolidated data to server
+--     
+--     --Every minute, the source table will be consolidated and a row { timestamp=2, temp=26 } will be created in destination
+--     --Every 10 minutes, the consolidated data destination will be sent to server
 --
 -- The data can be consolidated by:
 --
@@ -195,8 +200,8 @@ end
 -- **Note:** a consolidation policy can be set only if the send policy of the
 -- source table is `never` (trying to call this method otherwise will result
 -- in a error). This means that automatic policies are mutually  exclusive for
--- sending and consolidating data. However @{airvantage.table:send} and
--- @{airvantage.table:consolidate} methods are always available for more advanced
+-- sending and consolidating data. However @{racon.table:send} and
+-- @{racon.table:consolidate} methods are always available for more advanced
 -- use cases.
 --
 -- **Note 2:** when the policies of the consolidation of a source and the
@@ -210,7 +215,7 @@ end
 -- @function [parent=#table] newConsolidation
 -- @param self
 -- @param path (relative to the asset root) where the data will be sent.
--- @param columns either a list of @{airvantage.table.columnspec} with `consolidation`
+-- @param columns either a list of @{racon.table.columnspec} with `consolidation`
 --  field and the same names as source table which associate each column
 --  name (key) to its consolidation method (value), like in example.
 -- @param storage either "file" or "ram", how the table must be persisted.

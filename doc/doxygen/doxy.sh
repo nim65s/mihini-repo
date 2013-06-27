@@ -1,3 +1,5 @@
+#!/bin/sh
+
 #*******************************************************************************
 # Copyright (c) 2012 Sierra Wireless and others.
 # All rights reserved. This program and the accompanying materials
@@ -8,9 +10,32 @@
 # Contributors:
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
+BASEDIR=$(cd $(dirname $0) && pwd)
 
-ADD_LUA_LIBRARY(tester DESTINATION tester EXCLUDE_FROM_ALL
-  test.lua
-  testmanager.lua
-  targetmanager.lua
-)
+while getopts g: o
+do  case "$o" in
+    g)  ga_tracker_path="$OPTARG";;
+    ?)  print "Usage: $0 [-g ga_tracker_path]"
+        exit 1;;
+    esac
+done
+
+cd $BASEDIR
+
+if [ -n "$ga_tracker_path" ]; then
+    doxygen -w html headertmp tmp1 tmp2 Doxyfile
+
+    sed "\,</head>, {
+            h
+            r $ga_tracker_path
+            g
+            N
+    }" headertmp > header
+       
+else
+doxygen -w html header tmp1 tmp2 Doxyfile
+fi
+
+#cleanup
+rm -rf tmp1 tmp2 headertmp
+

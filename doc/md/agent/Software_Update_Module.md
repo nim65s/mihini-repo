@@ -234,7 +234,7 @@ There is two types of update, the **target path** will be used to
      The update package will be forwarded to the application using
     [Embedded Micro Protocol
     (EMP)](Embedded%2BMicro%2BProtocol%2B%2528EMP%2529.html), and
-    Airvantage APIS provides corresponding functionalities.\
+    Racon APIS provides corresponding functionalities.\
     The application must report update execution status; so it has to
     either:
     -   handle unsupported EMP message to alert synchronously that the

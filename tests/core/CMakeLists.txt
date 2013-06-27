@@ -14,4 +14,5 @@ ADD_LUA_LIBRARY(tester DESTINATION tester
   testManager.lua
   targetManager.lua
   testerTools.lua
+  platformAPI.lua
 )

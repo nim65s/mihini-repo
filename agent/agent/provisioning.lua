@@ -1,6 +1,7 @@
 local security = require 'm3da.session.security'
 local cipher   = require 'crypto.cipher'
 local hash     = require 'crypto.hash'
+local lfs      = require 'lfs'
 
 local M = { }
 
@@ -55,7 +56,8 @@ end
 function M.registration_password_md5(K)
     checks('string')
     x("Setting pre-shared key")
-    assert(os.execute('mkdir -p crypto'), "Can't create crypto folder")
+    local cryptopath = (LUA_AF_RW_PATH or lfs.currentdir())
+    assert(os.execute('mkdir -p '..cryptopath..'/'..'crypto'), "Can't create crypto folder")
     x("K ="..k2s(K))
     local serverid = assert(agent.config.server.serverId, "Missing server.serverId in config")
     local deviceid = assert(agent.config.agent.deviceId, "Missing agent.deviceId in config")

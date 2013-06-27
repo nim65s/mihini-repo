@@ -13,6 +13,7 @@ function loadtestsontarget(testslist, env, rpcclient)
 
   assert(tests, "Test list empty for "..env.." environment")
   assert(rpcclient)
+  
 
   for k,v in pairs(tests) do
     rpcclient:call("loadinfwk", "tests."..v)

@@ -52,7 +52,7 @@ local function ResetToFactoryDefault(asset, params, command, ticket)
     if (type(restart) == "boolean" and restart) or (type(restart) == "number" and restart) then
         local delay = (type(restart) == "number" and restart >= 6 and restart) or 6
         if ticket and ticket ~= 0 then
-            require'airvantage'.acknowledge(ticket, 0, "ResetToFactoryDefault command succeeded", "on_boot", true) --ack to server after rebooting device
+            require'racon'.acknowledge(ticket, 0, "ResetToFactoryDefault command succeeded", "on_boot", true) --ack to server after rebooting device
             status = "async"
         else status = "ok" end
 

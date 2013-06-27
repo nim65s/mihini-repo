@@ -133,10 +133,6 @@ function M.downloadkeys(session)
     log('M3DA-PROVISIONING', 'DEBUG', "Acknowledgment sent")
 
     log('M3DA-PROVISIONING', 'INFO', "Credential provisioning successful")
-
-    log('M3DA-PROVISIONING', 'WARNING', "Temporization (workaround)")
-    sched.wait(10)
-
     return 'ok'
 end
 

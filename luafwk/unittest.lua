@@ -55,6 +55,10 @@ function newtestsuite(name)
     return addtestsuite(name, t)
 end
 
+function resettestsuite()
+  testsuites = {}
+end
+
 
 
 
@@ -354,21 +358,21 @@ function isFinished()
   return isFinished
 end
 
-function configureAgent(target, path, hostname, port)
+function configureReadyAgent(target, path, hostname, port)
   startRA.target = target
   startRA.path = path
   startRA.hostname = hostname or 'localhost'
   startRA.port = port or 1999
 end
 
-function resetAgentConfig()
+function resetReadyAgentConfig()
   startRA.target = nil
   startRA.path = nil
   startRA.hostname = nil
   startRA.port = nil
 end
 
-local function runAgent()
+local function runReadyAgent()
   assert_not_nil(startRA.target)
   assert_not_nil(startRA.path)
   assert_not_nil(startRA.hostname)

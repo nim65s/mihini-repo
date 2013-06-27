@@ -31,12 +31,13 @@ function compile(config, svndir, targetdir)
   assertconfig(config)
 
   -- Compile the Agent using the default toolchain
+  --local result = os.execute(svndir.."/bin/build.sh -n -C " ..targetdir)
   local result = os.execute(svndir.."/bin/build.sh -C " ..targetdir)
   if result ~= 0 then error("Compilation error for module: "..config.ConfigModule) end
 
   --result = os.execute("cd " .. targetdir.. " && make all embeddedtestsluafwk luafwktests readyagenttests lua embeddedteststools modbusserializertests readyagentconnectortests")
   -- Compiling Ready Agent
-  result = os.execute("cd " .. targetdir.. " && make all lua")
+  result = os.execute("cd " .. targetdir.. " && make all lua agent_provisioning")
   if result ~= 0 then error("Make Agent error for module: "..config.ConfigModule) end
 
   -- Remove defaultconfig
@@ -61,7 +62,7 @@ function install(config, svndir, targetdir)
    assert(targetdir)
 
    -- delete all stored objects for a clean install
-   local result = os.execute("rm -rf "..targetdir .. "/runtime/persist/")
+   local result = os.execute("rm -rf "..targetdir .. "/runtime/persist/ && rm -rf "..targetdir .. "/runtime/crypto/")
    if result ~= 0 then error("Installation error for module: "..config.ConfigModule) end
 
 end
@@ -108,7 +109,7 @@ end
 function stop(config, svndir, targetdir, rpcclient)
   print ("Stopping target")
   assert(rpcclient)
-  local res, err = rpcclient:call('closeLua')
+  local res, err = rpcclient:call('os.exit')
 
   sched.wait(3)
   if not res then return "Success" else return nil, "Stop failed" end

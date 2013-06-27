@@ -13,6 +13,6 @@ PROJECT(CFWK_DEVICETREE)
 
 ADD_LIBRARY(Swi_DeviceTree SHARED swi_devicetree.c)
 ADD_PUBLIC_HEADER(Swi_DeviceTree swi_devicetree.h)
-TARGET_LINK_LIBRARIES(Swi_DeviceTree Emp lib_yajl)
+TARGET_LINK_LIBRARIES(Swi_DeviceTree Emp lib_yajl lib_swi_log)
 
 ADD_UNIT_TEST(dt_test dt_test.c RUNTIME_DEPENDENCIES Swi_DeviceTree lib_swi_log)

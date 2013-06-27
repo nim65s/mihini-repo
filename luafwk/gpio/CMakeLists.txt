@@ -9,12 +9,12 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-INCLUDE_DIRECTORIES(
-    ${LIB_MIHINI_COMMON_SOURCE_DIR}
-    # ${LIB_ALEOSVARS_SOURCE_DIR}
-    ${LIB_EXTVARS_SOURCE_DIR}
-    ${LIB_MIHINI_LUASIGNAL_SOURCE_DIR}
-)
+PROJECT(MIHINI_GPIO)
 
-ADD_LUA_LIBRARY(treehdlsample EXCLUDE_FROM_ALL DESTINATION agent/devman/extvars treehdlsample.c)
-TARGET_LINK_LIBRARIES(treehdlsample lib_swi_log)
+INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
+
+ADD_LUA_LIBRARY(gpio gpio.lua gpio.c)
+ADD_DEPENDENCIES(gpio gpio_core sched lib_swi_log)
+TARGET_LINK_LIBRARIES(gpio lib_swi_log)
+
+

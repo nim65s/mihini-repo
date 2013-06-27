@@ -364,6 +364,7 @@ local path        = require 'utils.path'
 local db          = require 'agent.treemgr.db'; M.db = db
 local utils_table = require 'utils.table'
 local niltoken    = require 'niltoken'
+local lfs         = require 'lfs'
 
 require 'print'
 
@@ -374,11 +375,20 @@ local function get_handler(name)
     local h = package.loaded[name]
     if h then return h end
 
-    -- Not loaded yet: require it and check that the module works as specified.
-    h = require(name)
-    if not pcall(function() return h.get end) then
-        error ("Module "..name.." returns "..sprint(h)..
-            " instead of a valid handler")
+    if name:match '%.extvars%.' or name:match '^extvars%.' or name:match '%.extvars$' then
+       local extvars = require 'agent.treemgr.handlers.extvars'
+       local apath = (LUA_AF_RO_PATH or lfs.currentdir()) .. "/lua/" .. name:gsub("%.", "/") .. ".so"
+       local err
+       h, err = extvars.load(name, apath)
+       if not h then error (err) end
+       package.loaded[name] = h
+    else
+       -- Not loaded yet: require it and check that the module works as specified.
+       h = require(name)
+       if not pcall(function() return h.get end) then
+	  error ("Module "..name.." returns "..sprint(h)..
+		 " instead of a valid handler")
+       end
     end
     return h
 end

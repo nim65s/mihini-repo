@@ -11,15 +11,15 @@
 
 --------------------------------------------------------------------------------
 --
--- Provides interfaces with the Sierra Wireless AirVantage M2M Cloud Services
+-- Provides interfaces with the M2M Cloud Services
 -- Platform.
 --
--- The AirVantage Application Services functionality (managing transfer and
+-- The Racon Application Services functionality (managing transfer and
 -- remote storage of application data and commands) is exposed in the
--- @{airvantage.asset} module.
+-- @{racon.asset} module.
 --
 --
--- @module airvantage
+-- @module racon
 --
 
 
@@ -32,7 +32,7 @@ local M = { initialized=false }
 --------------------------------------------------------------------------------
 -- Initializes the module.
 --
--- @function [parent=#airvantage] init
+-- @function [parent=#racon] init
 -- @return non-`nil` upon success;
 -- @return `nil` + error message upon failure.
 --
@@ -54,12 +54,12 @@ end
 -- A connection to the server is done only if data needs to be sent as the result
 -- to this trigger operation. Put another way, if no data is attached to the
 -- triggered policy(ies), then no connection to the server is done.
--- See @{#airvantage.connectToServer} for complementary function.
+-- See @{#racon.connectToServer} for complementary function.
 --
 -- For a description of how policies allow to manage data reporting from the
--- assets to the server, see the _AirVantage technical article_.
+-- assets to the server, see the _Racon technical article_.
 --
--- @function [parent=#airvantage] triggerPolicy
+-- @function [parent=#racon] triggerPolicy
 -- @param #string policy name of the policy queue to be flushed.
 --   Flush all policies if policy=='*';
 --   only flush the `default` policy if policy is omitted.
@@ -86,7 +86,7 @@ end
 -- Note:
 --  - 0 value means the connection will be asynchronous, but will be done as soon as possible.
 --
--- @function [parent=#airvantage] connectToServer
+-- @function [parent=#racon] connectToServer
 -- @param latency optional positive integer, latency in seconds before initiating the connection to the server,
 -- use nil value to specify synchronous connection.
 -- @return non-`nil` upon success;
@@ -108,7 +108,7 @@ end
 -- non-null number to signal failure. Most applications should therefore not
 -- call this function explicitly.
 --
--- @function [parent=#airvantage] acknowledge
+-- @function [parent=#racon] acknowledge
 -- @param ackid the id to acknowledge
 -- @param status a boolean, true for success, false for failure
 -- @param errmsg an optional error message string
@@ -133,19 +133,19 @@ function M.acknowledge(ackid, status, errmsg, policy, persisted)
 end
 
 --------------------------------------------------------------------------------
--- Creates and returns a new @{airvantage.asset#asset} instance.
+-- Creates and returns a new @{racon.asset#asset} instance.
 --
--- The newly created @{airvantage.asset#asset} is not started when returned, it can therefore
+-- The newly created @{racon.asset#asset} is not started when returned, it can therefore
 -- neither send nor receive messages at this point.
 --
 -- This intermediate, unstarted set allows to configure message handlers before
 -- any message is actually transferred to the #asset.
 --
--- See @{airvantage.asset#asset.start} to start the newly created instance.
+-- See @{racon.asset#asset.start} to start the newly created instance.
 --
--- @function [parent=#airvantage] newAsset
+-- @function [parent=#racon] newAsset
 -- @param id string defining the assetid identifying the instance of this new asset.
--- @return airvantage.asset#asset instance on success.
+-- @return racon.asset#asset instance on success.
 -- @return `nil` followed by an error message otherwise.
 --
 M.newAsset = asset.newasset

@@ -7,8 +7,9 @@
 #
 # Contributors:
 #     Romain Perier for Sierra Wireless - initial API and implementation
+#     Benjamin Cabé for Sierra Wireless - bug 407919
 #*******************************************************************************
 
 ADD_CUSTOM_TARGET(mdoc
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/pandocize.sh ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/pandocize.sh -i ${CMAKE_CURRENT_SOURCE_DIR} -g \"\${GA_TRACKER}\"
 )

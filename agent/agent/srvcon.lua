@@ -58,14 +58,14 @@ local function dispatch_message(envelope_payload)
         elseif msg.__class == 'Message' then
             if not msg.body or not next(msg.body) then
                 log("SRVCON", "ERROR", "invalid message: message body is nil or empty, message is rejected")
-                if msg.ticketid and msg.ticketid ~= 0 then require('airvantage').acknowledge(msg.ticketid, false, "invalid message: message body is nil or empty", "now", false) end
+                if msg.ticketid and msg.ticketid ~= 0 then require('racon').acknowledge(msg.ticketid, false, "invalid message: message body is nil or empty", "now", false) end
             else
                 local name = upath.split(msg.path, 1)
                 local r, errmsg = asscon.sendcmd(name, "SendData", msg)
                 if not r then
                     --build and send a NAK to the server through a session+transport
                     log("SRVCON", "ERROR", "Failed to dispatch server message %s", sprint(msg))
-                    if msg.ticketid and msg.ticketid ~= 0 then require('airvantage').acknowledge(msg.ticketid, false, errmsg, "now", false) end
+                    if msg.ticketid and msg.ticketid ~= 0 then require('racon').acknowledge(msg.ticketid, false, errmsg, "now", false) end
                 end
             end
          elseif msg.__class == 'Response' then
@@ -117,7 +117,12 @@ function M.dosession()
     end
     M.pendingcallbacks = { }
     lock.unlock(M)
-    return status
+
+    if status >= 200 and status <= 299 then
+        return "ok"
+    else
+        return nil, "unexpected status code " .. tostring(r)
+    end
 end
 
 -- Obsolete: former support for data sending through SMS.

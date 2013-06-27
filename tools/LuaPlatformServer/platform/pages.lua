@@ -48,7 +48,7 @@ ${prolog}
 -- Main page.
 --------------------------------------------------------------------------------
 web.site[''] = web.template 'default' {
-    title = [[Airvantage platform server simulator]],
+    title = [[M2M platform server simulator]],
     body = [[
     <ul>
       <li><a href='history'>See history</a></li>
@@ -67,7 +67,7 @@ web.site[''] = web.template 'default' {
 --
 --------------------------------------------------------------------------------
 web.site['config'] = web.template 'default' {
-    title = [[Airvantage platform server simulator]],
+    title = [[M2M platform server simulator]],
     body = [[
       <p class='error'>Not implemented</p>
       <form action='/config/submit' method='POST'>

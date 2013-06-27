@@ -6,40 +6,28 @@
 -- http://www.eclipse.org/legal/epl-v10.html
 --
 -- Contributors:
---     Sierra Wireless - initial API and implementation
--------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
---
--- AirVantage Application Services object used to send data to the AirVantage
--- Application Services server. Instances of this object should be created
--- through @{airvantage#(airvantage).newAsset}.
---
--- This module relies on an internal background service known as the Mihini
--- Agent, which is responsible for queuing data, managing the flush timers
--- and sending the data to the remote AirVantage server. Many of the APIs in
--------------------------------------------------------------------------------
--- Copyright (c) 2012 Sierra Wireless and others.
--- All rights reserved. This program and the accompanying materials
--- are made available under the terms of the Eclipse Public License v1.0
--- which accompanies this distribution, and is available at
--- http://www.eclipse.org/legal/epl-v10.html
---
--- Contributors:
 --     Laurent Barthelemy for Sierra Wireless - initial API and implementation
 --     Fabien Fleutot     for Sierra Wireless - initial API and implementation
 --     Minh Giang         for Sierra Wireless - initial API and implementation
 --     Romain Perier      for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- Racon Application Services object used to send data to the M2M
+-- Application Services server. Instances of this object should be created
+-- through @{racon#(racon).newAsset}.
+--
+-- This module relies on an internal background service known as the Mihini
+-- Agent, which is responsible for queuing data, managing the flush timers
+-- and sending the data to the remote M2M server. Many of the APIs in
 -- this module relay the data to the Agent; the Agent then manages
 -- the data as described.
 --
--- For information regarding supported policies, see the @{airvantage#airvantage} module
+-- For information regarding supported policies, see the @{racon#racon} module
 -- documentation.
 --
---Two methods are supported for sending data to the AirVantage servers:
+--Two methods are supported for sending data to the M2M servers:
 --
 -- 1. `pushData`:  this is a simple API for managing how to send data,
 --    this is the recommended method for most use cases.
@@ -47,12 +35,9 @@
 --    transfer of data; it is an experimental API.
 --
 -- Moreover, methods `setUpdateHook` and `sendUpdateResult` are provided to let application handle
--- software update requests from the AirVantage servers in a custom way.
+-- software update requests from the M2M servers in a custom way.
 --
--- **NOTE:** The AirVantage APIs are currently in BETA and are subject to
--- change in the subsequent release.
---
--- @module airvantage.asset
+-- @module racon.asset
 --
 
 local common       = require 'racon.common'
@@ -93,9 +78,9 @@ end
 -- This intermediate, unstarted set allows to configure message handlers before
 -- any message is actually transferred to the #asset.
 --
--- See @{airvantage.asset.start} to start the newly created instance.
+-- See @{racon.asset.start} to start the newly created instance.
 --
--- @function [parent=#airvantage] newAsset
+-- @function [parent=#racon] newAsset
 -- @param id string defining the assetid identifying the instance of this new asset.
 -- @return @{#asset} instance on success.
 -- @return `nil` followed by an error message otherwise.
@@ -181,7 +166,7 @@ end
 --
 -- Those data are not necessarily moved forward from the agent to the server
 -- immediately: agent-to-server data transfers are managed through policies,
--- as described in the _AirVantage technical article_.
+-- as described in the _Racon technical article_.
 --
 -- This API is optimized for ease of use: it will internally try to reformat
 -- data in the most sensible, server-compatible way. Applications requiring a
@@ -201,7 +186,7 @@ end
 --
 -- **Note:** Notice that for the server, all data is timestamped. If there is 
 -- no 'timestamp' or 'timestamps' entry on a record, it will be timestamped 
--- at the date of its reception by the server (see more detail [Airvantage_Lua_library](http://git.eclipse.org/c/mihini/org.eclipse.mihini.git/tree/doc/md/agent_connector_libraries/Airvantage_Lua_library.md))
+-- at the date of its reception by the server (see more detail [Racon_Lua_library](http://git.eclipse.org/c/mihini/org.eclipse.mihini.git/tree/doc/md/agent_connector_libraries/Racon_Lua_library.md))
 --
 -- @function [parent=#asset] pushData
 -- @param self
@@ -295,12 +280,12 @@ function MT_ASSET :setUpdateHook(hook)
 end
 
 -- -----------------------------------------------------------------------------
--- Creates and returns a @{airvantage.table#table} instance.
+-- Creates and returns a @{racon.table#table} instance.
 --
 -- @function [parent=#asset] newTable
 -- @param self
 -- @param path (relative to the asset's root) where the data will be sent.
--- @param columns list of either @{airvantagetable#columnspec} or column names (to
+-- @param columns list of either @{racon.table#columnspec} or column names (to
 --  use default values).
 -- @param storage either string `"file"` or `"ram"`; how the table must be persisted.
 -- @param sendPolicy name of the policy controlling when the table content is
@@ -310,14 +295,14 @@ end
 --  will be dropped then recreated from scratch (so any data inside table will
 --  be lost).
 --
--- @return an @{airvantage.table#table} to store and consolidate structured data.
+-- @return an @{racon.table#table} to store and consolidate structured data.
 -- @return `nil` + error message otherwise.
 --
 
 MT_ASSET.newTable = require 'racon.table'
 
 --------------------------------------------------------------------------------
--- airvantage.asset data tree
+-- racon.asset data tree
 --
 -- An @{#asset} contains a data tree, in its field `tree`.
 --

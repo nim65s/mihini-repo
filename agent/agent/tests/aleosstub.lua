@@ -21,7 +21,7 @@ local t=u.newtestsuite("aleosvars")
 function t:setup()
     --enable aleos stub
     require"agent.devman.extvars.aleosstub"
-    u.assert(airvantage.init())
+    u.assert(racon.init())
     u.assert(devicetree.init())
 end
 

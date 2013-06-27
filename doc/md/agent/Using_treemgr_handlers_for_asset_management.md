@@ -39,7 +39,7 @@ thus also become accessible to the server. 3rd party applications
 interact with the server through assets, which can either reflect an
 actual physical object (a thermometer, a compressor...) or be a software
 abstraction. Applications can create assets with
-"airvantage.newAsset(assetId)", then use them to push data to the
+"racon.newAsset(assetId)", then use them to push data to the
 server, and configure them to react properly to server requests.
 
 To the existing asset API, we add:

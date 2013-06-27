@@ -124,6 +124,23 @@ local function EMPUnregisterVariable(assetid, dt_id)
     else return errnum 'UNKNOWN_ERROR', (err or "unknown error") end
 end
 
+local function rest_get_handler(env)
+   local node = env["suburl"]:gsub("/", "%.")
+   local v, l = treemgr.get(node)
+   if not v and type(l) == "string" then
+      return v, l
+   end
+   return { niltoken(v), l }
+end
+
+local function rest_set_handler(env)
+   if not env["payload"] then
+      return nil, "missing value"
+   end
+   local node = env["suburl"]:gsub("/", "%.")
+   return treemgr.set(node, env["payload"])
+end
+
 function M.init(cfg)
 
     if M.initialized then return "already initialized" end
@@ -148,6 +165,15 @@ function M.init(cfg)
     assert(asscon.registercmd("RegisterVariable", EMPRegisterVariable))
     assert(asscon.registercmd("UnregisterVariable", EMPUnregisterVariable))
 
+    -- register rest commands
+    if type(config.rest) == "table" and config.rest.activate == true  then
+       local rest = require 'agent.rest'
+       rest.register("devicetree/[%w.]+", "GET", rest_get_handler)
+       rest.register("devicetree/[%w.]+", "PUT", rest_set_handler)
+    else
+       rest_get_handler = nil
+       rest_set_handler = nil
+    end
     M.initialized = true
 
     return "ok"

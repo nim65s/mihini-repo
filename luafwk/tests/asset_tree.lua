@@ -14,14 +14,14 @@
 local sched  = require "sched"
 local u = require "unittest"
 local ltn12tostring = require "utils.ltn12.source".tostring
-local airvantage  = require "airvantage"
+local racon  = require "racon"
 local config = require "agent.config"
 local asscon = require "agent.asscon"
 
 local t = u.newtestsuite("asset_tree")
 
 function t :setup()
-    u.assert (airvantage.init())
+    u.assert (racon.init())
     return "ok"
 end
 
@@ -30,7 +30,7 @@ function t:test_createasset()
 
     --register
     for i=1, 10 do
-        local newasset = airvantage.newasset("asset"..tostring(i))
+        local newasset = racon.newasset("asset"..tostring(i))
         u.assert_not_nil(newasset)
         local status = newasset:start()
         u.assert_string(status)
@@ -57,7 +57,7 @@ end
 
 function t:test_asset_tree_command()
     --create/register
-    local newasset = u.assert(airvantage.newasset("command"))
+    local newasset = u.assert(racon.newasset("command"))
     local status   = u.assert(newasset:start())
 
     --configure
@@ -128,7 +128,7 @@ end
 
 function t:test_asset_tree_variable()
     --create/register
-    local newasset = airvantage.newasset("variable")
+    local newasset = racon.newasset("variable")
     u.assert_not_nil(newasset)
     local status = newasset:start()
     u.assert_equal("ok", status)
@@ -191,9 +191,9 @@ end
 
 function t:test_asset_connectreboot()
     --create/register
-    local newasset = u.assert(airvantage.newasset("connectreboot"))
+    local newasset = u.assert(racon.newasset("connectreboot"))
     u.assert(newasset :start())
-    u.assert(airvantage.connecttoserver())
+    u.assert(racon.connecttoserver())
 
     local system = require 'racon.system'.init()
     u.assert(system.reboot())

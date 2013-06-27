@@ -10,7 +10,7 @@
 #*******************************************************************************
 
 ADD_CUSTOM_TARGET(luaExecEnv
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ldoc.sh
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ldoc.sh -g \"\${GA_TRACKER}\"
     COMMAND rm -f ${CMAKE_CURRENT_BINARY_DIR}/*.zip
     COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/Lua_User_API_doc
     COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/mihini-*.zip ${CMAKE_CURRENT_BINARY_DIR}

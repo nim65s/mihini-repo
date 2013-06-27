@@ -61,8 +61,8 @@ function targetmanagerapi:stop()
   self.target.stop(self.config, self.svndir, self.targetdir, self:getrpc())
 end
 
-function targetmanagerapi:restart()
-  self.target.restart(self.config, self.svndir, self.targetdir, self:getrpc())
+function targetmanagerapi:reboot()
+  self.target.reboot(self:getrpc())
 end
 
 function targetmanagerapi:startlua()

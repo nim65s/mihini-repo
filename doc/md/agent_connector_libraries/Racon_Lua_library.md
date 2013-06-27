@@ -1,10 +1,10 @@
-Airvantage Lua library
+Racon Lua library
 ======================
 
 
 #### 1. Presentation
 
-The Airvantage Connector library provides access to the Airvantage
+The Racon Connector library provides access to the M2M
 platform through the Agent. On architectures supporting multiple
 processes, it is a library which dialogs with the Agent process
 through a dedicated IPC channel, most commonly a socket.
@@ -28,14 +28,14 @@ encoding and regrouping, of handling acknowledgements, of securing them
 in non-volatile memory if asked to, etc.
 
 In addition to offering communication means to the server, the
-AirVantage library also gives access to other Agent features: SMS
+Racon library also gives access to other Agent features: SMS
 communications, hardware I/O control and monitoring, etc.
 
 #### 2. Create a New Asset Instance, Initialize a New Asset
 
-Creating a new asset is as simple as calling `airvantage.newasset()`
+Creating a new asset is as simple as calling `racon.newasset()`
 with a mandatory asset id string.\
- It returns an Airvantage asset object, which acts on behalf of the
+ It returns an Racon asset object, which acts on behalf of the
 asset.\
  An asset does not necessarily represent a physical piece of hardware;
 it is merely a representation of the global application architecture.
@@ -45,11 +45,11 @@ the Agent. To make it active, the `start` method must be called
 first, after any required event subscription has been performed.
 
 ~~~~{.lua}
-local airvantage = require "airvantage"
-airvantage.init() -- configure the module
+local racon = require "racon"
+racon.init() -- configure the module
 
 -- create asset
-asset = airvantage.newAsset("newassetid")
+asset = racon.newAsset("newassetid")
 -- register asset
 local status, err = asset :start()
 if not status then print("Error when starting the asset: "..err)
@@ -99,11 +99,11 @@ to a policy, which can be:
   dates, specified using the standard Unix cron syntax.
 - latency=n: The operation will be performed in `n` seconds at most.
 - manually=true: The connection will be triggered by the application
-  through an explicit call to `airvantage.triggerPolicy()`.
+  through an explicit call to `racon.triggerPolicy()`.
 - boot=n: The operation will be performed `n` seconds after the
-  `airvantage` module has been initialized.
+  `racon` module has been initialized.
 
-There can be multiple policies set up on a single device, and Airvantage
+There can be multiple policies set up on a single device, and Racon
 APIs allow to choose according to which policy when each data is sent.
 
 ###### 3.3.1. Policy Examples
@@ -268,7 +268,7 @@ All the data attached to a given policy can be flushed to the server
 immediately with function:
 
 ~~~~{.lua}
-airvantage.triggerPolicy(?policy_name)
+racon.triggerPolicy(?policy_name)
 ~~~~
 
 If no `policy_name` is passed, the default policy is used. If the
@@ -278,8 +278,8 @@ special name `"*"` is passed, all policies are flushed.
 
 ##### 4.1. Asset `Data Tree`
 
-The Airvantage asset instance (returned by a call to
-`airvantage.newAsset()`) contains a `data tree`: a set of nested lua
+The Racon asset instance (returned by a call to
+`racon.newAsset()`) contains a `data tree`: a set of nested lua
 tables, stored in the asset's `tree` field. Data sent by the server will
 be written in this tree, under the proper path, unless a handler
 function has been set up in the tree. If a suitable handler function is
@@ -312,7 +312,7 @@ Data writing handlers can either:
 
 Data handlers receive the following parameters:
 
--   the Airvantage asset instance to which the data was destined;
+-   the Racon asset instance to which the data was destined;
 -   the data, as a table of key/value pairs; keys are suffixes to the
     common path prefix (see next parameter);
 -   a path prefix, common to all data; actual data paths are the set of
@@ -332,7 +332,7 @@ The following example illustrates the registration of function on the
 
 ~~~~{.lua}
 -- create an asset
-asset = airvantage.newAsset("myasset")
+asset = racon.newAsset("myasset")
 
 -- create a sub path 'engine' in the asset data tree
 -- in developper studio datamodel, 'engine' is represented as a node

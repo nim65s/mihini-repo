@@ -68,7 +68,7 @@ local lfs        = require "lfs"
 local sprint     = sprint
 local asscon     = require "agent.asscon"
 local config     = require "agent.config"
-local airvantage = require "racon"
+local racon      = require "racon"
 local system     = require "racon.system"
 local device     = require "agent.devman"
 local devasset   = device.asset
@@ -212,9 +212,9 @@ local function finish_update()
             log("UPDATE", "INFO", "Acknowledging update command to M3DA server")
             local m3dacode = result==200 and 0 or result --0 is M3DA success code
             --send the ack to srv: use default policy for ack, but request the ack to be persisted in flash
-            local res, err = airvantage.acknowledge(data.currentupdate.infos.ticketid, m3dacode, resultdetails or "no description", nil, true)
+            local res, err = racon.acknowledge(data.currentupdate.infos.ticketid, m3dacode, resultdetails or "no description", nil, true)
             if not res then
-                log("UPDATE", "ERROR", "Update: can't send m3da ack: airvantage.acknowledge response: %s", tostring(err))
+                log("UPDATE", "ERROR", "Update: can't send m3da ack: racon.acknowledge response: %s", tostring(err))
                 log("UPDATE", "ERROR", "Update: can't accept new update until this ack is accepted by RA, next retry will be done on next RA boot")
                 --define what to do here: cleaning or not the update have significant csqs
                 -- return: do not empty current update; do not send the signal etc...
@@ -502,6 +502,8 @@ function stepfinished(result, resultcode, resultdetails)
     common.savecurrentupdate();
     --start next step
     stepstart()
+
+    return "ok"
 end
 
 
@@ -536,6 +538,34 @@ end
 --todo to remove:
 local INIT_DONE
 
+local function rest_localupdate_handler(env)
+    local sync = false
+    local params = env["params"]
+    if params["sync"] and tonumber(params["sync"]) == 1 then
+        sync = true
+    end
+    return localupdate(nil, sync)
+end
+
+
+local function rest_status_handler(env)
+    local sync = false
+    local params = env["params"]
+    if params["sync"] and tonumber(params["sync"]) == 1 then
+        sync = true
+    end
+    return getstatus(sync)
+end
+
+local function update_sink()
+   return function(chunk, err)
+            local handle = io.open(common.dropdir .. "/updatepackage.tar", "a")
+	    local ret = (not chunk) and 1 or handle:write(chunk)
+	    handle:close()
+	    return ret
+	  end
+end
+
 --init
 local function init()
     if not INIT_DONE then
@@ -548,8 +578,8 @@ local function init()
         assert(pkgcheck.init(step_api))
         assert(updatemgr.init(step_api))
 
-        --airvantage API is used to send ack
-        assert(airvantage.init())
+        --racon API is used to send ack
+        assert(racon.init())
 
         -- Register EMP SoftwareUpdate command targeted to Device(@sys):
         assert(asscon.registercmd("RegisterUpdateListener", EMPRegisterUpdateListener))
@@ -572,6 +602,16 @@ local function init()
             -- or look for local update
             sched.sighook("Agent", "InitDone", function() sched.run(localupdate) end )
         end
+
+	-- register rest commands
+	if type(config.rest) == "table" and config.rest.activate == true then
+	   local rest = require 'agent.rest'
+	   rest.register("update[/%w%?]*$", "POST", rest_localupdate_handler, update_sink())
+	   rest.register("update[/%w%?]*$", "GET", rest_status_handler)
+	else
+	   rest_localupdate_handler = nil
+	   rest_status_handler = nil
+	end
     else
         log("UPDATE", "INFO", "Update service init was already done!")
     end

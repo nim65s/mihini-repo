@@ -23,7 +23,7 @@ local function random_timeout()
 end
 
 local function check_timer(timeout, starttime, endtime)
-   local delta = timeout * 1.5 / 100
+   local delta = timeout * 2.5 / 100
    u.assert_gte(timeout-delta, (endtime - starttime))
    u.assert_lte((timeout+delta), (endtime - starttime))
 end

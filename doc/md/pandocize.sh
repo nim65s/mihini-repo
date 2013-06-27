@@ -9,6 +9,7 @@
 #
 # Contributors:
 #     Romain Perier for Sierra Wireless - initial API and implementation
+#     Benjamin Cabé for Sierra Wireless - bug 407919
 #*******************************************************************************
 
 markdown_list="
@@ -29,21 +30,25 @@ markdown_list="
     agent/Using_treemgr_handlers_for_asset_management.md
     agent/Remote_Script.md
     agent/Monitoring.md
-    agent_connector_libraries/Airvantage_Lua_library.md
+    agent_connector_libraries/Racon_Lua_library.md
     agent_connector_libraries/Embedded_Micro_Protocol_EMP.md
 	agent_connector_libraries/Agent_UserGuide.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
-    index.md
-    ../../README.md
+    ./index.md
 "
 
-if [ $# != 1 ]; then
-    source_dir="."
-else
-    source_dir="$1"
-fi
+source_dir="."
+
+while getopts i:g: o
+do  case "$o" in
+    i)  source_dir="$OPTARG";;
+    g)  ga_tracker_path="$OPTARG";;
+    ?)  print "Usage: $0 [-i markdown_input_folder] [-g ga_tracker_path]"
+        exit 1;;
+    esac
+done
 
 for md in $markdown_list; do
     output=$(echo $md | sed 's:\.md::')
@@ -51,12 +56,17 @@ for md in $markdown_list; do
     test -d $category_dir || mkdir $category_dir
 
     if [ -d ${source_dir}/${category_dir}/images ]  && [ ! -e ${category_dir}/images ]; then
-	ln -s ${source_dir}/${category_dir}/images ${category_dir}/images
+	    ln -s ${source_dir}/${category_dir}/images ${category_dir}/images
     fi
 
-    if [ ! -e default.css ]; then
-        ln -s ${source_dir}/default.css default.css
+    if [ ! -e ${category_dir}/default.css ]; then
+        ln -s ${source_dir}/default.css ${category_dir}/default.css
     fi
 
-    pandoc --standalone --css="../default.css" --highlight-style=tango ${source_dir}/$md -o ${output}.html || exit 1
+    if [ -n "$ga_tracker_path" ]; then
+        pandoc --standalone --css="default.css" --include-in-header="$ga_tracker_path" --highlight-style=tango ${source_dir}/$md -o ${output}.html || exit 1
+    else
+        echo "${source_dir}/$md"
+        pandoc --standalone --css="default.css" --highlight-style=tango ${source_dir}/$md -o ${output}.html || exit 1
+    fi
 done

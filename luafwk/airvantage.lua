@@ -10,4 +10,5 @@
 -------------------------------------------------------------------------------
 
 -- system is an alias for racon
+-- Deprecated ! Please use racon instead
 return require 'racon'

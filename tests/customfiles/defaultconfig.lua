@@ -22,8 +22,9 @@
     server.retryperiod = 60
 
     -- Determines the protocol, host, port, and optionally other things such
-    -- as path, user, passoword
-    server.url = "tcp://localhost:8070"
+    -- as path, user, password
+    server.url = "tcp://m2m.eclipse.org:44900"
+    --server.url = "http://localhost:8070/device/com"
     --server.url = "http://webplt-qa.anyware-tech.com/device/com"
     --server.url = "http://webplt-m2m.anyware-tech.com/device/com"
     --server.url = "http://m2mop.net/device/com"
@@ -32,8 +33,15 @@
     --server.proxy must be a URL starting by "http://".
     --server.proxy = "http://some.proxy.server:port"
 
+    -- Security: authentication is one of "hmac-sha1" or "hmac-md5" (or nil)
+    -- Encryption cannot be enabled without authentication. It's of the form
+    -- "<cipher>-<chaining>-<length>", where cipher must be "aes", chaining is
+    -- either "ctr" or "cbc", length is either "128" or "256".
+    -- server.authentication = 'hmac-sha1'
+    -- server.encryption = 'aes-cbc-128'
+
     -- Agent auto connection policy
-    server.autoconnect = {}
+    server.autoconnect = { }
     -- server.autoconnect.onboot = true -- connect a few seconds after the Agent started
     -- server.autoconnect.period = 5 -- period in minute (connect every 5 minutes)
     -- server.autoconnect.cron = "0 0 * * *" -- cron entry (connect once a day at midnight)
@@ -141,8 +149,8 @@
     rpc.activate = true
     rpc.address = '*'
 
-	data = { }
-	data.activate = true
+    data = { }
+    data.activate = true
     data.policy = { }
     data.policy.default  = { latency = 5, onboot=30 }
     data.policy.hourly   = { latency = 60*60 }
