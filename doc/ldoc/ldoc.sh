@@ -13,9 +13,18 @@
 
 BASEDIR=$(cd $(dirname $0) && pwd)
 HOME_RA=$(cd $BASEDIR/../.. && pwd)
-LUADOCUMENTOR_VERSION=0.1.1
-LUADOCUMENTOR_REVISION=3702b84c5d
-MIHINI_VERSION=0.8
+LUADOCUMENTOR_VERSION=0.1.2
+LUADOCUMENTOR_REVISION=31a48059b3
+MIHINI_VERSION=0.9
+
+while getopts g: o
+do  case "$o" in
+    g)  ga_tracker_path="$OPTARG";;
+    ?)  print "Usage: $0 [-g ga_tracker_path]"
+        exit 1;;
+    esac
+done
+
 
 fail()
 {
@@ -35,7 +44,7 @@ link()
 cd $BASEDIR
 
 mkdir -p doctmp/utils/ltn12
-mkdir doctmp/racon
+mkdir doctmp/airvantage
 
 link $HOME_RA/luafwk/sched/init.lua doctmp/sched.lua
 link $HOME_RA/luafwk/log/init.lua doctmp/log.lua
@@ -56,11 +65,11 @@ link $HOME_RA/luafwk/gpio/gpio.c   doctmp/gpio.c
 #link $HOME_RA/luafwk/gpio/gpio.lua doctmp/gpio.lua
 
 
-link $HOME_RA/luafwk/racon/init.lua doctmp/racon.lua
-link $HOME_RA/luafwk/racon/asset/init.lua doctmp/racon/asset.lua
+link $HOME_RA/luafwk/racon/init.lua doctmp/airvantage.lua
+link $HOME_RA/luafwk/racon/asset/init.lua doctmp/airvantage/asset.lua
 link $HOME_RA/luafwk/racon/system.lua doctmp/system.lua
 link $HOME_RA/luafwk/racon/sms.lua doctmp/sms.lua
-link $HOME_RA/luafwk/racon/table.lua doctmp/racon/table.lua
+link $HOME_RA/luafwk/racon/table.lua doctmp/airvantage/table.lua
 link $HOME_RA/luafwk/racon/devicetree.lua doctmp/devicetree.lua
 
 
@@ -95,25 +104,43 @@ link $HOME_RA/luafwk/luasocket/luasocket.luadoc doctmp/socket.lua
 link $HOME_RA/luafwk/lfs/lfs.luadoc doctmp/lfs.lua
 
 # mkdir doc/luafwk
-# mkdir doc/racon
+# mkdir doc/airvantage
 # mkdir doc/liblua
 # mkdir doc/socket
 # mkdir doc/lfs
 
-ARCH=$(test `uname -m`  = x86_64 && echo "64bits" || echo "32bits")
-ZIP=luadocumentor-${LUADOCUMENTOR_VERSION}-${LUADOCUMENTOR_REVISION}-${ARCH}.zip
+
+ZIP=luadocumentor-${LUADOCUMENTOR_VERSION}-${LUADOCUMENTOR_REVISION}-noarch.zip
 
 if [ ! -f $ZIP ]; then
     wget http://download.eclipse.org/koneki/luadocumentor/${LUADOCUMENTOR_VERSION}/${ZIP} || exit 1
 fi
 unzip $ZIP -d luadocumentor > /dev/null 2>&1 || exit 1
 
+
+
+if [ -n "$ga_tracker_path" ]; then
+      # Inserts Google Analytics header into luadocumentor page template.
+      # at some point this custom template should be an option to luadocumentor.
+      # For now, just insert GA header just before </head>.
+      # The line breaks in sed command are made on purpose!
+      sed "\,</head>, {
+              h
+              r $ga_tracker_path
+              g
+              N
+      }" luadocumentor/template/page.lua > page.lua
+      # It's likely that the sed command could have been done in one line.
+      mv page.lua luadocumentor/template/page.lua
+fi
+
+
 cp lua5.1-execution-environment/lua/5.1/api/*.lua doctmp/
 
 cd luadocumentor
-lua luadocumentor.lua -f doc -d ../Lua_User_API_doc ../doctmp || exit 1
+lua luadocumentor.lua -f doc -s ../stylesheet.css -d ../Lua_User_API_doc ../doctmp || exit 1
 lua luadocumentor.lua -f api -d ../Lua_User_API_doc ../doctmp || exit 1
-# lua luadocumentor.lua -d ../doc/racon ../doctmp/racon
+# lua luadocumentor.lua -d ../doc/airvantage ../doctmp/airvantage
 # lua luadocumentor.lua -d ../doc/liblua ../doctmp/liblua
 # lua luadocumentor.lua -d ../doc/socket ../doctmp/socket
 # lua luadocumentor.lua -d ../doc/lfs ../doctmp/lfs
