@@ -824,7 +824,9 @@ HTML_FILE_EXTENSION    = .html
 # each generated HTML page. If it is left blank doxygen will generate a
 # standard header.
 
-HTML_HEADER            =
+#header file is generated on the fly to include Google analitics and 
+# not depend of Doxygen header version 
+HTML_HEADER            = header
 
 # The HTML_FOOTER tag can be used to specify a personal HTML footer for
 # each generated HTML page. If it is left blank doxygen will generate a

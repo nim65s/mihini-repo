@@ -1,3 +1,5 @@
+#!/bin/sh
+
 #*******************************************************************************
 # Copyright (c) 2012 Sierra Wireless and others.
 # All rights reserved. This program and the accompanying materials
@@ -9,9 +11,28 @@
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
 
-ADD_CUSTOM_TARGET(doxygen_gen
-    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && ${CMAKE_CURRENT_SOURCE_DIR}/doxy.sh -g \"\${GA_TRACKER}\"
-    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && doxygen ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
-    COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/C_User_API_doc ${CMAKE_CURRENT_BINARY_DIR}/header
-    COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/C_User_API_doc ${CMAKE_CURRENT_BINARY_DIR}
-)
+while getopts g: o
+do  case "$o" in
+    g)  ga_tracker_path="$OPTARG";;
+    ?)  print "Usage: $0 [-g ga_tracker_path]"
+        exit 1;;
+    esac
+done
+
+if [ -n "$ga_tracker_path" ]; then
+    doxygen -w html headertmp tmp1 tmp2 Doxyfile
+
+    sed "\,</head>, {
+            h
+            r $ga_tracker_path
+            g
+            N
+    }" headertmp > header
+       
+else
+doxygen -w html header tmp1 tmp2 Doxyfile
+fi
+
+#cleanup
+rm -rf tmp1 tmp2 headertmp
+
