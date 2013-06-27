@@ -1,0 +1,111 @@
+#!/bin/bash
+#*******************************************************************************
+# Copyright (c) 2012 Sierra Wireless and others.
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+#     Guilhem Saurel for Sierra Wireless - initial script
+#*******************************************************************************
+
+useradd -b /opt -U mihini
+
+cd ~mihini
+
+for rw in persist update apps
+do
+    mkdir -p /var/opt/mihini/$rw
+    ln -s /var/opt/mihini/$rw
+done
+
+chown -R mihini:mihini /{var/,}opt/mihini
+
+cat << EOF > /etc/init.d/mihini
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides: mihini_agent
+# Required-Start: \$remote_fs \$syslog
+# Required-Stop: \$remote_fs \$syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start mihini agent at boot time
+# Description: Enable application framework or M2M services (like device management) provided by mihini agent.
+### END INIT INFO
+
+DESC="Mihini agent"
+NAME=Mihini
+DAEMON=/opt/mihini/bin/appmon_daemon
+AGENT=/opt/mihini/bin/agent
+ROOTDIR=/opt/mihini
+
+. /lib/lsb/init-functions
+
+test -f \$DAEMON || exit 0
+test -f \$AGENT || exit 0
+
+case "\$1" in
+    start)
+        if [ ! "`pidof \$DAEMON`" ]
+        then
+            export LUA_PATH="/opt/mihini/lua/?.lua;/opt/mihini/lua/?/init.lua"
+            export LUA_CPATH="/opt/mihini/lua/?.so"
+            export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/mihini/lib
+
+            \$DAEMON -a \$AGENT -w \$ROOTDIR -u mihini -g mihini -n 5 2>&1 | logger -t Mihini &
+            if [ "\$?" -eq 0  ]
+            then
+                log_success_msg "\$NAME started"
+            else
+                log_failure_msg "\$NAME failed to start"
+            fi
+            sleep 1
+        fi
+        ;;
+
+    stop)
+        log_daemon_msg "Stopping \$NAME agent"
+        echo "destroy" | nc localhost 4242 > /dev/null 2>&1
+        killproc \$AGENT
+        log_end_msg \$?
+
+        log_daemon_msg "Stopping \$NAME daemon"
+        killproc \$DAEMON
+        log_end_msg \$?
+        sleep 1
+        ;;
+
+    restart)
+        \$0 stop
+        \$0 start
+        sleep 1
+        \$0 status
+        ;;
+
+    status)
+        status_of_proc \$DAEMON "\$NAME daemon"
+        status_of_proc \$AGENT "\$NAME agent"
+        ;;
+
+    purge)
+        rm -rf /var/opt/mihini/persist/*
+        log_daemon_msg "Mihini's persist folder cleared"
+        ;;
+
+    *)
+      echo "Usage: \$0 {start|stop|restart|status|purge}"
+      exit 1
+      ;;
+esac
+
+exit 0
+EOF
+
+chmod +x /etc/init.d/mihini
+
+echo "/opt/mihini/lib" > /etc/ld.so.conf.d/01-mihini.conf
+ldconfig
+
+/etc/init.d/mihini start
