@@ -10,6 +10,7 @@
 # Contributors:
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
+BASEDIR=$(cd $(dirname $0) && pwd)
 
 while getopts g: o
 do  case "$o" in
@@ -18,6 +19,8 @@ do  case "$o" in
         exit 1;;
     esac
 done
+
+cd $BASEDIR
 
 if [ -n "$ga_tracker_path" ]; then
     doxygen -w html headertmp tmp1 tmp2 Doxyfile
