@@ -247,7 +247,7 @@ Manifest Component specific fields:
 To install/update/remove an application managed by the
 ApplicationContainer, the module of the Agent responsible for
 installing and monitoring applications.\
-As this kind of update is managed by a Agent module, the
+As this kind of update is managed by an Agent module, the
 ApplicationContainer, the update actions are done by this module, please
 note that:
 
@@ -265,7 +265,7 @@ page.
 
 Manifest Component specific fields:
 
--   name: @sys.appcon.[application_name]\
+-   name: `@sys.appcon.[application_name]`\
      [application_name] can be any value, the ApplicationContainer will
     receive it as one string all characters after the @sys.appcon.
     shortcut.
@@ -276,11 +276,11 @@ Manifest Component specific fields:
     installing/reinstalling an application, those parameters are
     directly related to those of the install API of [Application
     Container](Application_Container.html).
-    -   autostart: **boolean**, automatically start the app after
-        install and on Agent reboot
-    -   purge: **boolean**, when reinstalling an application, the
+    -   `autostart`: `boolean`, automatically start the app after
+        install and on Agent reboot; default value is `false`
+    -   `purge`: `boolean`, when reinstalling an application, the
         application runtime folder will be erased before reinstallation
-        if this field is set to true
+        if this field is set to true; default value is `false`
 
 > **INFO**
 >
