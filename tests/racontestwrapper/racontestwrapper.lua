@@ -72,12 +72,12 @@ local function run_wrapper(testname, testtype)
        loadtestwrappermodule()
     end
 
-    func(testname)
+    local status = func(testname)
 
     if #depmodule then
         unloadtestwrappermodule()
     end
-    os.exit()
+    os.exit(status)
 end
 
 local function envsetup(progname)
