@@ -11,10 +11,3 @@
 #*******************************************************************************
 
 /etc/init.d/mihini stop
-
-rm /opt/mihini/{apps,persist,update}
-rm -rf /opt/mihini /etc/init.d/mihini /etc/ld.so.conf.d/01-mihini.conf
-
-chown -R root:root /var/opt/mihini
-userdel mihini
-ldconfig
