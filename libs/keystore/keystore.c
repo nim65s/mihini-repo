@@ -23,7 +23,7 @@
 
 /* Define this to get verbose traces and sanity-checks when writing.
  * Warning: traces leak sensitive informations! */
-#define DBG_KEYSTORE
+//#define DBG_KEYSTORE
 
 #ifdef DBG_KEYSTORE
 #define DBG_TRACE( args) printf args
