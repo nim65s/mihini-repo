@@ -34,13 +34,13 @@ local function registerdevice(devicename, crypto, registrationPassword)
    
    communication =   {
       m3da =    {
-          registrationPassword = registrationPassword
+          password = registrationPassword
       }
     }
   }
 
   -- Create the device with the associated model
-  print("Registering device " .. devicename .. " using " .. crypto .. " and its registration password is " .. registrationPassword)
+  print("Registering device " .. devicename .. " using " .. crypto .. " and its password is " .. registrationPassword)
   local operationTable,errmess =  platformAPI.registerSystem(platformTable, config)
   
   -- Check device has been successfuly created
@@ -179,7 +179,7 @@ local function testRegistration(uid, auth, encrypt, key, name)
   -- generate registration key from registration password
   local function setPassword(key)
     local prov = require 'agent.provisioning'
-    prov.registration_password(key)
+    prov.password(key)
   end
   
   local f = rpcclient:newexec(setPassword)
@@ -401,81 +401,6 @@ function t:teardown()
   os.execute("mv "..targetManager.targetdir.."/runtime/lua/agent/defaultconfig.lua.backup "..targetManager.targetdir.."/runtime/lua/agent/defaultconfig.lua")
 end
 
-function t:test_cryptSha1AesCbc128()
-  
-  local provisioningkey = generatekey()
-  
-  -- initialize the device
-  -- Create device on client side and install agent_provisioning
-  -- init defaultconfig.lua file
-  -- generate and set random provisioning key
-  -- start Mihini
-  -- Initiate a connection
-  -- Check success
-  testCombination("hmac-sha1", "aes-cbc-128", provisioningkey, "testautoS1CBC128")
-  
-    
-  
-  
-  -- 
-end
-
-function t:test_cryptSha1AesCbc256()
-    
-  local provisioningkey = generatekey()
-  
-  -- initialize the device
-  -- Create device on client side and install agent_provisioning
-  -- init defaultconfig.lua file
-  -- generate and set random provisioning key
-  -- start Mihini
-  -- Initiate a connection
-  -- Check success
-  testCombination("hmac-sha1", "aes-cbc-256", provisioningkey, "testautoS1CBC256")
-end
-
-function t:test_cryptSha1AesCtr128()
-    
-  local provisioningkey = generatekey()
-  
-  -- initialize the device
-  -- Create device on client side and install agent_provisioning
-  -- init defaultconfig.lua file
-  -- generate and set random provisioning key
-  -- start Mihini
-  -- Initiate a connection
-  -- Check success
-  testCombination("hmac-sha1", "aes-ctr-128", provisioningkey, "testautoS1CTR128")
-end
-
-function t:test_cryptSha1AesCtr256()
-    
-  local provisioningkey = generatekey()
-  
-  -- initialize the device
-  -- Create device on client side and install agent_provisioning
-  -- init defaultconfig.lua file
-  -- generate and set random provisioning key
-  -- start Mihini
-  -- Initiate a connection
-  -- Check success
-  testCombination("hmac-sha1", "aes-ctr-256", provisioningkey, "testautoS1CTR256")
-end
-
-function t:test_cryptSha1None()
-    
-  local provisioningkey = generatekey()
-  
-  -- initialize the device
-  -- Create device on client side and install agent_provisioning
-  -- init defaultconfig.lua file
-  -- generate and set random provisioning key
-  -- start Mihini
-  -- Initiate a connection
-  -- Check success
-  testCombination("hmac-sha1", "None", provisioningkey, "testautoS1None")
-end
-
 function t:test_cryptMd5AesCbc128()
     
   local provisioningkey = generatekey()
@@ -488,48 +413,6 @@ function t:test_cryptMd5AesCbc128()
   -- Initiate a connection
   -- Check success
   testCombination("hmac-md5", "aes-cbc-128", provisioningkey, "testautoMD5CBC128")
-end
-
-function t:test_cryptMd5AesCbc256()
-    
-  local provisioningkey = generatekey()
-  
-  -- initialize the device
-  -- Create device on client side and install agent_provisioning
-  -- init defaultconfig.lua file
-  -- generate and set random provisioning key
-  -- start Mihini
-  -- Initiate a connection
-  -- Check success
-  testCombination("hmac-md5", "aes-cbc-256", provisioningkey, "testautoMD5CBC256")
-end
-
-function t:test_cryptMd5AesCtr128()
-    
-  local provisioningkey = generatekey()
-  
-  -- initialize the device
-  -- Create device on client side and install agent_provisioning
-  -- init defaultconfig.lua file
-  -- generate and set random provisioning key
-  -- start Mihini
-  -- Initiate a connection
-  -- Check success
-  testCombination("hmac-md5", "aes-ctr-128", provisioningkey, "testautoMD5CTR128")
-end
-
-function t:test_cryptMd5AesCtr256()
-    
-  local provisioningkey = generatekey()
-  
-  -- initialize the device
-  -- Create device on client side and install agent_provisioning
-  -- init defaultconfig.lua file
-  -- generate and set random provisioning key
-  -- start Mihini
-  -- Initiate a connection
-  -- Check success
-  testCombination("hmac-md5", "aes-ctr-256", provisioningkey, "testautoMD5CTR256")
 end
 
 function t:test_cryptMd5None()
