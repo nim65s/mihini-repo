@@ -16,13 +16,14 @@
 #include "keystore.h"
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #define CRYPT_OK 0
 #define CRYPT_ERROR 1
 
 /* Define this to get verbose traces and sanity-checks when writing.
  * Warning: traces leak sensitive informations! */
-//#define DBG_KEYSTORE
+#define DBG_KEYSTORE
 
 #ifdef DBG_KEYSTORE
 #define DBG_TRACE( args) printf args
@@ -131,8 +132,9 @@ int get_plain_bin_key( int key_index, unsigned char* plain_bin_key) {
      DBG_TRACE(( "\nGetting key #%d\n", key_index));
      if( get_obfuscated_bin_key( key_index, obfuscated_bin_key)) return CRYPT_ERROR;
      DBG_TRACE(( "Obfuscated key #%d =\t%s\n", key_index, k2s(obfuscated_bin_key)));
-
-     return keystore_deobfuscate( key_index, plain_bin_key, obfuscated_bin_key);
+     int r = keystore_deobfuscate( key_index, plain_bin_key, obfuscated_bin_key);
+     DBG_TRACE(( "Plain key #%d =\t%s\n", key_index, k2s(plain_bin_key)));
+     return r;
 }
 
 /* Obfuscates and writes the keys `key_index ... key_index + n_keys - 1` in the file.

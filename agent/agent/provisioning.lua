@@ -1,7 +1,7 @@
-local security = require 'm3da.session.security'
-local cipher   = require 'crypto.cipher'
-local hash     = require 'crypto.hash'
-local lfs      = require 'lfs'
+local security   = require 'm3da.session.security'
+local write_keys = require 'openaes.keystore'
+local hash       = require 'hmacmd5'
+local lfs        = require 'lfs'
 
 local M = { }
 
@@ -27,7 +27,7 @@ local function h2b(h)
 end
 
 local function md5_bin(str)
-    return hash.new 'md5' :update (str) :digest(true)
+    return hash.md5() :update (str) :digest(true)
 end
 
 -------------------------------------------------------------------------------
@@ -39,13 +39,13 @@ function M.password_md5(K)
     local deviceid = assert(agent.config.agent.deviceId,  "Missing agent.deviceId in config")
     x("Setting authentication and encryption key")
     x("K ="..k2s(K))
-    local KS = hash.new 'md5' :update (serverid) :update (K) :digest(true)
+    local KS = hash.md5() :update (serverid) :update (K) :digest(true)
     x("KS="..k2s(KS))
-    local KD = hash.new 'md5' :update (deviceid) :update (K) :digest(true)
+    local KD = hash.md5() :update (deviceid) :update (K) :digest(true)
     x("KD="..k2s(KD))
     assert(security.IDX_AUTH_KS == security.IDX_CRYPTO_K + 1)
     assert(security.IDX_AUTH_KD == security.IDX_CRYPTO_K + 2)
-    assert(cipher.write(security.IDX_CRYPTO_K, { K, KS, KD }))
+    assert(write_keys(security.IDX_CRYPTO_K, { K, KS, KD }))
     x("Keys written in store")
 end
 
@@ -61,12 +61,12 @@ function M.registration_password_md5(K)
     x("K ="..k2s(K))
     local serverid = assert(agent.config.server.serverId, "Missing server.serverId in config")
     local deviceid = assert(agent.config.agent.deviceId, "Missing agent.deviceId in config")
-    local KS = hash.new 'md5' :update (serverid) :update (K) :digest(true)
+    local KS = hash.md5() :update (serverid) :update (K) :digest(true)
     x("KS="..k2s(KS))
-    local KD = hash.new 'md5' :update (deviceid) :update (K) :digest(true)
+    local KD = hash.md5() :update (deviceid) :update (K) :digest(true)
     x("KD="..k2s(KD))
     assert(security.IDX_PROVIS_KD == security.IDX_PROVIS_KS + 1)
-    assert(cipher.write(security.IDX_PROVIS_KS, { KS, KD }))
+    assert(write_keys(security.IDX_PROVIS_KS, { KS, KD }))
     x("Keys written in store")
 end
 

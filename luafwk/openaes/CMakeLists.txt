@@ -17,6 +17,10 @@ ADD_LUA_LIBRARY(openaes_core openaes_core.c DESTINATION openaes)
 TARGET_LINK_LIBRARIES(openaes_core lib_openaes)
 SET_TARGET_PROPERTIES(openaes_core PROPERTIES OUTPUT_NAME core)
 
+ADD_LUA_LIBRARY(openaes_keystore openaes_keystore.c DESTINATION openaes)
+TARGET_LINK_LIBRARIES(openaes_keystore lib_keystore)
+SET_TARGET_PROPERTIES(openaes_keystore PROPERTIES OUTPUT_NAME keystore)
+
 ADD_LUA_LIBRARY(openaes_isaac openaes_isaac.c DESTINATION openaes)
 TARGET_LINK_LIBRARIES(openaes_isaac lib_openaes)
 SET_TARGET_PROPERTIES(openaes_isaac PROPERTIES OUTPUT_NAME isaac)
