@@ -30,6 +30,11 @@ local function md5_bin(str)
     return hash.md5() :update (str) :digest(true)
 end
 
+local function create_directory_if_needed()
+    local cryptopath = (LUA_AF_RW_PATH or lfs.currentdir())
+    assert(os.execute('mkdir -p '..cryptopath..'/'..'crypto'), "Can't create crypto folder")
+end
+
 -------------------------------------------------------------------------------
 -- Writes the 3 keys needed for encryption and authentication in the key store,
 -- from the password's binary MD5.
@@ -38,6 +43,7 @@ function M.password_md5(K)
     local serverid = assert(agent.config.server.serverId, "Missing server.serverId in config")
     local deviceid = assert(agent.config.agent.deviceId,  "Missing agent.deviceId in config")
     x("Setting authentication and encryption key")
+    create_directory_if_needed()
     x("K ="..k2s(K))
     local KS = hash.md5() :update (serverid) :update (K) :digest(true)
     x("KS="..k2s(KS))
@@ -56,8 +62,7 @@ end
 function M.registration_password_md5(K)
     checks('string')
     x("Setting pre-shared key")
-    local cryptopath = (LUA_AF_RW_PATH or lfs.currentdir())
-    assert(os.execute('mkdir -p '..cryptopath..'/'..'crypto'), "Can't create crypto folder")
+    create_directory_if_needed()
     x("K ="..k2s(K))
     local serverid = assert(agent.config.server.serverId, "Missing server.serverId in config")
     local deviceid = assert(agent.config.agent.deviceId, "Missing agent.deviceId in config")
