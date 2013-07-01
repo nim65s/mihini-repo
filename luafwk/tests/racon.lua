@@ -61,10 +61,6 @@ function t: test_03_connectToServer()
    -- expected behavior here: negative value casted into unsigned int
    -- resulting value above INT_MAX, the max value accepted, so it's rejected
    u.assert_nil(racon.connectToServer(-5))
-   
-   -- Test using too big latency:
-   -- expected behavior here: rejected
-   u.assert_nil(racon.connectToServer(2^31 + 1))
 end
 
 function t: test_04_Create_Start_Close()
