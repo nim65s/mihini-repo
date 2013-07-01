@@ -195,7 +195,8 @@ function t:test_asset_connectreboot()
     u.assert(newasset :start())
     u.assert(racon.connecttoserver())
 
-    local system = require 'racon.system'.init()
+    local system = require 'racon.system'
+    system.init()
     u.assert(system.reboot())
 
     --unregister
