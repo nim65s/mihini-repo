@@ -1,7 +1,8 @@
 #include "hmac-md5.h"
+#include "md5.h"
 #include <strings.h>
-/*
-** Function: hmac_md5
+
+/*** Function: hmac_md5
 */
 
 void

@@ -74,7 +74,7 @@ static int api_hmac( lua_State *L) {
 static int api_hmac_update( lua_State *L) {
     struct hmac_ctx_t *ctx = checkhmac ( L, 1);
     size_t datalen;
-    unsigned const char *data = (unsigned const char *) luaL_checklstring( L, 2, & datalen);
+    unsigned char *data = (unsigned char *) luaL_checklstring( L, 2, & datalen);
     if( ctx->digested) { lua_pushnil( L); lua_pushliteral( L, "digest already computed"); return 2; }
     MD5Update( & ctx->md5, data, datalen);
     lua_pushvalue( L, 1);
@@ -104,7 +104,7 @@ static int hmac_filter_closure( lua_State *L) {
     if( ctx->digested) { lua_pushnil( L); lua_pushliteral( L, "digest already computed"); return 2; }
     if( ! lua_isnil( L, 1)) {
         size_t size;
-        const char *data = luaL_checklstring( L, 1, & size);
+        unsigned char *data = (unsigned char *) luaL_checklstring( L, 1, & size);
         MD5Update( & ctx->md5, data, size);
     }
     /* return the original argument, unmodified. */
@@ -134,7 +134,7 @@ static int api_md5( lua_State *L) {
 static int api_md5_update( lua_State *L) {
     MD5_CTX *ctx = checkmd5 ( L, 1);
     size_t datalen;
-    unsigned const char *data = (unsigned const char *) luaL_checklstring( L, 2, & datalen);
+    unsigned char *data = (unsigned char *) luaL_checklstring( L, 2, & datalen);
     MD5Update( ctx, data, datalen);
     lua_pushvalue( L, 1);
     return 1;

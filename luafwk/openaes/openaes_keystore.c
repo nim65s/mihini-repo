@@ -15,6 +15,8 @@
 
 #include "lauxlib.h"
 #include "keystore.h"
+#include <malloc.h>
+#include <string.h>
 
 /** Lwrite(first_idx, keys) */
 static int api_write( lua_State *L) {
