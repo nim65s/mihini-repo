@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 #include "swi_update.h"
 #include "swi_log.h"
 #include "lua.h"
@@ -185,17 +186,25 @@ static void generate_package()
   FILE *file;
 
   file = fopen("/tmp/Manifest", "w");
+  if (file == NULL) {
+    fprintf(stderr, "/tmp/Manifest: %s\n", strerror(errno));
+    exit(1);
+  }
   fwrite(manifest_content, 1, strlen(manifest_content), file);
   fclose(file);
 
   file = fopen("/tmp/update.txt", "w");
+  if (file == NULL) {
+    fprintf(stderr, "/tmp/update.txt: %s\n", strerror(errno));
+    exit(1);
+  }
   fwrite("test update", 1, strlen("test update"), file);
   fclose(file);
 
-  int ret = system("cd /tmp; tar czpf update_package.tar.gz Manifest update.txt 2>/dev/null");
-  if (ret != -1) {
-    SWI_LOG("UPDATE_TEST", ERROR, "%s: unpacking package failed\n", __FUNCTION__);
-    abort();
+  int ret = system("cd /tmp; tar czpf update_package.tar.gz Manifest update.txt");
+  if (ret == -1 || WEXITSTATUS(ret) != 0) {
+    SWI_LOG("UPDATE_TEST", ERROR, "package packing internal error: %s\n", (ret == -1) ? strerror(errno) : "wrong status code");
+    exit(1);
   }
 }
 
