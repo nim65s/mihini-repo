@@ -11,6 +11,8 @@
 #*******************************************************************************
 
 useradd -b /opt -U mihini
+usermod -aG tty mihini
+usermod -aG dialout mihini
 
 cd ~mihini
 
