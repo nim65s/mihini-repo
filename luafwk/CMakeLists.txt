@@ -63,8 +63,8 @@ ADD_SUBDIRECTORY(stagedb)
 ADD_LUA_LIBRARY(debugger debugger.lua debugintrospection.lua)
 
 INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
-ADD_LUA_LIBRARY(status status.c)
-TARGET_LINK_LIBRARIES(status lib_swi_statusname)
+ADD_LUA_LIBRARY(returncodes returncodes.c)
+TARGET_LINK_LIBRARIES(returncodes lib_returncodes)
 
 INCLUDE_DIRECTORIES(${LIB_MIHINI_KEYSTORE_SOURCE_DIR} ${LIB_MD5_SOURCE_DIR})
 ADD_LUA_LIBRARY(hmacmd5 hmacmd5.c)
