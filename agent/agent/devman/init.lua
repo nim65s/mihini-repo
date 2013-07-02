@@ -21,7 +21,7 @@ local niltoken = require "niltoken"
 local upath    = require 'utils.path'
 local utable   = require 'utils.table'
 local racon    = require 'racon'
-local errnum   = require 'status'.tonumber
+local errnum   = require 'returncodes'.tonumber
 
 require 'coxpcall'
 

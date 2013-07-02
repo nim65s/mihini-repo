@@ -15,9 +15,8 @@
 local require = require
 local sched   = require 'sched'
 local log     = require 'log'
-local status  = require 'status'
 local yajl    = require 'yajl'
-local errnum  = require 'status' .tonumber
+local errnum  = require 'returncodes' .tonumber
 
 require 'pack'
 require 'coxpcall'

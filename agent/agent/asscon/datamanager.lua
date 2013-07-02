@@ -23,7 +23,7 @@ local srvcon   = require 'agent.srvcon'
 local upath    = require 'utils.path'
 local utable   = require 'utils.table'
 local m3da     = require 'm3da.bysant'
-local errnum   = require 'status'.tonumber
+local errnum   = require 'returncodes'.tonumber
 
 --------------------------------------------------------------------------------
 -- A policy features:

@@ -21,7 +21,7 @@ local timer       = require "timer"
 local lock        = require "sched.lock"
 local ltn12       = require "ltn12"
 local checks      = require "checks"
-local errnum      = require "status".tonumber
+local errnum      = require "returncodes".tonumber
 require 'coxpcall'
 require 'socket.url'
 require 'print'

@@ -35,7 +35,7 @@ local next = next
 local print = print
 local p = p
 local tostring = tostring
-local errnum = require 'status'.tonumber
+local errnum = require 'returncodes'.tonumber
 
 module (...)
 
