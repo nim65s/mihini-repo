@@ -25,20 +25,18 @@ static const char *const returncode[] =
   "UNSPECIFIED_ERROR",    //  -5
   "COMMUNICATION_ERROR",  //  -6
   "TIMEOUT",              //  -7
-  "OVERFLOW",             //  -8
-  "UNDERFLOW",            //  -9
-  "WOULD_BLOCK",          // -10
-  "DEADLOCK",             // -11
-  "BAD_FORMAT",           // -12
-  "DUPLICATE",            // -13
-  "BAD_PARAMETER",        // -14
-  "CLOSED",               // -15
-  "IO_ERROR",             // -16
-  "NOT_IMPLEMENTED",      // -17
-  "BUSY",                 // -18
-  "NOT_INITIALIZED",      // -19
-  "END",                  // -20
-  "NOT_AVAILABLE",        // -21
+  "WOULD_BLOCK",          //  -8
+  "DEADLOCK",             //  -9
+  "BAD_FORMAT",           // -10
+  "DUPLICATE",            // -11
+  "BAD_PARAMETER",        // -12
+  "CLOSED",               // -13
+  "IO_ERROR",             // -14
+  "NOT_IMPLEMENTED",      // -15
+  "BUSY",                 // -16
+  "NOT_INITIALIZED",      // -17
+  "END",                  // -18
+  "NOT_AVAILABLE",        // -19
 };
 
 
@@ -49,28 +47,26 @@ static const struct cn
     const char *name;
 } const rc_names[] =
 {
-  {  -12, "BAD_FORMAT" },
-  {  -14, "BAD_PARAMETER" },
-  {  -18, "BUSY" },
-  {  -15, "CLOSED" },
+  {  -10, "BAD_FORMAT" },
+  {  -12, "BAD_PARAMETER" },
+  {  -16, "BUSY" },
+  {  -13, "CLOSED" },
   {   -6, "COMMUNICATION_ERROR" },
-  {  -11, "DEADLOCK" },
-  {  -13, "DUPLICATE" },
-  {  -20, "END" },
-  {  -16, "IO_ERROR" },
-  {  -21, "NOT_AVAILABLE" },
+  {   -9, "DEADLOCK" },
+  {  -11, "DUPLICATE" },
+  {  -18, "END" },
+  {  -14, "IO_ERROR" },
+  {  -19, "NOT_AVAILABLE" },
   {   -1, "NOT_FOUND" },
-  {  -17, "NOT_IMPLEMENTED" },
-  {  -19, "NOT_INITIALIZED" },
+  {  -15, "NOT_IMPLEMENTED" },
+  {  -17, "NOT_INITIALIZED" },
   {   -4, "NOT_PERMITTED" },
   {   -3, "NO_MEMORY" },
   {    0, "OK" },
   {   -2, "OUT_OF_RANGE" },
-  {   -8, "OVERFLOW" },
   {   -7, "TIMEOUT" },
-  {   -9, "UNDERFLOW" },
   {   -5, "UNSPECIFIED_ERROR" },
-  {  -10, "WOULD_BLOCK" },
+  {   -8, "WOULD_BLOCK" },
 };
 
 
