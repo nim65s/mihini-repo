@@ -33,14 +33,26 @@
 #include "lauxlib.h"
 #include "keystore.h"
 
-#define DIGEST_LEN 16
-#define KEY_LEN    64
+#define DIGEST_LEN     16
+#define HEX_DIGEST_LEN (2*DIGEST_LEN)
+#define KEY_LEN        64
 
 struct hmac_ctx_t {
     MD5_CTX md5;
     unsigned char key[KEY_LEN];
     int digested;
 };
+
+static const char figures[]="0123456789abcdef";
+
+static void bin2hex( char hex[HEX_DIGEST_LEN], unsigned char bin[DIGEST_LEN]) {
+    int i;
+    for( i=0; i<DIGEST_LEN; i++) {
+        int byte = bin[i];
+        hex[2*i]   = figures[byte>>4];
+        hex[2*i+1] = figures[byte&0xf];
+    }
+}
 
 /* Check that value at Lua stack index `idx` is a userdata containing an hmac context. */
 static struct hmac_ctx_t *checkhmac ( lua_State *L, int idx) {
@@ -93,8 +105,16 @@ static int api_hmac_digest( lua_State *L) {
     MD5Init( & ctx->md5); // reuse MD5 ctx to compute outer MD5
     MD5Update( & ctx->md5, ctx->key, KEY_LEN); // key = k_opad
     MD5Update( & ctx->md5, digest, DIGEST_LEN);
-    MD5Final( digest, & ctx->md5); // (outer) digest = MD59(k_opad..inner digest)
-    lua_pushlstring( L, (const char *) digest, DIGEST_LEN);
+    MD5Final( digest, & ctx->md5); // (outer) digest = MD5(k_opad..inner digest)
+
+    if( lua_toboolean( L, 2)) {
+        lua_pushlstring( L, (const char *) digest, DIGEST_LEN);
+    } else {
+        char hex[HEX_DIGEST_LEN];
+        bin2hex( hex, digest);
+        lua_pushlstring( L, (const char *) hex, HEX_DIGEST_LEN);
+    }
+
     return 1;
 }
 
@@ -145,7 +165,13 @@ static int api_md5_digest( lua_State *L) {
     MD5_CTX *ctx = checkmd5 ( L, 1);
     unsigned char digest[DIGEST_LEN];
     MD5Final( digest, ctx);
-    lua_pushlstring( L, (const char *) digest, DIGEST_LEN);
+    if( lua_toboolean( L, 2)) {
+        lua_pushlstring( L, (const char *) digest, DIGEST_LEN);
+    } else {
+        char hex[HEX_DIGEST_LEN];
+        bin2hex( hex, digest);
+        lua_pushlstring( L, (const char *) hex, HEX_DIGEST_LEN);
+    }
     return 1;
 }
 

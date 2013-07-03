@@ -33,7 +33,7 @@ function M.decrypt_function(scheme, nonce, keyidx, ciphered_text)
     checks('string', 'string', 'number', 'string')
     if scheme ~= 'aes-cbc-128' then return nil, "scheme not supported" end
     assert(#ciphered_text % 16 == 0, "bad ciphered_text size")
-    local iv    = hash.md5():update(nonce):digest()
+    local iv    = hash.md5():update(nonce):digest(false)
     local oaes  = core.new(nonce, keyidx)
     local plain = core.decrypt(oaes, OAES_HEADER..iv..ciphered_text)
     local n = plain :byte(-1)
@@ -53,7 +53,7 @@ end
 function M.encrypt_filter(scheme, nonce, keyidx)
     checks('string', 'string', 'number')
     if scheme ~= 'aes-cbc-128' then return nil, "scheme not supported" end
-    local iv = hash.md5():update(nonce):digest()  -- initialization vector
+    local iv = hash.md5():update(nonce):digest(false)  -- initialization vector
     local oaes = core.new(nonce, keyidx, iv)
     local buffer = ''      -- yet unsent data (must be sent by 16-bytes chunks)
     local lastsent = false -- has last padded segment been sent yet?

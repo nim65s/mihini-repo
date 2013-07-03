@@ -367,9 +367,7 @@ function start_m3da_download()
         end -- : downloading is not needed anymore
 
 
-        local bin_checksum = md5:digest()
-        local hex_checksum = bin :gsub('.', function(k) return string.format('%02x',k:byte()) end)
-
+        local hex_checksum = md5:digest(false)
         data.currentupdate.infos.signature = string.lower(data.currentupdate.infos.signature)
 
         if hex_checksum ~= data.currentupdate.infos.signature then

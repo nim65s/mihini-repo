@@ -40,9 +40,9 @@ local function ExecuteScript(sys_asset, args)
 
     local md5 = hash.md5()
     for k,v in ipairs(script) do md5:update(v) end
-    local checksum = md5:digest():gsub('.', function(k) return string.format('%02x',k:byte()) end)
+    local hex_checksum = md5:digest(false)
     signature = string.lower(signature)
-    assert(checksum == signature, string.format("corrupted script content, received %s, computed %s", signature, checksum))
+    assert(hex_checksum == signature, string.format("corrupted script content, received %s, computed %s", signature, hex_checksum))
 
     local s, err = loader.loadbuffer(script, "@"..url, true)
     assert(s, "loading err="..(err or "unknown"))
