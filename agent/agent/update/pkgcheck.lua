@@ -14,7 +14,7 @@ local config = require"agent.config"
 local utable = require"utils.table"
 local socket = require"socket"
 local log    = require"log"
-local systemutils = require"utils.system"
+local lfs    = require"lfs"
 
 local data   = common.data
 local escapepath = common.escapepath
@@ -52,16 +52,21 @@ local function checkpkg()
        return state.stepfinished("failure", 451, "Cannot parse the update file name correctly")
     end
 
-    local dirname = common.tmpdir .."/"..pkgname
+    local dirname = common.tmpdir .. pkgname
     updatefile = data.currentupdate.updatefile
     
-    --Get absolute path if we can get it: the absolute path will be sent to user callback
-    local err, output = systemutils.pexec("readlink -f -n " .. common.tmpdir )
-    if err ~= 0 then 
-        log("UPDATE", "WARNING", "Cannot get the absolute path: err=%s, user callback will receive relative path!", tostring(output))
-        output= nil
+    if dirname:sub(1,1) == "/" then
+        --common.tmpdir was already an absolute path, dirname can be used directly
+        data.currentupdate.update_directory = dirname
+    else
+        --common.tmpdir was a relative path (with starting "." char or not...), dirname needs to be changed.
+        --Get absolute path if we can get it: the absolute path will be sent to user callback
+        local currentdir, error =  lfs.currentdir()
+        if not currentdir then
+            log("UPDATE", "WARNING", "Cannot get the absolute path: err=%s, user callback will receive relative path!", tostring(error))
+        end
+        data.currentupdate.update_directory = ((currentdir and currentdir .. string.gsub(dirname, "^%.","",1)) or dirname)  --gsub remove the "." before dirname, if any.
     end
-    data.currentupdate.update_directory = (output or common.tmpdir) .."/"..pkgname
 
     --preventive directory removal before mkdir
     res, err  = os.execute("rm -rf "..escapepath(dirname))
