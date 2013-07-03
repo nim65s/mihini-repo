@@ -17,7 +17,9 @@ local persist = require "persist"
 local m3da    = require "m3da.bysant"
 local m3da_deserialize = m3da.deserializer()
 
-local crypto = require 'm3da.session.security.crypto'
+local hmac   = require 'crypto.hmac'
+local aes    = require 'crypto.aes'
+local random = require 'crypto.random'
 
 require 'print'
 
@@ -59,9 +61,9 @@ end
 --
 function M :getauthentication(keyidx, method_hash)
     checks('m3da.session', 'number', 'string')
-    local method, hash = method_hash :match "^(.+)%-(.+)$"
-    if not method or not hash then failwith(self, 400, 'bad auth scheme') end
-    local obj = assert(crypto.hmac(hash, keyidx))
+    local hash = method_hash :match "^hmac%-(.+)$"
+    if not hash then failwith(self, 400, 'bad auth scheme') end
+    local obj = assert(hmac(hash, keyidx))
     return obj
 end
 
@@ -115,7 +117,7 @@ function M :sendmsg(msg_src, inner_headers, current_nonce, next_nonce)
     -- If an encryption method is specified, then the content of the payload
     -- must go through a cipher filter to be scrambled. This filter is added
     if  self.encryption then
-        local cipher_filter = crypto.encrypt_filter(self.encryption, current_nonce, M.IDX_CRYPTO_K)
+        local cipher_filter = aes.encrypt_filter(self.cipher_chaining, self.cipher_length, current_nonce, M.IDX_CRYPTO_K)
         envelopes = ltn12.filter.chain(inner_envelope, cipher_filter, auth:filter(), auth_envelope)
     else
         envelopes = ltn12.filter.chain(inner_envelope, auth:filter(), auth_envelope)
@@ -279,7 +281,7 @@ end
 --
 function M :unprotectedsend (current_nonce, src_factory, inner_headers)
     checks('m3da.session', 'string', 'function', '?table')
-    local next_nonce = crypto.getnonce()
+    local next_nonce = random(16)
 
     log("M3DA-SESSION", "INFO", "Sending data through authenticated%s session",
         self.encryption and ' and encrypted' or '')
@@ -333,7 +335,7 @@ function M :unprotectedparse(nonce, outer_env)
     checks('m3da.session', 'string', 'table')
 
     if not self :verifymsg (outer_env, nonce) then -- bad message, send a challenge and retry
-        nonce = crypto.getnonce()
+        nonce = random(16)
         self :sendchallenge (nonce)
         outer_env = self :receive()
         -- Must be right the second time: we don't want to be DoS'ed
@@ -344,7 +346,7 @@ function M :unprotectedparse(nonce, outer_env)
 
     local payload = outer_env.payload
     if self.encryption then
-        payload = assert(crypto.decrypt_function(self.encryption, nonce, M.IDX_CRYPTO_K, payload))
+        payload = assert(aes.decrypt_function(self.cipher_chaining, self.cipher_length, nonce, M.IDX_CRYPTO_K, payload))
     end
 
     log("M3DA-SESSION", "INFO", "Accepted authenticated%s response from server",
@@ -389,7 +391,7 @@ local function protector_factory (unprotected_func)
             if s then self.started = true else return s, errmsg end
         end
         self.last_status = false -- to be filled in case of error
-        local current_nonce = persist.load("security.nonce") or crypto.getnonce()
+        local current_nonce = persist.load("security.nonce") or random(16)
         local success, next_nonce = copcall(unprotected_func, self, current_nonce, ...)
         --local success, next_nonce = coxpcall(function() return unprotected_func(self, current_nonce, ...) end, debug.traceback)
         if success then -- success
@@ -432,13 +434,9 @@ M.send = protector_factory(M.unprotectedsend)
 M.mandatory_keys = {
     transport=1, msghandler=1, localid=1, peerid=1, authentication=1 }
 
-M.optional_keys = {
-    encryption=1
-}
-
 function M :start()
-    if not crypto.hmac('md5', M.IDX_AUTH_KS) then
-        assert(crypto.hmac('md5', M.IDX_PROVIS_KS)) -- tested by session.new()
+    if not hmac('md5', M.IDX_AUTH_KS) then
+        assert(hmac('md5', M.IDX_PROVIS_KS)) -- tested by session.new()
         local P = require 'm3da.session.provisioning'
         return P.downloadkeys(self)
     else
@@ -456,8 +454,8 @@ end
 --
 function M.new(cfg)
     local self = { waitingresponse = false; started = false }
-    if not (crypto.hmac('md5', M.IDX_AUTH_KS) or 
-            crypto.hmac('md5', M.IDX_PROVIS_KS)) then
+    if not (hmac('md5', M.IDX_AUTH_KS) or 
+            hmac('md5', M.IDX_PROVIS_KS)) then
         return nil, "Neither provisioning nor authenticating crypto keys"
     end 
     for key in pairs(M.mandatory_keys) do
@@ -466,7 +464,17 @@ function M.new(cfg)
         self[key]=val
     end
     
-    for key in pairs(M.optional_keys) do self[key]=cfg[key] end
+    if cfg.encryption then 
+        local chaining, length = cfg.encryption :match 'aes%-([a-z]+)%-([0-9]+)'
+        if chaining then
+            self.encryption = cfg.encryption
+            self.cipher_chaining = chaining
+            self.cipher_length = tonumber(length)
+        else
+            return nil, "Invalid encryption scheme"
+        end
+    end
+
     setmetatable(self, MT)
 
     self.transport.sink = self :newsink()

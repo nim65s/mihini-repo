@@ -76,7 +76,7 @@ static int api_isaac( lua_State *L) {
     return 1;
 }
 
-int luaopen_openaes_isaac( lua_State *L) {
+int luaopen_crypto_random( lua_State *L) {
     lua_pushcfunction( L, api_isaac);
     return 1;
 }

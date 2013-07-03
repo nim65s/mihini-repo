@@ -48,7 +48,7 @@ ADD_LUA_LIBRARY(m3da_transport_servers DESTINATION
 ADD_LUA_LIBRARY(m3da_session DESTINATION m3da/session session/default.lua)
 
 # Authentication & encryption enabled session communication layer
-ADD_LUA_LIBRARY(m3da_session_security DESTINATION m3da
-    =session/security/init.lua =session/security/crypto.lua)
-ADD_DEPENDENCIES(m3da_session_security openaes_core openaes_isaac hmacmd5)
+ADD_LUA_LIBRARY(m3da_session_security DESTINATION m3da =session/security.lua)
+
+ADD_DEPENDENCIES(m3da_session_security crypto_aes crypto_random crypto_hmac)
 

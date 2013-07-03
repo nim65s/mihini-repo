@@ -13,7 +13,7 @@
  *
  ******************************************************************************/
 
-/* Streaming implementation of HMAC-MD5, for Lua, which retrieves keys from
+/* Streaming implementation of HMAC-MD5 and HMAC-SHA1, for Lua, which retrieves keys from
  * the keystore, and never writes them in Lua-managed memory.
  *
  * Contrary to the reference implementation in the RFC, it doesn't require
@@ -21,15 +21,16 @@
  *
  * Usage:
  *
- *    M = require 'hmacmd5'
- *    hmac_text1_text2 = M.hmac(key_index) :update(text1) :update(text2) :digest()
- *    md5_text1_text2  = M.md5()           :update(text1) :update(text2) :digest()
+ *    hmac = require 'crypto.hmac'
+ *    hmac_text1_text2 = M.hmac('md5', key_index) :update(text1) :update(text2) :digest()
  */
 
 #include <strings.h>
+#include <string.h>
 #include <stddef.h>
 #include <malloc.h>
 #include "md5.h"
+#include "sha1.h"
 #include "lauxlib.h"
 #include "keystore.h"
 
@@ -38,7 +39,8 @@
 #define KEY_LEN        64
 
 struct hmac_ctx_t {
-    MD5_CTX md5;
+    enum { HASH_MD5, HASH_SHA1 } hash;
+    union { MD5_CTX md5; SHA1Context sha1; } u;
     unsigned char key[KEY_LEN];
     int digested;
 };
@@ -59,16 +61,33 @@ static struct hmac_ctx_t *checkhmac ( lua_State *L, int idx) {
     return (struct hmac_ctx_t *) luaL_checkudata( L, idx, "HMAC_CTX");
 }
 
-/* Check that value at Lua stack index `idx` is a userdata containing md5 context. */
-static MD5_CTX *checkmd5 ( lua_State *L, int idx) {
-    return (MD5_CTX *) luaL_checkudata( L, idx, "MD5_CTX");
+
+static void h_init( struct hmac_ctx_t *ctx) {
+    if( HASH_MD5 == ctx->hash) MD5Init( & ctx->u.md5);
+    else SHA1Reset( & ctx->u.sha1);
 }
 
-/* hmac(idx_K) returns a ctx as userdata. */
+static void h_update( struct hmac_ctx_t *ctx, unsigned char *data, size_t length) {
+    if( HASH_MD5 == ctx->hash) MD5Update( & ctx->u.md5, data, length);
+    else SHA1Input( & ctx->u.sha1, data, length);
+}
+
+static void h_digest( struct hmac_ctx_t *ctx, unsigned char digest[DIGEST_LEN]) {
+    if( HASH_MD5 == ctx->hash) MD5Final( digest, & ctx->u.md5);
+    else SHA1Result( & ctx->u.sha1, digest);
+}
+
+/* hmac(hash_name, idx_K) returns a ctx as userdata. */
 static int api_hmac( lua_State *L) {
     int i;
-    int idx_K = luaL_checkinteger( L, 1)-1;
     struct hmac_ctx_t *ctx = lua_newuserdata( L, sizeof( * ctx));
+    const char *hash_name = luaL_checkstring( L, 1);
+    int idx_K = luaL_checkinteger( L, 2)-1;
+
+    if( ! strcmp( hash_name, "sha1")) { ctx->hash = HASH_SHA1; }
+    else if( ! strcmp( hash_name, "md5")) { ctx->hash = HASH_MD5; MD5Init( & ctx->u.md5); }
+    else { lua_pushnil( L); lua_pushliteral( L, "hash function not supported"); return 2; }
+
     bzero( & ctx->key, KEY_LEN);
     i = get_plain_bin_key( idx_K, ctx->key);
     if( i) { lua_pushnil( L); lua_pushinteger( L, i); return 2; }
@@ -76,8 +95,8 @@ static int api_hmac( lua_State *L) {
     luaL_newmetatable( L, "HMAC_CTX");
     lua_setmetatable( L, -2);
     for( i=0; i<KEY_LEN; i++) ctx->key[i] ^= 0x36; // convert key into k_ipad
-    MD5Init( & ctx->md5);
-    MD5Update( & ctx->md5, ctx->key, KEY_LEN);
+    h_init( ctx);
+    h_update( ctx, ctx->key, KEY_LEN);
     for( i=0; i<KEY_LEN; i++) ctx->key[i] ^= 0x36 ^ 0x5c; // convert key from k_ipad to k_opad
     return 1;
 }
@@ -88,12 +107,14 @@ static int api_hmac_update( lua_State *L) {
     size_t datalen;
     unsigned char *data = (unsigned char *) luaL_checklstring( L, 2, & datalen);
     if( ctx->digested) { lua_pushnil( L); lua_pushliteral( L, "digest already computed"); return 2; }
-    MD5Update( & ctx->md5, data, datalen);
+    h_update( ctx, data, datalen);
     lua_pushvalue( L, 1);
     return 1;
 }
 
-/* digest(ctx) returns the hmac signature of all data passed to update(). */
+/* hmac_ctx:digest(b) returns the hmac signature of all data passed to update().
+ * Digest is returns as a binary string if `b` is true,
+ * as an hexadecimal string if it's false. */
 static int api_hmac_digest( lua_State *L) {
     struct hmac_ctx_t *ctx = checkhmac ( L, 1);
     unsigned char digest[DIGEST_LEN];
@@ -101,11 +122,11 @@ static int api_hmac_digest( lua_State *L) {
     if( ctx->digested) { lua_pushnil( L); lua_pushliteral( L, "digest already computed"); return 2; }
     ctx->digested = 1;
 
-    MD5Final( digest, & ctx->md5);  // (inner) digest = MD5(k_ipad..msg)
-    MD5Init( & ctx->md5); // reuse MD5 ctx to compute outer MD5
-    MD5Update( & ctx->md5, ctx->key, KEY_LEN); // key = k_opad
-    MD5Update( & ctx->md5, digest, DIGEST_LEN);
-    MD5Final( digest, & ctx->md5); // (outer) digest = MD5(k_opad..inner digest)
+    h_digest( ctx, digest);  // (inner) digest = HASH(k_ipad..msg)
+    h_init( ctx);            // reuse hash ctx to compute outer hash
+    h_update( ctx, ctx->key, KEY_LEN); // key = k_opad
+    h_update( ctx, digest, DIGEST_LEN);
+    h_digest(ctx, digest); // (outer) digest = MD5(k_opad..inner digest)
 
     if( lua_toboolean( L, 2)) {
         lua_pushlstring( L, (const char *) digest, DIGEST_LEN);
@@ -125,7 +146,7 @@ static int hmac_filter_closure( lua_State *L) {
     if( ! lua_isnil( L, 1)) {
         size_t size;
         unsigned char *data = (unsigned char *) luaL_checklstring( L, 1, & size);
-        MD5Update( & ctx->md5, data, size);
+        h_update( ctx, data, size);
     }
     /* return the original argument, unmodified. */
     lua_settop( L, 1);
@@ -140,92 +161,21 @@ static int api_hmac_filter( lua_State *L) {
     return 1;
 }
 
-/* md5() returns an MD5 ctx as userdata. */
-static int api_md5( lua_State *L) {
-    MD5_CTX *ctx = lua_newuserdata( L, sizeof( MD5_CTX));
-    luaL_newmetatable( L, "MD5_CTX");
-    lua_setmetatable( L, -2);
-    MD5Init( ctx);
-    return 1;
-}
-
-
-/* md5_ctx:update(data) returns md5_ctx, processes data. */
-static int api_md5_update( lua_State *L) {
-    MD5_CTX *ctx = checkmd5 ( L, 1);
-    size_t datalen;
-    unsigned char *data = (unsigned char *) luaL_checklstring( L, 2, & datalen);
-    MD5Update( ctx, data, datalen);
-    lua_pushvalue( L, 1);
-    return 1;
-}
-
-/* md5_ctx:digest() returns the MD5 of all data passed to update(). */
-static int api_md5_digest( lua_State *L) {
-    MD5_CTX *ctx = checkmd5 ( L, 1);
-    unsigned char digest[DIGEST_LEN];
-    MD5Final( digest, ctx);
-    if( lua_toboolean( L, 2)) {
-        lua_pushlstring( L, (const char *) digest, DIGEST_LEN);
-    } else {
-        char hex[HEX_DIGEST_LEN];
-        bin2hex( hex, digest);
-        lua_pushlstring( L, (const char *) hex, HEX_DIGEST_LEN);
-    }
-    return 1;
-}
-
-/* Helper for ltn12 filter. */
-static int md5_filter_closure( lua_State *L) {
-    MD5_CTX *ctx = checkmd5 ( L, lua_upvalueindex( 1));
-    if( ! lua_isnil( L, 1)) {
-        size_t size;
-        const char *data = luaL_checklstring( L, 1, & size);
-        MD5Update( ctx, (unsigned char *) data, size);
-        lua_pushvalue( L, 1);
-        return 1;
-    }
-    /* return the original argument, unmodified. */
-    lua_settop( L, 1);
-    return 1;
-}
-
-/* Returns an ltn2 filter, which lets data go through it unmodified but updates the md5 context. */
-static int api_md5_filter( lua_State *L) {
-    checkmd5 ( L, 1);
-    lua_settop( L, 1);
-    lua_pushcclosure( L, md5_filter_closure, 1);
-    return 1;
-}
-
-int luaopen_hmacmd5( lua_State *L) {
+int luaopen_crypto_hmac( lua_State *L) {
 #define REG(c_name, lua_name) lua_pushcfunction( L, c_name); lua_setfield( L, -2, lua_name)
 
-    /* Build M */
-    lua_newtable( L); // M
-    REG( api_hmac, "hmac");
-    REG( api_md5, "md5");
-
     /* Build HMAC metatable. */
-    luaL_newmetatable( L, "HMAC_CTX"); // M, hmac_mt
-    lua_newtable( L);                  //  M, hmac_mt, hmac_index
-    lua_pushvalue( L, -1);             //  M, hmac_mt, hmac_index, hmac_index
-    lua_setfield( L, -3, "__index");   // M, hmac_mt[__index=hmac_index], hmac_index
+    luaL_newmetatable( L, "HMAC_CTX"); // hmac_mt
+    lua_newtable( L);                  // hmac_mt, hmac_index
+    lua_pushvalue( L, -1);             // hmac_mt, hmac_index, hmac_index
+    lua_setfield( L, -3, "__index");   // hmac_mt[__index=hmac_index], hmac_index
     REG( api_hmac_update, "update");
     REG( api_hmac_digest, "digest");
     REG( api_hmac_filter, "filter");
-    lua_pop( L, 2);// M
+    lua_pop( L, 2);// -
 
-    /* Build MD5 metatable. */
-    luaL_newmetatable( L, "MD5_CTX");  // M, md5_mt
-    lua_newtable( L);                  //  M, md5_mt, md5_index
-    lua_pushvalue( L, -1);             //  M, md5_mt, md5_index, md5_index
-    lua_setfield( L, -3, "__index");   // M, md5_mt[__index=md5_index], md5_index
-    REG( api_md5_update, "update");
-    REG( api_md5_digest, "digest");
-    REG( api_md5_filter, "filter");
-    lua_pop( L, 2);// M
-
+    /* Return constructor. */
+    lua_pushcfunction( L, api_hmac);
     return 1;
 #undef REG
 }

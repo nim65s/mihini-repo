@@ -57,7 +57,7 @@ static int api_write( lua_State *L) {
     else { lua_pushboolean( L, 1); return 1; }
 }
 
-int luaopen_openaes_keystore( lua_State *L) {
+int luaopen_crypto_keystore( lua_State *L) {
     lua_pushcfunction( L, api_write);
     return 1;
 }

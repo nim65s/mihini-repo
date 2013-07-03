@@ -87,7 +87,7 @@ static int api_close( lua_State *L) {
 }
 
 
-int luaopen_openaes_core( lua_State *L) {
+int luaopen_crypto_openaes_core( lua_State *L) {
     lua_newtable( L);
 #define REG( name) lua_pushcfunction( L, api_##name); lua_setfield( L, -2, #name)
     REG( new);

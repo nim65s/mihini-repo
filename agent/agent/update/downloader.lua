@@ -12,7 +12,7 @@
 
 local common = require"agent.update.common"
 local io = require "io"
-local hash = require "hmacmd5"
+local md5_new = require "crypto.md5"
 local lfs = require "lfs"
 local ltn12 = require "ltn12"
 local http = require "socket.http"
@@ -233,7 +233,7 @@ function start_m3da_download()
     data.currentupdate.updatefile=updatepath
     common.savecurrentupdate()
 
-    local md5 = hash.md5()
+    local md5 = md5_new()
     local md5filter = md5:filter()
 
     --we get the headers of package

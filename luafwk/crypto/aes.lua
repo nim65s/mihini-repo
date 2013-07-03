@@ -9,12 +9,9 @@
 --     Fabien Fleutot     for Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 
--- Cryptographic helpers for security sessions, based on OpenAES and
--- RFC reference implementation of MD5.
+local core  = require 'crypto.openaes.core'
+local md5   = require 'crypto.md5'
 
-local core  = require 'openaes.core'
-local hash  = require 'hmacmd5'
-local isaac = require 'openaes.isaac'
 local M = { }
 
 -- OpenAES expects a header to describe configuration, in front of data to decrypt
@@ -29,11 +26,11 @@ local OAES_HEADER="OAES\001\002\002\000\000\000\000\000\000\000\000\000"
 --  @param keyidx index of the key in the key store, 1-based
 --  @param ciphered_text data to decrypt.
 --  @return plain text, or nil+error message, or throws an error
-function M.decrypt_function(scheme, nonce, keyidx, ciphered_text)
-    checks('string', 'string', 'number', 'string')
-    if scheme ~= 'aes-cbc-128' then return nil, "scheme not supported" end
+function M.decrypt_function(chaining, length, nonce, keyidx, ciphered_text)
+    checks('string', 'number', 'string', 'number', 'string')
+    if chaining~='cbc' or length~=128 then return nil, "scheme not supported" end
     assert(#ciphered_text % 16 == 0, "bad ciphered_text size")
-    local iv    = hash.md5():update(nonce):digest(false)
+    local iv    = md5():update(nonce):digest(true)
     local oaes  = core.new(nonce, keyidx)
     local plain = core.decrypt(oaes, OAES_HEADER..iv..ciphered_text)
     local n = plain :byte(-1)
@@ -50,10 +47,10 @@ end
 --   the ciphered and to get an initial chaining vector.
 --  @param keyidx index of the key in the key store, 1-based
 --  @return and ltn12 filter, or nil+error message, or throws an error
-function M.encrypt_filter(scheme, nonce, keyidx)
-    checks('string', 'string', 'number')
-    if scheme ~= 'aes-cbc-128' then return nil, "scheme not supported" end
-    local iv = hash.md5():update(nonce):digest(false)  -- initialization vector
+function M.encrypt_filter(chaining, length, nonce, keyidx)
+    checks('string', 'number', 'string', 'number')
+    if chaining~='cbc' or length~=128 then return nil, "scheme not supported" end
+    local iv = md5():update(nonce):digest(true)  -- initialization vector
     local oaes = core.new(nonce, keyidx, iv)
     local buffer = ''      -- yet unsent data (must be sent by 16-bytes chunks)
     local lastsent = false -- has last padded segment been sent yet?
@@ -84,33 +81,17 @@ function M.encrypt_filter(scheme, nonce, keyidx)
     return filter
 end
 
--------------------------------------------------------------------------------
---- Returns a new 16 bytes (128 bits) random string.
-function M.getnonce() return isaac(16) end
-
--------------------------------------------------------------------------------
---- Returns an hmac computing object with methods:
---  * `:update(data)` which accept more data to authenticate, and returns
---   the authentication object to allow method chaining;
---  * `:digest(bool)` which returns the digest as a binary string if `bool` is true.
---  @param hash_name name of the hash algorithm, currently `'md5'` or `'sha1'`.
---  @param keyidx the keystore index of the key to use
---  @return an object with methods `:update()` and `:digest()` respecting the
---   specification above, or nil + error message.
-function M.hmac(hash_name, keyidx)
-    assert(hash_name=='md5', "hash not supported")
-    return hash.hmac(keyidx)
+function M.encrypt_function(chaining, length, nonce, keyidx, plain)
+    checks('string', 'number', 'string', 'number', 'string')
+    local ltn12 = require 'ltn12'
+    local filter, msg = M.encrypt_filter(chaining, length, nonce, keyidx)
+    if not filter then return nil, msg end
+    local src = ltn12.source.string(plain)
+    local snk, result = ltn12.sink.table{ }
+    ltn12.pump.all(ltn12.source.chain(src, filter), snk)
+    return table.concat(result)
 end
 
-local function no_ecdh() return nil, 'Elliptic curves not supported' end
-
--------------------------------------------------------------------------------
---- Returns a private key and a public key for Elliptic-Curve Diffie-Hellman
---  shared secret generation, as a pair of strings.
-M.ecdh_new = no_ecdh
-
--------------------------------------------------------------------------------
---- Generates a shared secret from our private key and the peer's public key.
-M.ecdh_getsecret = no_ecdh
+function M.decrypt_filter() return nil, "not implemented" end
 
 return M

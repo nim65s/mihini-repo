@@ -8,7 +8,11 @@
 # Contributors:
 #     Sierra Wireless - initial API and implementation
 #*******************************************************************************
-PROJECT(LIB_MD5)
+PROJECT(LIB_HMAC_MD5)
 
-ADD_LIBRARY(lib_md5 SHARED md5.c hmac-md5.c)
-SET_TARGET_PROPERTIES(lib_md5 PROPERTIES COMPILE_FLAGS -fPIC OUTPUT_NAME md5)
+INCLUDE_DIRECTORIES(
+    ${LIB_HMAC_MD5_SOURCE_DIR}/hmac_rfc2104
+    ${LIB_HMAC_MD5_SOURCE_DIR}/md5_rfc1321)
+
+ADD_LIBRARY(lib_hmac_md5 SHARED md5_rfc1321/md5.c hmac_rfc2104/hmac-md5.c)
+SET_TARGET_PROPERTIES(lib_hmac_md5 PROPERTIES COMPILE_FLAGS -fPIC OUTPUT_NAME hmacmd5)

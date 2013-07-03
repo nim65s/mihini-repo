@@ -9,8 +9,7 @@ N/A
 Description
 -----------
 
-Reference implementations of the MD5 hash algorithm and HMAC message
-authentication, taken from RFC1321 and RFC2104 respectively.
+Reference implementations of the MD5 hash algorithm, taken from RFC1321.
 
 Cryptography
 ------------
@@ -19,7 +18,6 @@ Yes (authentication, no encryption)
 Project Website
 ---------------
 http://www.ietf.org/rfc/rfc1321.txt
-http://www.ietf.org/rfc/rfc2104.txt
 
 Source URL
 ----------

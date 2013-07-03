@@ -121,7 +121,7 @@ function M.dosession()
     if status >= 200 and status <= 299 then
         return "ok"
     else
-        return nil, "unexpected status code " .. tostring(r)
+        return nil, "unexpected status code " .. tostring(status)
     end
 end
 

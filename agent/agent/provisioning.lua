@@ -1,6 +1,6 @@
 local security   = require 'm3da.session.security'
-local write_keys = require 'openaes.keystore'
-local hash       = require 'hmacmd5'
+local write_keys = require 'crypto.keystore'
+local md5       = require 'crypto.md5'
 local lfs        = require 'lfs'
 
 local M = { }
@@ -27,7 +27,7 @@ local function h2b(h)
 end
 
 local function md5_bin(str)
-    return hash.md5() :update (str) :digest(true)
+    return md5() :update (str) :digest(true)
 end
 
 local function create_directory_if_needed()
@@ -45,9 +45,9 @@ function M.password_md5(K)
     x("Setting authentication and encryption key")
     create_directory_if_needed()
     x("K ="..k2s(K))
-    local KS = hash.md5() :update (serverid) :update (K) :digest(true)
+    local KS = md5() :update (serverid) :update (K) :digest(true)
     x("KS="..k2s(KS))
-    local KD = hash.md5() :update (deviceid) :update (K) :digest(true)
+    local KD = md5() :update (deviceid) :update (K) :digest(true)
     x("KD="..k2s(KD))
     assert(security.IDX_AUTH_KS == security.IDX_CRYPTO_K + 1)
     assert(security.IDX_AUTH_KD == security.IDX_CRYPTO_K + 2)
@@ -66,9 +66,9 @@ function M.registration_password_md5(K)
     x("K ="..k2s(K))
     local serverid = assert(agent.config.server.serverId, "Missing server.serverId in config")
     local deviceid = assert(agent.config.agent.deviceId, "Missing agent.deviceId in config")
-    local KS = hash.md5() :update (serverid) :update (K) :digest(true)
+    local KS = md5() :update (serverid) :update (K) :digest(true)
     x("KS="..k2s(KS))
-    local KD = hash.md5() :update (deviceid) :update (K) :digest(true)
+    local KD = md5() :update (deviceid) :update (K) :digest(true)
     x("KD="..k2s(KD))
     assert(security.IDX_PROVIS_KD == security.IDX_PROVIS_KS + 1)
     assert(write_keys(security.IDX_PROVIS_KS, { KS, KD }))
