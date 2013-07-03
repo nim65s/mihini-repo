@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "swi_status.h"
+#include "returncodes.h"
 
 /**
  * Enum to define data types supported in Data Set object
@@ -70,10 +70,10 @@ typedef struct swi_dset_Iterator swi_dset_Iterator_t;
 * so API documentation will explicitly mention that you have to call this API to collect the resources attached to
 * the data iterator.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_CONTEXT_IS_CORRUPTED if data parameter is invalid
+* @return RC_OK on success
+* @return RC_BAD_FORMAT if data parameter is invalid
 */
-swi_status_t swi_dset_Destroy
+rc_ReturnCode_t swi_dset_Destroy
 (
     swi_dset_Iterator_t* data ///< [IN] the data iterator to destroy.
 );
@@ -88,11 +88,11 @@ swi_status_t swi_dset_Destroy
 * Please note that the order of the elements is not guaranteed, caller is strongly
 * advised to rely on elements' name rather than on the order.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_CONTEXT_IS_CORRUPTED if data parameter is invalid
-* @return SWI_STATUS_DA_NOT_FOUND when no more data are available, i.e previous call returned last received value.
+* @return RC_OK on success
+* @return RC_BAD_FORMAT if data parameter is invalid
+* @return RC_NOT_FOUND when no more data are available, i.e previous call returned last received value.
 */
-swi_status_t swi_dset_Next
+rc_ReturnCode_t swi_dset_Next
 (
     swi_dset_Iterator_t* data ///< [IN] iterator object to iterate over.
                               ///<      The iterator will be given as parameter on data reception function(s).
@@ -181,12 +181,12 @@ const char* swi_dset_ToString
 * Retrieves an integer value of an element in the data iterator (not necessarily the current element),
 * using element name to find/select it.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_BAD_TYPE when the element was found according requested name, but the element had
+* @return RC_OK on success
+* @return RC_BAD_PARAMETER when the element was found according requested name, but the element had
 *                             different type so value can not be returned.
-* @return SWI_STATUS_DA_NOT_FOUND when requested name was not found in the data iterator.
+* @return RC_NOT_FOUND when requested name was not found in the data iterator.
 */
-swi_status_t swi_dset_GetIntegerByName
+rc_ReturnCode_t swi_dset_GetIntegerByName
 (
     swi_dset_Iterator_t* data, ///< [IN] iterator object to search in
     const char* namePtr,       ///< [IN] name of the element to find
@@ -197,12 +197,12 @@ swi_status_t swi_dset_GetIntegerByName
 * Retrieves a float value of an element in the data iterator (not necessarily the current element),
 * using element name to find/select it.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_BAD_TYPE when the element was found according requested name, but the element had
+* @return RC_OK on success
+* @return RC_BAD_PARAMETER when the element was found according requested name, but the element had
 *                             different type so value can not be returned.
-* @return SWI_STATUS_DA_NOT_FOUND when requested name was not found in the data iterator.
+* @return RC_NOT_FOUND when requested name was not found in the data iterator.
 */
-swi_status_t swi_dset_GetFloatByName
+rc_ReturnCode_t swi_dset_GetFloatByName
 (
     swi_dset_Iterator_t* data, ///< [IN] iterator object to search in
     const char* namePtr,       ///< [IN] name of the element to find
@@ -213,12 +213,12 @@ swi_status_t swi_dset_GetFloatByName
 * Retrieves a string value of an element in the data iterator (not necessarily the current element),
 * using element name to find/select it.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_BAD_TYPE when the element was found according requested name, but the element had
+* @return RC_OK on success
+* @return RC_BAD_PARAMETER when the element was found according requested name, but the element had
 *                             different type so value can not be returned.
-* @return SWI_STATUS_DA_NOT_FOUND when requested name was not found in the data iterator.
+* @return RC_NOT_FOUND when requested name was not found in the data iterator.
 */
-swi_status_t swi_dset_GetStringByName
+rc_ReturnCode_t swi_dset_GetStringByName
 (
     swi_dset_Iterator_t* data, ///< [IN] iterator object to search in
     const char* namePtr,       ///< [IN] name of the element to find
@@ -233,10 +233,10 @@ swi_status_t swi_dset_GetStringByName
 * This API is useful when user knows the name of the element that the application will receive,
 * but not the type of this element.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_NOT_FOUND when requested name was not found in the data iterator.
+* @return RC_OK on success
+* @return RC_NOT_FOUND when requested name was not found in the data iterator.
 */
-swi_status_t swi_dset_GetTypeByName
+rc_ReturnCode_t swi_dset_GetTypeByName
 (
     swi_dset_Iterator_t* data, ///< [IN] iterator object to search in
     const char* namePtr,       ///< [IN] the name of the element to select

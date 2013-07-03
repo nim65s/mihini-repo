@@ -19,7 +19,7 @@
 #ifndef POINTER_LIST_H_
 #define POINTER_LIST_H_
 
-#include "swi_status.h"
+#include "returncodes.h"
 
 /**
  * Private structure of the pointer list object
@@ -34,7 +34,7 @@ typedef struct PointerList_s PointerList;
  * default value (8) is used.
  * @return status code.
  */
-swi_status_t PointerList_Create(PointerList** list, unsigned int prealloc);
+rc_ReturnCode_t PointerList_Create(PointerList** list, unsigned int prealloc);
 
 /**
  * Destroy a PointerList object
@@ -42,7 +42,7 @@ swi_status_t PointerList_Create(PointerList** list, unsigned int prealloc);
  * @param list PointerList object to destroy.
  * @return status code.
  */
-swi_status_t PointerList_Destroy(PointerList* list);
+rc_ReturnCode_t PointerList_Destroy(PointerList* list);
 
 /**
  * Get the number of entries currently hold in a PointerList object.
@@ -52,7 +52,7 @@ swi_status_t PointerList_Destroy(PointerList* list);
  * @param allocatedSize total nb of entries that the object can hold before reallocating space.
  * @return status code.
  */
-swi_status_t PointerList_GetSize(PointerList* list, unsigned int* nbOfElements, unsigned int* allocatedSize);
+rc_ReturnCode_t PointerList_GetSize(PointerList* list, unsigned int* nbOfElements, unsigned int* allocatedSize);
 
 /**
  * Push a pointer entry on the tail of the PointerList object
@@ -61,7 +61,7 @@ swi_status_t PointerList_GetSize(PointerList* list, unsigned int* nbOfElements, 
  * @param pointer pointer to push into the object.
  * @return status code.
  */
-swi_status_t PointerList_PushLast(PointerList* list, void* pointer);
+rc_ReturnCode_t PointerList_PushLast(PointerList* list, void* pointer);
 
 /**
  * Pop a pointer entry from the PointerList object
@@ -70,7 +70,7 @@ swi_status_t PointerList_PushLast(PointerList* list, void* pointer);
  * @param pointer will point on the pointer to retrieve, or null if no more entries are available.
  * @return status code.
  */
-swi_status_t PointerList_PopFirst(PointerList* list, void** pointer);
+rc_ReturnCode_t PointerList_PopFirst(PointerList* list, void** pointer);
 
 /**
  * Overwrite the entry at the given index with the given pointer value;
@@ -81,7 +81,7 @@ swi_status_t PointerList_PopFirst(PointerList* list, void** pointer);
  * @param pointer pointer to push into the object.
  * @return status code.
  */
-swi_status_t PointerList_Poke(PointerList* list, unsigned int index, void* pointer);
+rc_ReturnCode_t PointerList_Poke(PointerList* list, unsigned int index, void* pointer);
 
 /**
  * Read an entry at the given index, without popping it from the PointerList.
@@ -92,7 +92,7 @@ swi_status_t PointerList_Poke(PointerList* list, unsigned int index, void* point
  * @param pointer will point on the pointer to retrieve, or null if no more entries are available.
  * @return status code.
  */
-swi_status_t PointerList_Peek(PointerList* list, unsigned int index, void** pointer);
+rc_ReturnCode_t PointerList_Peek(PointerList* list, unsigned int index, void** pointer);
 
 
 /**
@@ -104,7 +104,7 @@ swi_status_t PointerList_Peek(PointerList* list, unsigned int index, void** poin
  * @param pointer will point on the pointer to retrieve, or null if no more entries are available.
  * @return status code.
  */
-swi_status_t PointerList_Remove(PointerList* list, unsigned int index, void** pointer);
+rc_ReturnCode_t PointerList_Remove(PointerList* list, unsigned int index, void** pointer);
 
 
 #endif /* POINTER_LIST_H_ */
