@@ -40,7 +40,7 @@ typedef enum
   EMP_SIMULATE_CRASH = 7
 } EmpTestCommand;
 
-static swi_status_t newCallbackCmd(uint32_t payloadsize, char* payload);
+static rc_ReturnCode_t newCallbackCmd(uint32_t payloadsize, char* payload);
 
 static EmpCommand empCmds[] = { EMP_CALLBACK_CMD };
 static emp_command_hdl_t empHldrs[] = { newCallbackCmd };
@@ -48,11 +48,11 @@ static volatile uint8_t cb_invoked = 0;
 static volatile uint8_t reconnected = 0;
 static pthread_t threads[EMP_SEND_NB_THREADS];
 
-static swi_status_t newCallbackCmd(uint32_t payloadsize, char* payload)
+static rc_ReturnCode_t newCallbackCmd(uint32_t payloadsize, char* payload)
 {
   SWI_LOG("EMP_TEST", DEBUG, "%s\n", __FUNCTION__);
   cb_invoked = 1;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 static void empReconnectionCallback()
@@ -61,66 +61,66 @@ static void empReconnectionCallback()
   reconnected = 1;
 }
 
-static swi_status_t emp_init()
+static rc_ReturnCode_t emp_init()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = emp_parser_destroy(SWI_EMP_DESTROY_NO_CMDS);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = emp_parser_init(SWI_EMP_INIT_NO_CMDS);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = emp_parser_init(SWI_EMP_INIT_NO_CMDS);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-static swi_status_t emp_init_with_callbacks()
+static rc_ReturnCode_t emp_init_with_callbacks()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = emp_parser_init(1, empCmds, empHldrs, empReconnectionCallback);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = emp_parser_init(1, empCmds, empHldrs, empReconnectionCallback);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-static swi_status_t emp_destroy()
+static rc_ReturnCode_t emp_destroy()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = emp_parser_destroy(SWI_EMP_DESTROY_NO_CMDS);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = emp_parser_destroy(SWI_EMP_DESTROY_NO_CMDS);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-static swi_status_t emp_trigger_response_timeout()
+static rc_ReturnCode_t emp_trigger_response_timeout()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = emp_send_and_wait_response(EMP_TRIGGER_TIMEOUT, 0, NULL, 0, NULL, NULL);
-  if (res != SWI_STATUS_IPC_TIMEOUT)
+  if (res != RC_TIMEOUT)
     return res;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 static void * send_cmd(void *arg)
 {
   uintptr_t id = (uintptr_t)arg, i = 0, fd = -1;
-  swi_status_t res;
+  rc_ReturnCode_t res;
   uint8_t rbufferLen;
   size_t payloadLen = 0;
   uint32_t respPayloadLen = 0;
@@ -169,7 +169,7 @@ static void * send_cmd(void *arg)
   while (true)
   {
     res = emp_send_and_wait_response(EMP_SEND_CMD, 0, payload, payloadLen, &respPayload, &respPayloadLen);
-    if (res != SWI_STATUS_OK && res != SWI_STATUS_IPC_BROKEN)
+    if (res != RC_OK && res != RC_CLOSED)
     {
       SWI_LOG("EMP_TEST", ERROR, "EMP sender thread #%" PRIuPTR " failed:  unexpected status code %d\n", id, res);
       exit(1);
@@ -189,24 +189,24 @@ static void * send_cmd(void *arg)
   return NULL;
 }
 
-static swi_status_t emp_start_mt_cmd()
+static rc_ReturnCode_t emp_start_mt_cmd()
 {
   uintptr_t i;
 
   for (i = 0; i < EMP_SEND_NB_THREADS; i++)
       pthread_create(threads + i, NULL, send_cmd, (void *)i);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-static swi_status_t emp_stop_mt_cmd()
+static rc_ReturnCode_t emp_stop_mt_cmd()
 {
   int i;
   for (i = 0; i < EMP_SEND_NB_THREADS; i++)
     pthread_cancel(threads[i]);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-static swi_status_t emp_reconnecting()
+static rc_ReturnCode_t emp_reconnecting()
 {
   // Asking EMP testing server to simulate a crash, in this way EMP
   // can handles reconnecting
@@ -214,19 +214,19 @@ static swi_status_t emp_reconnecting()
 
   while (reconnected == 0)
     usleep(1000 * 5); // 5ms
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-static swi_status_t emp_fail_reconnecting()
+static rc_ReturnCode_t emp_fail_reconnecting()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   do
   {
     res = emp_send_and_wait_response(EMP_SIMULATE_CRASH, 0, NULL, 0, NULL, NULL);
-  } while (res != SWI_STATUS_SERVER_UNREACHABLE);
+  } while (res != RC_COMMUNICATION_ERROR);
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 int main(void)
