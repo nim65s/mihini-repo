@@ -36,6 +36,7 @@ function M.getdeviceid()
     for line in io.lines('/proc/cpuinfo') do
         if string.find(line, 'Serial') then
             deviceId = string.sub(line, 11)
+            break
         end
     end
     log("agent.platform", "INFO", "getdeviceid: deviceId set [%s]", deviceId);
