@@ -60,7 +60,9 @@ end
 
 local function nonce_authenticate_header(env)
    local nonce, opaque = new_nonce(), new_nonce()
+   local timer = require 'timer'
    NONCES[nonce] = opaque
+   timer.once(60, function() NONCES[nonce] = nil end)
    env.response_headers['WWW-Authenticate'] = env.response_headers['WWW-Authenticate'] .. 'nonce="'..nonce..'", opaque="'..opaque..'"'
    env.response_headers['Transfer-Encoding'] = nil
 end
@@ -114,7 +116,6 @@ function web.authenticate_header (realm, ha1)
              return
          end
          log ("WEB-AUTH", "INFO", "logged in successfully")
-	 NONCES[auth["nonce"]] = nil
       end
    end
 end
