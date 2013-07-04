@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------
 
 require 'web.server'
+require 'web.auth.digest'
 local config = require 'agent.config'
 local yajl = require 'yajl'
 
@@ -48,9 +49,7 @@ function M.register(URL, rtype, handler, payload_sink)
      end
      web.pattern[URL]["".. rtype ..""] = {
                 ["content"] = closure,
-                ["authentication"] = authentication,
-                ["realm"] = config.rest.authentication and config.rest.authentication.realm or nil,
-                ["ha1"]   = config.rest.authentication and config.rest.authentication.ha1 or nil,
+                ["header"] = authentication and web.authenticate_header(config.rest.authentication.realm, config.rest.authentication.ha1) or nil,
                 ["sink"] = (rtype == "POST" or rtype == "PUT") and payload_sink or nil
      }
    return "ok"
