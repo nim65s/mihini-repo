@@ -138,7 +138,7 @@
 
     -- Application Container
     appcon={}
-    appcon.activate = false
+    appcon.activate = true
     -- Tcp Port to connect to appmon_daemon.
     -- No need to use this config value if using appmon_daemon default port (4242)
     --appcon.port = 4243
