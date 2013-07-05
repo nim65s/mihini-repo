@@ -20,17 +20,25 @@ local initialiazed = false
 local serialize = yajl.to_string
 
 local function deserialize(str)
-   return str and yajl.to_value('['..str..']')[1] or yajl.null
+   if not str then
+      return yajl.null
+   end
+   local status, result = pcall(yajl.to_value, '['..str..']')
+   return status and result[1] or nil, "Invalid JSON input: " .. str
 end
 
 function M.register(URL, rtype, handler, payload_sink)
    log("REST", "DEBUG", "Registering handler %p on URL %s for type %s", handler, URL, rtype)
 
    local closure = function (echo, env)
-                       local payload = payload_sink and nil or deserialize(env.body)
+                       local payload, res, err
+                       if not payload_sink then
+                          payload, err = deserialize(env.body)
+                          if not payload and err then return nil, err end
+                       end
                        local suburl = env.url:find("/") and env.url:match("/.*"):sub(2) or nil
                        local environment = { ["suburl"] = suburl, ["params"] = env.params, ["payload"] = payload}
-                       local res, err = handler(environment)
+                       res, err = handler(environment)
                        if not res and type(err) == "string" then
                            log("REST", "ERROR", "Unexpected error while executing rest request %s: %s", env.url, err)
                            return res, err
