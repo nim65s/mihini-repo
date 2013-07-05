@@ -13,7 +13,7 @@ ADD_LUA_LIBRARY(agent_update DESTINATION agent/update
     init.lua builtinupdaters.lua pkgcheck.lua updatemgr.lua common.lua downloader.lua status.lua
 )
 
-ADD_DEPENDENCIES(agent_update racon)
+ADD_DEPENDENCIES(agent_update racon crypto_md5)
 
 ADD_LUA_LIBRARY(agent_update_tools EXCLUDE_FROM_ALL DESTINATION agent/update/tools
     tools/createpkg.lua
