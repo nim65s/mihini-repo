@@ -43,7 +43,7 @@ function M.register(URL, rtype, handler, payload_sink)
                            log("REST", "ERROR", "Unexpected error while executing rest request %s: %s", env.url, err)
                            return res, err
                        end
-	               echo(serialize(res))
+	               echo(res ~= "ok" and serialize(res) or nil)
 		       return "ok"
                    end
      if not web.pattern[URL] then
