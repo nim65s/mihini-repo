@@ -88,7 +88,7 @@ local function afpathprovisioning()
 
    sndcmd("setenv LUA_PATH=".. af_ro_path .. "/lua/?.lua;" .. af_ro_path .. "/" .. "lua/?/init.lua")
    sndcmd("setenv LUA_CPATH=".. af_ro_path .. "/lua/?.so")
-   sndcmd("setenv PATH=" .. os.getenv("PATH") .. ":" .. af_ro_path .. "/bin")
+   sndcmd("setenv PATH=" .. af_ro_path .. "/bin" .. ":" .. os.getenv("PATH"))
 
    if config.appcon.envvars then
       for k, v in pairs(config.appcon.envvars) do
