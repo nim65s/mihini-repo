@@ -78,7 +78,7 @@ case "\$1" in
     restart)
         \$0 stop
         \$0 start
-        sleep 1
+        sleep 3
         \$0 status
         ;;
 
