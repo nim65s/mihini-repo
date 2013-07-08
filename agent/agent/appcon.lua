@@ -86,7 +86,7 @@ local function afpathprovisioning()
 
    local res, err = sndcmd("setenv LD_LIBRARY_PATH=".. af_ro_path .. "/lib")
 
-   sndcmd("setenv LUA_PATH=".. af_ro_path .. "/lua/?.lua;" .. af_ro_path .. "/" .. "lua/?/init.lua")
+   sndcmd("setenv LUA_PATH=".. af_ro_path .. "/lua/?.lua;" .. af_ro_path .. "/" .. "lua/?/init.lua;./?.lua")
    sndcmd("setenv LUA_CPATH=".. af_ro_path .. "/lua/?.so")
    sndcmd("setenv PATH=" .. af_ro_path .. "/bin" .. ":" .. os.getenv("PATH"))
 
