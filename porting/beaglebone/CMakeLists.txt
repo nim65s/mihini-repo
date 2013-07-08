@@ -20,7 +20,6 @@ ENDIF()
 SET(SYS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/agent/system)
 
 ADD_CUSTOM_COMMAND(TARGET agent_platform POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/start.sh ${CMAKE_INSTALL_PREFIX}/start.sh
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/GPRS ${CMAKE_INSTALL_PREFIX}/bin/GPRS
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYS_DIR}/ETH ${CMAKE_INSTALL_PREFIX}/bin/ETH
 )
