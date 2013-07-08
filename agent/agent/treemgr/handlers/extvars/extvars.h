@@ -14,7 +14,7 @@
 #ifndef EXTVARS_H_
 #define EXTVARS_H_
 
-#include "swi_status.h"
+#include "returncodes.h"
 
 /* The data types which can be handled by the treemgr variables */
 typedef enum ExtVars_type_t {
@@ -34,7 +34,7 @@ typedef int ExtVars_id_t;
 
 /* Initialize the handler
  * @return SWI_STATUS_OK, SWI_STATUS_RESOURCE_INITIALIZATION_FAILED */
-swi_status_t ExtVars_initialize (void);
+rc_ReturnCode_t ExtVars_initialize (void);
 
 
 /* Prototype of the notification function.
@@ -55,7 +55,7 @@ swi_status_t ExtVars_initialize (void);
  * @param types  array of `nvars` types of the notified variables
  *
  * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS */
-typedef swi_status_t ExtVars_notify_t(void *ctx, int nvars, ExtVars_id_t* vars, void** values, ExtVars_type_t* types);
+typedef rc_ReturnCode_t ExtVars_notify_t(void *ctx, int nvars, ExtVars_id_t* vars, void** values, ExtVars_type_t* types);
 
 /* Pass the notification function to the handler.
  *
@@ -76,12 +76,12 @@ void ExtVars_set_notifier (void *ctx, ExtVars_notify_t *notifier);
  * @param var the variable id
  * @param enable register for notification if true, unregister if false
  * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS, SWI_STATUS_DA_UNSUPPORTED_ACTION */
-swi_status_t ExtVars_register_variable(ExtVars_id_t var, int enable);
+rc_ReturnCode_t ExtVars_register_variable(ExtVars_id_t var, int enable);
 
 /* Register or unregister for notification on all variables
  * @param enable register for notification if true, unregister if false
  * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS, SWI_STATUS_DA_UNSUPPORTED_ACTION */
-swi_status_t ExtVars_register_all(int enable);
+rc_ReturnCode_t ExtVars_register_all(int enable);
 
 /*
  * Retrieve the content of a variable.
@@ -98,12 +98,12 @@ swi_status_t ExtVars_register_all(int enable);
  * @param value (output) value of the retrieved variable
  * @param type  (output) type of the retrieved variable
  * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS, SWI_STATUS_DA_NOT_FOUND */
-swi_status_t ExtVars_get_variable(ExtVars_id_t var, void **value, ExtVars_type_t *type);
+rc_ReturnCode_t ExtVars_get_variable(ExtVars_id_t var, void **value, ExtVars_type_t *type);
 
 
 /* Called by ExtVars after it has stopped needing the results of a `get_variable` callback;
  *  Allows to clean up resources needed to maintain those results valid. */
-swi_status_t ExtVars_get_variable_release(ExtVars_id_t var, void *value, ExtVars_type_t type);
+rc_ReturnCode_t ExtVars_get_variable_release(ExtVars_id_t var, void *value, ExtVars_type_t type);
 
 /* List all the variables identifiers handled by the handler.
  *
@@ -118,7 +118,7 @@ swi_status_t ExtVars_get_variable_release(ExtVars_id_t var, void *value, ExtVars
  * @param vars must be made to point to an array of `nvars` variables.
  * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS
  */
-swi_status_t ExtVars_list(int* nvars, ExtVars_id_t** vars);
+rc_ReturnCode_t ExtVars_list(int* nvars, ExtVars_id_t** vars);
 
 /* If provided, called when the handler stopped needing a list of variables
  * passed to ExtVars_list(). Allows to clean up any dynamically allocated resource. */
@@ -136,6 +136,6 @@ void ExtVars_list_release(int nvars, ExtVars_id_t *vars);
  * @param types  types of the written variables
  * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS, SWI_STATUS_DA_UNSUPPORTED_ACTION, SWI_STATUS_DA_NOT_FOUND
  */
-swi_status_t ExtVars_set_variables(int nvars, ExtVars_id_t *vars, void** values, ExtVars_type_t* types);
+rc_ReturnCode_t ExtVars_set_variables(int nvars, ExtVars_id_t *vars, void** values, ExtVars_type_t* types);
 
 #endif /* EXTVARS_H_ */

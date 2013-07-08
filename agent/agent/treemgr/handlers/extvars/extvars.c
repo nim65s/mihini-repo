@@ -27,13 +27,13 @@
 typedef struct
 {
   char *name;
-  swi_status_t (*set)(int nvars, ExtVars_id_t *vars, void** values, ExtVars_type_t* types);
-  swi_status_t (*get) (ExtVars_id_t var, void **value, ExtVars_type_t *type);
-  swi_status_t (*register_var) (ExtVars_id_t var, int enable);
-  swi_status_t (*register_all) (int enable);
-  swi_status_t (*list)(int *nvars, ExtVars_id_t **vars);
-  swi_status_t (*get_release)(ExtVars_id_t var, void *value, ExtVars_type_t type);
-  swi_status_t (*list_release)(int nvars, ExtVars_id_t *vars);
+  rc_ReturnCode_t (*set)(int nvars, ExtVars_id_t *vars, void** values, ExtVars_type_t* types);
+  rc_ReturnCode_t (*get) (ExtVars_id_t var, void **value, ExtVars_type_t *type);
+  rc_ReturnCode_t (*register_var) (ExtVars_id_t var, int enable);
+  rc_ReturnCode_t (*register_all) (int enable);
+  rc_ReturnCode_t (*list)(int *nvars, ExtVars_id_t **vars);
+  rc_ReturnCode_t (*get_release)(ExtVars_id_t var, void *value, ExtVars_type_t type);
+  rc_ReturnCode_t (*list_release)(int nvars, ExtVars_id_t *vars);
 } ExtVars_Mod_t;
 
 static inline ExtVars_Mod_t *checkmod(lua_State *L)
@@ -99,7 +99,7 @@ static int get_all_var_names( lua_State *L) {
     // Initial stack state: ctx, hpath=="" (irrelevant)
     ExtVars_Mod_t *mod = checkmod(L);
     int nvars, *vars, i;
-    swi_status_t r;
+    rc_ReturnCode_t r;
 
     lua_newtable( L); // ctx, "", children_set
 
@@ -129,14 +129,14 @@ static int get_leaf_value( lua_State *L) {
     int var = (int) lua_tonumber( L, 2);
     ExtVars_type_t  type;
     void       *value;
-    swi_status_t   r;
+    rc_ReturnCode_t   r;
 
     if(!lua_isnumber(L, 2)) RETURN_DA_NOT_FOUND;
 
     r = mod->get(var, & value, & type);
 
     if(r) {
-        if (r == SWI_STATUS_DA_NOT_FOUND) {
+        if (r == RC_NOT_FOUND) {
             RETURN_DA_NOT_FOUND;
         }
         else {
@@ -259,7 +259,7 @@ static int api_set( lua_State *L) {
         i++;
     } // ctx, hmap
 
-    swi_status_t r = mod->set(n_entries, variables, values, types);
+    rc_ReturnCode_t r = mod->set(n_entries, variables, values, types);
 
     /* Lua-allocated chunks are freed by reallocating them to a 0 size. */
 #ifdef NOMALLOC
@@ -274,7 +274,7 @@ static int register_unregister( lua_State *L, int enable) {
     ExtVars_Mod_t *mod = checkmod(L);
     if( lua_isstring( L, 2) && lua_objlen( L, 2) == 0) {
         if(mod->register_all) {
-	    swi_status_t r = mod->register_all(enable);
+	    rc_ReturnCode_t r = mod->register_all(enable);
             if( r) RETURN_ERROR_NUMBER( "register", r);
         }
     } else {
@@ -282,7 +282,7 @@ static int register_unregister( lua_State *L, int enable) {
 	    RETURN_OK;
         }
         else if(mod->register_var) {
-            swi_status_t r = mod->register_var(luaL_checkint( L, 2), enable);
+            rc_ReturnCode_t r = mod->register_var(luaL_checkint( L, 2), enable);
             if( r) RETURN_ERROR_NUMBER( "register", r);
         }
     }
@@ -351,7 +351,7 @@ static int handle_notification( lua_State *L) {
  *   the notification handler, and waits until the handling is completed; completion
  *   is signaled by the release of a dedicated `notify_buffer->handled` mutex.
  */
-static swi_status_t trigger_notification(void *ctx, int nvars, ExtVars_id_t* vars, void** values, ExtVars_type_t* types) {
+static rc_ReturnCode_t trigger_notification(void *ctx, int nvars, ExtVars_id_t* vars, void** values, ExtVars_type_t* types) {
 
     ExtVars_Mod_t *mod = (ExtVars_Mod_t *)ctx;
     /* make sure that only one notification is in progress. */
@@ -379,7 +379,7 @@ static swi_status_t trigger_notification(void *ctx, int nvars, ExtVars_id_t* var
 
     pthread_mutex_unlock(&notify_buffer.inprogress);
 
-    return SWI_STATUS_OK;
+    return RC_OK;
 }
 
 
@@ -407,9 +407,9 @@ static int l_load(lua_State *L)
     return 2;
   }
 
-  swi_status_t (*init)(void) = dlsym(handler, "ExtVars_initialize");
+  rc_ReturnCode_t (*init)(void) = dlsym(handler, "ExtVars_initialize");
   if (init) {
-    swi_status_t res = init();
+    rc_ReturnCode_t res = init();
     if (res) {
       lua_pushnil(L);
       lua_pushfstring(L, "ExtVars: Failed to initialize the treehandler %s [error code = %d]\n", path, res);
