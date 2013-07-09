@@ -15,7 +15,7 @@ local messaging = require "messaging"
 local asscon = require "agent.asscon"
 local log = require "log"
 local mime = require"mime"
-local errnum = require 'status'.tonumber
+local errnum = require 'returncodes'.tonumber
 
 local table = table
 local string = string
