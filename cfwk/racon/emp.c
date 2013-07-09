@@ -425,7 +425,7 @@ rc_ReturnCode_t emp_parser_init(size_t nbCmds, EmpCommand* cmds, emp_command_hdl
     {
       SWI_LOG("EMP", ERROR, "socket connection failed\n");
       emp_parser_destroy(nbCmds, cmds, ipcHdlr);
-      return RC_UNSPECIFIED_ERROR;
+      return RC_COMMUNICATION_ERROR;
     }
 
     pthread_mutex_init(&parser->sockLock, 0);
