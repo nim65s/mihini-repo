@@ -27,7 +27,7 @@
 #include "yajl_helpers.h"
 
 #define ASSET_MAGIC_ID 0x32aeb53a // For CHECK_CONTEXT
-#define CHECK_ASSET(asset)  if (!asset || asset->magic != ASSET_MAGIC_ID) return RC_UNSPECIFIED_ERROR
+#define CHECK_ASSET(asset)  if (!asset || asset->magic != ASSET_MAGIC_ID) return RC_BAD_PARAMETER
 
 #define CHECK_RETURN(a) do { if ((res=(a)) != RC_OK){ return res;} } while(0)
 
