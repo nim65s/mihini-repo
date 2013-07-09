@@ -47,23 +47,23 @@
 /* Update control */
 
 
-#include "swi_status.h"
+#include "returncodes.h"
 
 
 /**
 * Initializes the module.
 * A call to init is mandatory to enable Update library APIs.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_update_Init();
+rc_ReturnCode_t swi_update_Init();
 
 /**
 * Destroys the Update library.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_update_Destroy();
+rc_ReturnCode_t swi_update_Destroy();
 
 /**
 * This enum lists the events that will notified by the Agent
@@ -142,9 +142,9 @@ typedef struct swi_update_Notification
 *
 *  @param indPtr [IN] Update process event notification. The indication data will be released when the callback returns
 *
-* @return SWI_STATUS_OK on success, other value will be interpreted has error and will trigger callback unregister.
+* @return RC_OK on success, other value will be interpreted has error and will trigger callback unregister.
 */
-typedef swi_status_t (*swi_update_StatusNotifictionCB_t)
+typedef rc_ReturnCode_t (*swi_update_StatusNotifictionCB_t)
 (
     swi_update_Notification_t* indPtr //<
 );
@@ -156,9 +156,9 @@ typedef swi_status_t (*swi_update_StatusNotifictionCB_t)
 *
 * The callback will be called in a new pthread.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_update_RegisterStatusNotification
+rc_ReturnCode_t swi_update_RegisterStatusNotification
 (
     swi_update_StatusNotifictionCB_t cb ///< [IN] callback to register to receive software update, previous value is replaced.
                                          ///<      NULL value for the callback is interpreted as unregister request.
@@ -183,11 +183,11 @@ typedef enum swi_update_Request
 * If called within a swi_update_StatusNotifictionCB_t, then a Pause/Abort request will be processed right after the swi_update_StatusNotifictionCB_t
 * has returned. Otherwise, a Pause/Abort request will be processed when the next update interruptible step will start.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if no update was in progress
-* @return SWI_STATUS_OPERATION_FAILED if the action can not be performed, e.g. trying to resume an update that is already running.
+* @return RC_OK on success
+* @return RC_SERVICE_UNAVAILABLE if no update was in progress
+* @return RC_UNSPECIFIED_ERROR if the action can not be performed, e.g. trying to resume an update that is already running.
 */
-swi_status_t swi_update_Request
+rc_ReturnCode_t swi_update_Request
 (
     swi_update_Request_t req ///< [IN] the request to send to the Agent in order to change the update process.
 );
