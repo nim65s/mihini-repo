@@ -80,6 +80,10 @@ static rc_ReturnCode_t test_dt_Set()
   res = swi_dt_SetString("config.tata", "tata");
   if (res != RC_OK)
     return res;
+
+  res = swi_dt_SetString("config.shell", "impossible action");
+  if (res != RC_NOT_PERMITTED)
+    return res;
   return 0;
 }
 
@@ -129,6 +133,9 @@ static rc_ReturnCode_t test_dt_Get()
   res = swi_dt_Get(NULL, &set, NULL);
   if (res != RC_NOT_FOUND)
     return 8;
+  res = swi_dt_Get(NULL, NULL, NULL);
+  if (res != RC_BAD_PARAMETER)
+    return 9;
   return 0;
 }
 
