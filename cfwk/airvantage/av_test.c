@@ -432,16 +432,17 @@ static int test_4_asset_Create_Start_Destroy()
   res = swi_av_asset_Create(&asset, ASSET_ID);
   if (res != RC_OK)
     return res;
+
   res = swi_av_asset_Start(NULL );
-  if (res != RC_BAD_FORMAT)
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_av_asset_Start(asset);
   if (res != RC_OK)
     return res;
 
-  res = swi_av_asset_Destroy(NULL );
-  if (res != RC_BAD_FORMAT)
+  res = swi_av_asset_Destroy(NULL);
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_av_asset_Destroy(asset);
@@ -452,7 +453,7 @@ static int test_4_asset_Create_Start_Destroy()
   if (res != RC_OK)
     return res;
 
-  return 0;
+  return RC_OK;
 }
 
 static int test_5_asset_pushData()
@@ -506,7 +507,7 @@ static int test_5_asset_pushData()
     return res;
 
   res = swi_av_asset_PushString(asset, "toto8", "now", SWI_AV_TSTAMP_AUTO, NULL );
-  if (res != RC_BAD_FORMAT)
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_av_TriggerPolicy("*");
