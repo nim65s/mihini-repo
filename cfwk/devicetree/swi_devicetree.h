@@ -28,7 +28,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include "swi_status.h"
+#include "returncodes.h"
 #include "swi_dset.h"
 
 
@@ -36,17 +36,17 @@
 * Initializes the module.
 * A call to init is mandatory to enable DeviceTree library APIs.
 *
-* @return SWI_STATUS_OK on success.
+* @return RC_OK on success.
 */
-swi_status_t swi_dt_Init();
+rc_ReturnCode_t swi_dt_Init();
 
 
 /**
 * Destroys the DeviceTree library.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_dt_Destroy();
+rc_ReturnCode_t swi_dt_Destroy();
 
 /**
 * Retrieves a variable's value from the device tree.
@@ -65,17 +65,17 @@ swi_status_t swi_dt_Destroy();
 * For instance, if the branch foo.bar contains { x=1, y={z1=2, z2=3}}, a get("foo.bar") will return { "foo.bar.x"="x", "foo.bar.y"="y" }.
 * No children value is returned, and the children of y, which are the grand-children of foo.bar, are not iterated.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_NODE when requesting non-leaf value
-* @return SWI_STATUS_DA_NOT_FOUND when requested path was not found
+* @return RC_OK on success
+* @return RC_NOT_FOUND when requested path was not found
 *
 */
-swi_status_t swi_dt_Get
+rc_ReturnCode_t swi_dt_Get
 (
-    const char* pathPtr,           ///< [IN] the path to retrieve, can be a leaf or a node.
-    swi_dset_Iterator_t** data    ///< [OUT] the data iterator containing the results of the Get operation.
-                                   ///<       The DeviceTree library will allocate data iterator resources.
-                                   ///<       The user is responsible to release the data iterator resources using #swi_dset_Destroy function.
+    const char* pathPtr,            ///< [IN] the path to retrieve, can be a leaf or a node.
+    swi_dset_Iterator_t** data,     ///< [OUT] the data iterator containing the results of the Get operation.
+                                    ///<       The DeviceTree library will allocate data iterator resources.
+                                    ///<       The user is responsible to release the data iterator resources using #swi_dset_Destroy function.
+    bool *isNode                     ///< [OUT] Indicator when requesting a non-leaf value
 );
 
 
@@ -119,12 +119,12 @@ swi_status_t swi_dt_Get
 * Each leaf value will be put as an element in the #swi_dset_Iterator_t object.
 * Each element's name will be the full path of the variable.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_NOT_FOUND when one of the requested path was not found,
+* @return RC_OK on success
+* @return RC_NOT_FOUND when one of the requested path was not found,
 *                                 then the whole request will fail and no value is returned.
 *
 */
-swi_status_t swi_dt_MultipleGet
+rc_ReturnCode_t swi_dt_MultipleGet
 (
     size_t numVars,             ///< [IN] the number of variables to retrieve.
     const char** pathPtr,       ///< [IN] pointer to an array of strings (with numVars entries), contains the path of each variable to retrieve.
@@ -136,11 +136,11 @@ swi_status_t swi_dt_MultipleGet
 /**
 * Sets an integer variable value into the variable tree.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_NODE when requesting non-leaf value
-* @return SWI_STATUS_DA_NOT_FOUND when requested path was not found
+* @return RC_OK on success
+* @return RC_NOT_PERMITTED when requesting non-leaf value
+* @return RC_NOT_FOUND when requested path was not found
 */
-swi_status_t swi_dt_SetInteger
+rc_ReturnCode_t swi_dt_SetInteger
 (
     const char* pathPtr, ///< [IN] the path to variable to set in device tree.
     int value            ///< [IN] integer value to set
@@ -149,11 +149,11 @@ swi_status_t swi_dt_SetInteger
 /**
 * Sets a float variable value into the variable tree.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_NODE when requesting non-leaf value
-* @return SWI_STATUS_DA_NOT_FOUND when requested path was not found
+* @return RC_OK on success
+* @return RC_NOT_PERMITTED when requesting non-leaf value
+* @return RC_NOT_FOUND when requested path was not found
 */
-swi_status_t swi_dt_SetFloat
+rc_ReturnCode_t swi_dt_SetFloat
 (
     const char* pathPtr, ///< [IN] the path to variable to set in device tree.
     double value         ///< [IN] float value to set
@@ -162,11 +162,11 @@ swi_status_t swi_dt_SetFloat
 /**
 * Sets a string variable value into the variable tree.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_NODE when requesting non-leaf value
-* @return SWI_STATUS_DA_NOT_FOUND when requested path was not found
+* @return RC_OK on success
+* @return RC_NOT_PERMITTED when requesting non-leaf value
+* @return RC_NOT_FOUND when requested path was not found
 */
-swi_status_t swi_dt_SetString
+rc_ReturnCode_t swi_dt_SetString
 (
     const char* pathPtr, ///< [IN] pathPtr the path to variable to set in device tree.
     const char* valuePtr ///< [IN] string value to set
@@ -176,11 +176,11 @@ swi_status_t swi_dt_SetString
 /**
 * Sets a NULL variable value into the variable tree.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_NODE when requesting non-leaf value
-* @return SWI_STATUS_DA_NOT_FOUND when requested path was not found
+* @return RC_OK on success
+* @return RC_NOT_PERMITTED when requesting non-leaf value
+* @return RC_NOT_FOUND when requested path was not found
 */
-swi_status_t swi_dt_SetNull
+rc_ReturnCode_t swi_dt_SetNull
 (
     const char* pathPtr ///< [IN] pathPtr the path to variable to set in device tree.
 );
@@ -189,11 +189,11 @@ swi_status_t swi_dt_SetNull
 /**
 * Sets a boolean variable value into the variable tree.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_DA_NODE when requesting non-leaf value
-* @return SWI_STATUS_DA_NOT_FOUND when requested path was not found
+* @return RC_OK on success
+* @return RC_NOT_PERMITTED when requesting non-leaf value
+* @return RC_NOT_FOUND when requested path was not found
 */
-swi_status_t swi_dt_SetBool
+rc_ReturnCode_t swi_dt_SetBool
 (
     const char* pathPtr, ///< [IN] pathPtr the path to variable to set in device tree.
     bool value ///< [IN] boolean value to set
@@ -235,9 +235,9 @@ typedef void * swi_dt_regId_t;
 * Please note that the callback can be called with swi_dset_Iterator_t param containing #swi_dset_Type_t #SWI_DSET_NIL type to indicate variable(s) deletion.
 * Variables listed in regvars and passivevars can be either fully qualified variable names, or a path which denotes every individual variable below this path.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_dt_Register
+rc_ReturnCode_t swi_dt_Register
 (
     size_t numRegVars,           ///< [IN] the number of variables to register to.
     const char** regVarsPtr,     ///< [IN] pointer to an array of strings (with numRegVars entries), the variables which must be monitored for change.
@@ -254,17 +254,10 @@ swi_status_t swi_dt_Register
 /**
 * Cancels registration to receive a notification when a variable changes.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_dt_Unregister(
+rc_ReturnCode_t swi_dt_Unregister(
     swi_dt_regId_t regId ///< [IN] identifier of the registration to cancel, the id returned by previous swi_dt_Register call.
 );
 
-
-
-
 #endif /* SWI_DEVICETREE_INCLUDE_GUARD */
-
-
-
-
