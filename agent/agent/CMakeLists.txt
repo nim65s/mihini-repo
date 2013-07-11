@@ -45,7 +45,7 @@ ADD_DEPENDENCIES(agent_modules
     checks coxpcall lfs log pack
     mihini_linux #posixsignal, fdwrapper etc.
     shell_telnet rpc_sched log_tools
-    ntp web
+    ntp web web_auth
 
     # Target-specific config
     agent_platform

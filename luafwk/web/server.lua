@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------
 
 require 'socket'
+local hash = require 'crypto.hash'
 
 if global then global "web" end
 web = web or { }
@@ -58,10 +59,9 @@ end
 -------------------------------------------------------------------------------
 function web.handle_connection (cx)
    while true do
-      log('WEB', 'DEBUG', "Connection waiting for another request on %s", tostring(cx))
+      log('WEB', 'INFO', "Connection waiting for another request on %s", tostring(cx))
 
       -- Set environment variables from the request
-
       local url, url_params, version, ext
       local line, msg = cx :receive '*l'
       if not line then
@@ -136,7 +136,16 @@ function web.handle_request (cx, env)
    env.response = "HTTP/1.1 200 OK"
    -- execute the header function, if any
    local hf = page.header
-   if hf then assert(type(hf)=='function'); hf(env) end
+   if hf then
+      assert(type(hf)=='function')
+      hf(env)
+      if env.response ~= "HTTP/1.1 200 OK" then
+         cx :send (env.response.."\r\n")
+         for k,v in pairs (env.response_headers) do cx :send (k..': '..v..'\r\n') end
+         cx :send '\r\n' -- end of headers
+         return
+      end
+   end
 
    if static_page then
       -- Send the response and headers
