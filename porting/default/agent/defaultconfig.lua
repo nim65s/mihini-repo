@@ -73,6 +73,7 @@
     -- http digest authentication
     --rest.authentication = {}
     --rest.authentication.realm = "username@localhost"
+    -- HA1 is the MD5 sum of the string "username:realm:password"
     --rest.authentication.ha1 = "your hash here"
     --rest.restricted_uri = {}
     -- Either globally
