@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <pthread.h>
-#include "swi_status.h"
 #include "swi_log.h"
 #include "extvars.h"
 
@@ -122,22 +121,22 @@ void ExtVars_set_notifier (void *ctx, ExtVars_notify_t *f)
 }
 
 /* This function is called when treemgr get the value attached to a leaf */
-swi_status_t ExtVars_get_variable (ExtVars_id_t id, void**value, ExtVars_type_t *type)
+rc_ReturnCode_t ExtVars_get_variable (ExtVars_id_t id, void**value, ExtVars_type_t *type)
 {
     SWI_LOG("TREEHDL", DEBUG, "%s(%d)\n", __FUNCTION__, id);
 
     treehdlvar_t *treehdlvar = get_treevar(id);
 
-    if(treehdlvar == NULL) return SWI_STATUS_DA_NOT_FOUND;
+    if(treehdlvar == NULL) return RC_NOT_FOUND;
     if(value) *value = (treehdlvar->type == EXTVARS_TYPE_STR) ? (void *)treehdlvar->value.s : &treehdlvar->value.d;
     if(type)  *type  = treehdlvar->type;
-    return SWI_STATUS_OK;
+    return RC_OK;
 }
 
 /* This function is called when treemgr changes the value attached to a leaf. It supports
  * changing a variable type on the fly, synchronous/asynchronous notifications and dynamic storage (according to the defined macro, see above)
  */
-swi_status_t ExtVars_set_variables(int nvars, ExtVars_id_t *vars, void **values, ExtVars_type_t *types)
+rc_ReturnCode_t ExtVars_set_variables(int nvars, ExtVars_id_t *vars, void **values, ExtVars_type_t *types)
 {
     int inotified = 0, i = 0;
     static ExtVars_id_t notified_ids[NVARS];
@@ -149,7 +148,7 @@ swi_status_t ExtVars_set_variables(int nvars, ExtVars_id_t *vars, void **values,
         treehdlvar_t *var = register_treevar(vars[i]);
 
         if(!var)
-            return SWI_STATUS_ITEM_NOT_FOUND;
+            return RC_NOT_FOUND;
 
         var->id = vars[i];
         if((types[i] != var->type) && (var->type == EXTVARS_TYPE_STR)) {
@@ -230,32 +229,32 @@ swi_status_t ExtVars_set_variables(int nvars, ExtVars_id_t *vars, void **values,
         notify(notify_ctx, inotified, notified_ids, notified_values, notified_types);
 #endif
     }
-    return SWI_STATUS_OK;
+    return RC_OK;
 }
 
 /* These functions are called when treemgr requires notifications for a specific node
    or for all existing nodes attached to the root node (treehdlsample) */
-swi_status_t ExtVars_register_variable(ExtVars_id_t id, int enable)
+rc_ReturnCode_t ExtVars_register_variable(ExtVars_id_t id, int enable)
 {
     SWI_LOG("TREEHDL", DEBUG, "%s: id=%d, enable=%d\n", __FUNCTION__, id, enable);
 
     treehdlvar_t *var = get_treevar(id);
     if(!var)
-        return SWI_STATUS_DA_NOT_FOUND;
+        return RC_NOT_FOUND;
     var->registered = enable;
-    return SWI_STATUS_OK;
+    return RC_OK;
 }
 
-swi_status_t ExtVars_register_all(int enable)
+rc_ReturnCode_t ExtVars_register_all(int enable)
 {
     SWI_LOG("TREEHDL", DEBUG, "%s\n", __FUNCTION__);
     all_vars_registered = enable;
-    return SWI_STATUS_OK;
+    return RC_OK;
 }
 
 // This function is called when the tree manager needs to list all existing nodes
 // attached to the root node (treehdlsample)
-swi_status_t ExtVars_list(int *nvars, ExtVars_id_t **vars)
+rc_ReturnCode_t ExtVars_list(int *nvars, ExtVars_id_t **vars)
 {
     static int initialized = 0;
     static ExtVars_id_t _vars[NVARS];
@@ -269,5 +268,5 @@ swi_status_t ExtVars_list(int *nvars, ExtVars_id_t **vars)
     }
     if (vars) *vars = _vars;
     if (nvars) *nvars = NVARS;
-    return SWI_STATUS_OK;
+    return RC_OK;
 }
