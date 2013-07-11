@@ -45,9 +45,9 @@ documentation and/or software.
 #define S43 15
 #define S44 21
 
-static void MD5Transform( UINT4 state[4], unsigned char block[64]);
-static void Encode (unsigned char *output, UINT4 *input, unsigned int len);
-static void Decode( UINT4 *output, unsigned char *input, unsigned int len);
+static void MD5Transform( uint32_t state[4], unsigned char block[64]);
+static void Encode (unsigned char *output, uint32_t *input, unsigned int len);
+static void Decode( uint32_t *output, unsigned char *input, unsigned int len);
 static void MD5_memcpy(unsigned char *output, unsigned char *input, unsigned int len);
 static void MD5_memset( unsigned char *output, int value, unsigned int len);
 
@@ -72,22 +72,22 @@ static unsigned char PADDING[64] = {
 Rotation is separate from addition to prevent recomputation.
  */
 #define FF(a, b, c, d, x, s, ac) { \
- (a) += F ((b), (c), (d)) + (x) + (UINT4)(ac); \
+ (a) += F ((b), (c), (d)) + (x) + (uint32_t)(ac); \
  (a) = ROTATE_LEFT ((a), (s)); \
  (a) += (b); \
   }
 #define GG(a, b, c, d, x, s, ac) { \
- (a) += G ((b), (c), (d)) + (x) + (UINT4)(ac); \
+ (a) += G ((b), (c), (d)) + (x) + (uint32_t)(ac); \
  (a) = ROTATE_LEFT ((a), (s)); \
  (a) += (b); \
   }
 #define HH(a, b, c, d, x, s, ac) { \
- (a) += H ((b), (c), (d)) + (x) + (UINT4)(ac); \
+ (a) += H ((b), (c), (d)) + (x) + (uint32_t)(ac); \
  (a) = ROTATE_LEFT ((a), (s)); \
  (a) += (b); \
   }
 #define II(a, b, c, d, x, s, ac) { \
- (a) += I ((b), (c), (d)) + (x) + (UINT4)(ac); \
+ (a) += I ((b), (c), (d)) + (x) + (uint32_t)(ac); \
  (a) = ROTATE_LEFT ((a), (s)); \
  (a) += (b); \
   }
@@ -114,11 +114,11 @@ void MD5Update (MD5_CTX *context, unsigned char *input, unsigned int inputLen) {
   index = (unsigned int)((context->count[0] >> 3) & 0x3F);
 
   /* Update number of bits */
-  if ((context->count[0] += ((UINT4)inputLen << 3))
+  if ((context->count[0] += ((uint32_t)inputLen << 3))
 
-   < ((UINT4)inputLen << 3))
+   < ((uint32_t)inputLen << 3))
  context->count[1]++;
-  context->count[1] += ((UINT4)inputLen >> 29);
+  context->count[1] += ((uint32_t)inputLen >> 29);
 
   partLen = 64 - index;
 
@@ -169,8 +169,8 @@ void MD5Final( unsigned char digest[16], MD5_CTX *context) {
 }
 
 /* MD5 basic transformation. Transforms state based on block. */
-static void MD5Transform( UINT4 state[4], unsigned char block[64]) {
-  UINT4 a = state[0], b = state[1], c = state[2], d = state[3], x[16];
+static void MD5Transform( uint32_t state[4], unsigned char block[64]) {
+  uint32_t a = state[0], b = state[1], c = state[2], d = state[3], x[16];
 
   Decode (x, block, 64);
 
@@ -256,9 +256,9 @@ static void MD5Transform( UINT4 state[4], unsigned char block[64]) {
   MD5_memset ((unsigned char *)x, 0, sizeof (x));
 }
 
-/* Encodes input (UINT4) into output (unsigned char). Assumes len is
+/* Encodes input (uint32_t) into output (unsigned char). Assumes len is
   a multiple of 4. */
-static void Encode (unsigned char *output, UINT4 *input, unsigned int len) {
+static void Encode (unsigned char *output, uint32_t *input, unsigned int len) {
   unsigned int i, j;
 
   for (i = 0, j = 0; j < len; i++, j += 4) {
@@ -269,14 +269,14 @@ static void Encode (unsigned char *output, UINT4 *input, unsigned int len) {
   }
 }
 
-/* Decodes input (unsigned char) into output (UINT4). Assumes len is
+/* Decodes input (unsigned char) into output (uint32_t). Assumes len is
   a multiple of 4. */
-static void Decode( UINT4 *output, unsigned char *input, unsigned int len) {
+static void Decode( uint32_t *output, unsigned char *input, unsigned int len) {
   unsigned int i, j;
 
   for (i = 0, j = 0; j < len; i++, j += 4)
-    output[i] = ((UINT4)input[j]) | (((UINT4)input[j+1]) << 8) |
-    (((UINT4)input[j+2]) << 16) | (((UINT4)input[j+3]) << 24);
+    output[i] = ((uint32_t)input[j]) | (((uint32_t)input[j+1]) << 8) |
+    (((uint32_t)input[j+2]) << 16) | (((uint32_t)input[j+3]) << 24);
 }
 
 /* Note: Replace "for loop" with standard memcpy if possible. */
