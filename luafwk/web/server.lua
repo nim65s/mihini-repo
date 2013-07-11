@@ -10,7 +10,6 @@
 -------------------------------------------------------------------------------
 
 require 'socket'
-local hash = require 'crypto.hash'
 
 if global then global "web" end
 web = web or { }

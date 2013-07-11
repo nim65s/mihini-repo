@@ -38,9 +38,7 @@ local NONCES = {}
 -- Compute and returns the md5sum of input
 --------------------------------------------------------------------------------
 function web.md5(input)
-   local d = hash.new("md5")
-   d = d:update(input)
-   return d:digest()
+   return require "crypto.md5"():update(input):digest()
 end
 
 --------------------------------------------------------------------------------
