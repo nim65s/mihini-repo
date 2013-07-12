@@ -33,7 +33,7 @@ typedef int ExtVars_id_t;
 /*** Handler lifecycle ***/
 
 /* Initialize the handler
- * @return SWI_STATUS_OK, SWI_STATUS_RESOURCE_INITIALIZATION_FAILED */
+ * @return RC_OK, RC_UNSPECIFIED_ERROR */
 rc_ReturnCode_t ExtVars_initialize (void);
 
 
@@ -54,7 +54,7 @@ rc_ReturnCode_t ExtVars_initialize (void);
  * @param values array of `nvars` values of the notified variables 
  * @param types  array of `nvars` types of the notified variables
  *
- * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS */
+ * @return RC_OK, RC_BAD_PARAMETER */
 typedef rc_ReturnCode_t ExtVars_notify_t(void *ctx, int nvars, ExtVars_id_t* vars, void** values, ExtVars_type_t* types);
 
 /* Pass the notification function to the handler.
@@ -75,12 +75,12 @@ void ExtVars_set_notifier (void *ctx, ExtVars_notify_t *notifier);
 /* Register or unregister for notification on one variable
  * @param var the variable id
  * @param enable register for notification if true, unregister if false
- * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS, SWI_STATUS_DA_UNSUPPORTED_ACTION */
+ * @return RC_OK, RC_BAD_PARAMETER, RC_NOT_FOUND */
 rc_ReturnCode_t ExtVars_register_variable(ExtVars_id_t var, int enable);
 
 /* Register or unregister for notification on all variables
  * @param enable register for notification if true, unregister if false
- * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS, SWI_STATUS_DA_UNSUPPORTED_ACTION */
+ * @return RC_OK, RC_BAD_PARAMETER, RC_NOT_FOUND */
 rc_ReturnCode_t ExtVars_register_all(int enable);
 
 /*
@@ -97,7 +97,7 @@ rc_ReturnCode_t ExtVars_register_all(int enable);
  * @param var identifier of the variable to retrieve
  * @param value (output) value of the retrieved variable
  * @param type  (output) type of the retrieved variable
- * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS, SWI_STATUS_DA_NOT_FOUND */
+ * @return RC_OK, RC_BAD_PARAMETER, RC_NOT_FOUND */
 rc_ReturnCode_t ExtVars_get_variable(ExtVars_id_t var, void **value, ExtVars_type_t *type);
 
 
@@ -116,7 +116,7 @@ rc_ReturnCode_t ExtVars_get_variable_release(ExtVars_id_t var, void *value, ExtV
  *
  * @param nvars where the number of variables must be written
  * @param vars must be made to point to an array of `nvars` variables.
- * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS
+ * @return RC_OK, RC_BAD_PARAMETER
  */
 rc_ReturnCode_t ExtVars_list(int* nvars, ExtVars_id_t** vars);
 
@@ -134,7 +134,7 @@ void ExtVars_list_release(int nvars, ExtVars_id_t *vars);
  * @param vars   array of the written  variables names
  * @param values values to write in the variables
  * @param types  types of the written variables
- * @return SWI_STATUS_OK, SWI_STATUS_WRONG_PARAMS, SWI_STATUS_DA_UNSUPPORTED_ACTION, SWI_STATUS_DA_NOT_FOUND
+ * @return RC_OK, RC_BAD_PARAMETER, RC_NOT_PERMITTED, RC_NOT_FOUND
  */
 rc_ReturnCode_t ExtVars_set_variables(int nvars, ExtVars_id_t *vars, void** values, ExtVars_type_t* types);
 
