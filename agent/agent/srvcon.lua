@@ -156,7 +156,7 @@ end
 --- Responds to request to connect to server sent through EMP messages.
 local function EMPConnectToServer(assetid, latency)
     local s, err = M.connect(latency)
-    if not s then return errnum 'SERVER_FAILURE', err else return 0 end
+    if not s then return errnum 'COMMUNICATION_ERROR', err else return 0 end
 end
 
 --- Sets up the module according to agent.config settings.
