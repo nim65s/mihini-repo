@@ -79,6 +79,7 @@ function web.authenticate_header (realm, ha1)
          nonce_authenticate_header(env)
          env.response = "HTTP/1.1 401 Unauthorized"
          env.error_msg = "Login+password required"
+         env.response_headers['Content-Length'] = 0
       else -- some auth info given, check it
          log ("WEB-AUTH", "INFO", "Login attempt on %s", env.url)
          local auth = {}
@@ -90,6 +91,7 @@ function web.authenticate_header (realm, ha1)
              env.response = "HTTP/1.1 401 Unauthorized"
              nonce_authenticate_header(env)
              env.error_msg = "Wrong input"
+             env.response_headers['Content-Length'] = 0
              return
          end
 
@@ -111,6 +113,7 @@ function web.authenticate_header (realm, ha1)
              env.response = "HTTP/1.1 401 Unauthorized"
              env.error_msg = "Authentication failure"
              env.response_headers['Transfer-Encoding'] = nil
+             env.response_headers['Content-Length'] = 0
              return
          end
          log ("WEB-AUTH", "INFO", "logged in successfully")
