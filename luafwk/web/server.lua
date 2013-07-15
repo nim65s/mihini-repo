@@ -115,10 +115,18 @@ function web.handle_request (cx, env)
 
    env.page = page
 
+   local res, err
    if env.method=='POST' then -- get params from body
-      web.handle_post_body (env)
+      res, err = web.handle_post_body (env)
    elseif env.method=='PUT' then
-      web.handle_put_body(env)
+      res, err = web.handle_put_body(env)
+   end
+
+   if not res and type(err) == "string" then
+      web.send_error (env, 500, err)
+      -- Connection closing or survival
+      if h['Connection']=='close' then cx :close() end
+      return
    end
 
    local content = page.content or page[1] or nil
@@ -153,7 +161,6 @@ function web.handle_request (cx, env)
       cx :send '\r\n' -- end of headers
       cx :send (content) -- send the static page
    else
-      local res
       local err = env.error_msg
       if err then
          cx :send (string.format ("%X\r\n%s\r\n0\r\n\r\n", #err, err))
@@ -292,10 +299,11 @@ function web.handle_post_body(env)
         rh['connection'],
         rh['transfer-encoding']
     local len = h_cl and tonumber(h_cl)
+    h_cx = h_cx and h_cx or ""
     local data, msg, res
 
     if len and len>0 then
-        log( 'WEB', 'INFO', "Getting %d bytes of POST data", len)
+        log( 'WEB', 'INFO', "Getting %d bytes of data for POST request", len)
 	if env.page.sink then
 	   local src = socket.source("by-length", env.channel, len)
 	   res, msg = ltn12.pump.all(src, env.page.sink)
@@ -304,6 +312,7 @@ function web.handle_post_body(env)
 	   data, msg = env.channel :receive (len)
 	end
     elseif h_te == "chunked" or h_cx :match "TE" then
+        log( 'WEB', 'INFO', "Getting chunk of data for POST request")
         if env.page.sink then
 	   local src = socket.source("http-chunked", env.channel, env.request_headers)
 	   res, msg = ltn12.pump.all(src, env.page.sink)
@@ -312,20 +321,21 @@ function web.handle_post_body(env)
 	   data, msg = web.read_chunks (env.channel)
 	end
     else
-        log('WEB','ERROR', "Body encoding not supported in POST handler: env=%s", siprint(2,env))
-        return { }
+        log('WEB','ERROR', "Body encoding not supported or missing header in POST request: env=%s", siprint(2,env))
+        return nil, "Body encoding not supported or missing header"
     end
 
     if not env.page.sink then
        if not data then
 	  log('WEB','ERROR', "Can\'t retrieve POST parameters: %q", msg)
-	  return { }
+	  return nil, "Cannot retrieve POST parameters"
        else
 	  env.body = data
 	  local ct = rh['content-type']
 	  if ct and ct :match 'urlencoded' then env.params = web.url.decode(data) end
        end
     end
+    return "ok"
 end
 
 function web.handle_put_body(env)
@@ -337,24 +347,27 @@ function web.handle_put_body(env)
         rh['connection'],
         rh['transfer-encoding']
     local len = h_cl and tonumber(h_cl)
+    h_cx = h_cx and h_cx or ""
     local data, msg
     if len and len>0 then
-        log( 'WEB', 'INFO', "Getting %d bytes of PUT data", len)
+        log( 'WEB', 'INFO', "Getting %d bytes of data for PUT request", len)
         data, msg = env.channel :receive (len)
     elseif h_te == "chunked" or h_cx :match "TE" then
+        log( 'WEB', 'INFO', "Getting chunk of data for PUT request")
         data, msg = web.read_chunks (env.channel)
     else
-        log('WEB','ERROR', "Body encoding not supported in PUT handler: env=%s", siprint(2,env))
-        return { }
+        log('WEB','ERROR', "Body encoding not supported or missing headers in PUT request: env=%s", siprint(2,env))
+        return nil, "Body encoding not supported or missing headers"
     end
     if not data then
         log('WEB','ERROR', "Can't retrieve PUT parameters: %q", msg)
-        return { }
+        return nil, "Cannot retrieve PUT parameters"
     else
         env.body = data
         local ct = rh['content-type']
         if ct and ct :match 'urlencoded' then env.params = web.url.decode(data) end
     end
+    return "ok"
 end
 
 -------------------------------------------------------------------------------
