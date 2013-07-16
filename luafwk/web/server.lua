@@ -70,6 +70,11 @@ function web.handle_connection (cx)
       end
       local env = { channel = cx; request_headers = { } }
       env.method, url, env.http_version = line :match  "^(%S+) (%S+) (%S+)"
+      if not env.method or not url or not env.http_version then
+         log('WEB', 'ERROR', "Invalid HTTP request %s", line)
+         cx: close()
+         break
+      end
       env.url, url_params = url :match "/([^%?]*)%??(.*)"
       ext = env.url :match "%.(%w+)$" -- extension (to guess mime type)
       env.mime_type = ext and web.mime_types[ext] or web.mime_types["<default>"]
