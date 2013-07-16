@@ -93,29 +93,38 @@ local function concat_factories(factories)
     end
 end
 
-local function restore_factories(factories)
+local function rollback_session(factories, callbacks)
     for f, _ in pairs(factories) do
         M.sourcefactories[f]=true
     end
+    for f, _ in pairs(callbacks) do
+        M.pendingcallbacks[f]=true
+    end
 end
+
 
 function M.dosession()
     if lock.waiting(M) > 0 then return nil, "connection already in progress" end
     lock.lock(M)
-    local pending_factories
-    M.sourcefactories, pending_factories = { }, M.sourcefactories
+    local pending_factories, pending_callbacks
+    M.sourcefactories, M.pendingcallbacks, pending_factories, pending_callbacks =
+        { }, { }, M.sourcefactories, M.pendingcallbacks
     local source_factory = concat_factories(pending_factories)
     local status, errmsg = agent.netman.withnetwork(M.session.send, M.session, source_factory)
     if not status then
         log('SRVCON', 'ERROR', "Error while sending data to server: %s", tostring(errmsg))
-        restore_factories(pending_factories);
+        rollback_session(factories, callbacks)
         lock.unlock(M)
         return nil, errmsg
     end
-    for callback, _ in pairs(M.pendingcallbacks) do
+
+	-- Execute the callbacks that where registered when the
+	-- session started (meanwhile, other callbacks might have
+	-- been stacked, corresponding with sources to be sent in
+	-- the next session).
+    for callback, _ in pairs(pending_callbacks) do
         callback(status, errmsg)
     end
-    M.pendingcallbacks = { }
     lock.unlock(M)
 
     if status >= 200 and status <= 299 then
