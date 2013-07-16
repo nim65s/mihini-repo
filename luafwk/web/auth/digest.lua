@@ -83,8 +83,8 @@ function web.authenticate_header (realm, ha1)
       else -- some auth info given, check it
          log ("WEB-AUTH", "INFO", "Login attempt on %s", env.url)
          local auth = {}
-         for i in a:gmatch("%w+=[%w@%-\"/%.]*") do
-             auth[i:gsub("=[%w@%-\"/%.]*", "")] = i:gsub("%w+=", ""):gsub('"', "")
+         for i in a:gmatch("%w+=[%w@%-\"/%.=]*") do
+             auth[i:gsub("=[%w@%-\"/%.=]*", "")] = i:gsub('^%w+=', ''):gsub('"', '')
          end
          auth["method"] = env.method
          if not NONCES[auth["nonce"]] or NONCES[auth["nonce"]] ~= auth["opaque"] then
