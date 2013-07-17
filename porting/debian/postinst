@@ -10,7 +10,7 @@
 #     Guilhem Saurel for Sierra Wireless - initial script
 #*******************************************************************************
 
-useradd -b /opt -U mihini
+useradd -b /opt -U mihini || echo "Mihini user already exists"
 usermod -aG tty mihini
 usermod -aG dialout mihini
 
