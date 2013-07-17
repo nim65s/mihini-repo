@@ -91,7 +91,7 @@ static rc_ReturnCode_t test_dt_Get()
 {
   rc_ReturnCode_t res;
   swi_dset_Iterator_t *set = NULL;
-  bool isNode = false;
+  bool isLeaf = true;
 
   res = swi_dt_Init();
 
@@ -120,10 +120,20 @@ static rc_ReturnCode_t test_dt_Get()
     return 5;
   swi_dset_Destroy(set);
 
-  res = swi_dt_Get("config", &set, &isNode);
+  res = swi_dt_Get("config", &set, &isLeaf);
   swi_dset_Destroy(set);
-  if (isNode == false)
+  if (res != RC_OK || isLeaf == true)
     return 6;
+
+  res = swi_dt_Get("config.agent.deviceId", &set, &isLeaf);
+  if(res != RC_OK || isLeaf == false)
+    return 10;
+
+  res = swi_dset_Next(set);
+  swi_dset_Type_t t = swi_dset_GetType(set);
+  swi_dset_Destroy(set);
+  if (res != RC_OK || t != SWI_DSET_STRING)
+    return 11;
 
   res = swi_dt_Get("unexisting_node", &set, NULL);
   if (res != RC_NOT_FOUND)
@@ -260,6 +270,7 @@ int main(void)
 
   CHECK_TEST(test_dt_Init());
   CHECK_TEST(test_dt_Init());
+
   CHECK_TEST(test_dt_Register(&regId));
   CHECK_TEST(test_dt_Set());
 

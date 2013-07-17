@@ -279,7 +279,7 @@ rc_ReturnCode_t swi_dt_Destroy()
   return RC_OK;
 }
 
-rc_ReturnCode_t swi_dt_Get(const char* pathPtr, swi_dset_Iterator_t** data, bool *isNode)
+rc_ReturnCode_t swi_dt_Get(const char* pathPtr, swi_dset_Iterator_t** data, bool *isLeaf)
 {
   rc_ReturnCode_t res = RC_OK;
   char* payload, *respPayload = NULL, *ptr = NULL;
@@ -388,9 +388,13 @@ rc_ReturnCode_t swi_dt_Get(const char* pathPtr, swi_dset_Iterator_t** data, bool
       goto status;
   }
 
-  if (yval->u.array.len < 2)
+  if (yval->u.array.len < 2){
+    //no more values in JSON payload, let's go to the end
+    //is_leaf already set to 1.
     goto status;
+  }
 
+  //Additional values in JSON payload, likely the list of children of interior node.
   yarray = yval->u.array.values[1];
   SWI_LOG("DT", DEBUG, "%s: {\n", __FUNCTION__);
   for(i = 0; i < yarray->u.array.len; i++)
@@ -408,10 +412,11 @@ rc_ReturnCode_t swi_dt_Get(const char* pathPtr, swi_dset_Iterator_t** data, bool
 
   if (null_value && is_leaf)
     res = RC_NOT_FOUND;
-  if (isNode)
-    *isNode = !is_leaf;
+
 status:
   SWI_LOG("DT", DEBUG, "%s: end\n", __FUNCTION__);
+  if (isLeaf)
+    *isLeaf = is_leaf? true : false;
   free(payload);
   free(respPayload);
   yajl_tree_free(yval);
@@ -442,9 +447,9 @@ rc_ReturnCode_t swi_dt_MultipleGet(size_t numVars, const char** pathPtr, swi_dse
 
   for (i = 0; i < numVars; i++)
   {
-    bool isNode = false;
-    res = swi_dt_Get(pathPtr[i], &tmp, &isNode);
-    if (isNode)
+    bool isLeaf = true;
+    res = swi_dt_Get(pathPtr[i], &tmp, &isLeaf);
+    if (!isLeaf)
     {
       swi_dset_Destroy(tmp);
       continue;

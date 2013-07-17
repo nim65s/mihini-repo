@@ -54,11 +54,12 @@ rc_ReturnCode_t swi_dt_Destroy();
 * There are 2 cases: either the requested path is a node or it is a value.
 *
 * Leaf case:
-* When retrieving a leaf, the result will be put as the single element in a #swi_dset_Iterator_t object.
+* When retrieving a leaf, the result will be put as the single element in a #swi_dset_Iterator_t object, and the `isLeaf` parameter will
+* be set to `true`.
 *
-* Node case:
+* Internal Node case:
 * The retrieval is not recursive: asking for a path prefix (i.e. a node) will not return every key/value pairs sharing this prefix.
-* Instead, it will return SWI_STATUS_DA_NODE and the result will be a list of element put in a #swi_dset_Iterator_t object, the list provides
+* Instead, the `isLeaf` parameter will be set to `false` and the result will be a list of element put in a #swi_dset_Iterator_t object, the list provides
 * the absolute and relatives paths to the prefix's direct children.
 * Each iterator element will give the name of one sub-element of the requested node.
 *
@@ -75,7 +76,8 @@ rc_ReturnCode_t swi_dt_Get
     swi_dset_Iterator_t** data,     ///< [OUT] the data iterator containing the results of the Get operation.
                                     ///<       The DeviceTree library will allocate data iterator resources.
                                     ///<       The user is responsible to release the data iterator resources using #swi_dset_Destroy function.
-    bool *isNode                     ///< [OUT] Indicator when requesting a non-leaf value
+    bool *isLeaf                    ///< [OUT] Optional output boolean parameter to indicate that the request was on a leaf node (`true` is returned)
+                                    ///<       or on an internal node (`false` is returned)
 );
 
 
@@ -88,9 +90,11 @@ rc_ReturnCode_t swi_dt_Get
  *
  * ...
  *
- * //Node Get:
- *
- * assert(SWI_STATUS_DA_NODE == swi_dt_Get("system.gprs", &data));
+ * //Interior Get:
+ * rc_ReturnCode_t res = RC_OK;
+ * bool isLeaf = false;
+ * res = swi_dt_Get("system.gprs", &data, &isLeaf)
+ * assert(RC_OK == res && !isLeaf);
  * do{
  *  const char* name, value;
  *  swi_dset_Type type  = swi_dset_GetType(data);
@@ -100,14 +104,17 @@ rc_ReturnCode_t swi_dt_Get
  *  value = swi_dset_ToString(data);
  *  printf("value = %s"); //-> "value = rssi" then "value = apn" and "value = ip"
  * }
- * while(SWI_STATUS_OK == swi_dset_Next(data));
+ * while(RC_OK == swi_dset_Next(data));
  * swi_dset_Destroy(data);
  *
  * //Leaf Get:
  *
- * assert(SWI_STATUS_OK == swi_dt_Get("system.gprs.rssi", &data));
+ * rc_ReturnCode_t res = RC_OK;
+ * bool isLeaf = false;
+ * res = swi_dt_Get("system.gprs.rssi", &data, &isLeaf)
+ * assert(RC_OK == res && isLeaf);
  * int64_t value=0;
- * assert(SWI_STATUS_OK == swi_dset_ToInteger(data, &value));
+ * assert(RC_OK == swi_dset_ToInteger(data, &value));
  * swi_dset_Destroy(data);
  *
  */
