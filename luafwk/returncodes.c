@@ -10,7 +10,7 @@
  *     Romain Perier  for Sierra Wireless - initial API and implementation
  *******************************************************************************/
 
-/* Wraps swi_statusname library, which converts between string and numeric
+/* Wraps returncodes library, which converts between string and numeric
  * representations of status codes. */
 
 #include <returncodes.h>
@@ -20,14 +20,14 @@
  * Warning: `0` also happens to be the status code corresponding to `"OK"`. */
 static int api_tonumber( lua_State *L) {
     const char *name = luaL_checkstring( L, 1);
-    lua_pushinteger( L, rc_string2returncode( name));
+    lua_pushinteger( L, rc_StringToReturnCode( name));
     return 1;
 }
 
 /* Converts a numeric status into a name, or `nil` if not found. */
 static int api_tostring( lua_State *L) {
     int num = luaL_checkinteger( L, 1);
-    lua_pushstring( L, rc_returncode2string( num));
+    lua_pushstring( L, rc_ReturnCodeToString( num));
     return 1;
 }
 

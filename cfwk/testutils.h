@@ -28,7 +28,7 @@ do {                                            \
   SWI_LOG(__testname, (res == RC_OK) ? INFO : ERROR,  #call "...%s\n", (res == RC_OK) ? "OK" : "FAIL");         \
   if (res != RC_OK)                                                                                             \
   {                                                                                                             \
-      SWI_LOG(__testname, ERROR, "Test failed with status code %d (%s)\n", res, rc_returncode2string(res));     \
+      SWI_LOG(__testname, ERROR, "Test failed with status code %d (%s)\n", res, rc_ReturnCodeToString(res));     \
       return 1;                                                                                                 \
   }                                                                                                             \
 } while(0)

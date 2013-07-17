@@ -72,7 +72,7 @@ static const struct cn
 
 
 /* Converts a numeric status into a string, or returns NULL if not found. */
-const char *rc_returncode2string( rc_ReturnCode_t n)
+const char *rc_ReturnCodeToString( rc_ReturnCode_t n)
 {
     n = -n;
     if (n >= 0 && n < sizeof(returncode)/sizeof(*returncode))
@@ -89,7 +89,7 @@ static int compcn(const void *m1, const void *m2)
 
 
 /* Converts a status string into a numeric code, or returns 1 if not found. */
-rc_ReturnCode_t rc_string2returncode( const char *name)
+rc_ReturnCode_t rc_StringToReturnCode( const char *name)
 {
     struct cn key, *res;
     key.name = name;

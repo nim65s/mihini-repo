@@ -23,7 +23,7 @@
 
 /**
 * @enum rc_ReturnCode_t
-* \brief Return code constants
+* \brief Return code constants.
 * All error codes are negative.
 */
 typedef enum
@@ -55,7 +55,7 @@ typedef enum
 * \brief Convert a rc_ReturnCode_t into string representing the ReturnCode
 * Returns a const string or NULL if the code does not exist.
 */
-const char *rc_returncode2string( rc_ReturnCode_t n);
+const char *rc_ReturnCodeToString( rc_ReturnCode_t n);
 
 
 /**
@@ -63,7 +63,7 @@ const char *rc_returncode2string( rc_ReturnCode_t n);
 * Returns the code value (negative or null value) or 1 is the string does not
 * represent a known error name.
 */
-rc_ReturnCode_t rc_string2returncode( const char *name);
+rc_ReturnCode_t rc_StringToReturnCode( const char *name);
 
 
 #endif // RETURNCODES_INCLUDE_GUARD

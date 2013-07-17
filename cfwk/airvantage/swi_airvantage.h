@@ -460,12 +460,12 @@ typedef void (*swi_av_DataWriteCB)
 * int my_datacallback(swi_av_Asset *asset, const char *path, swi_dset_Iterator* data, int ack_id, void *userData){
 *   if(! strncmp(path, "command.setvalue", strlen("command.setvalue")) ){
 *    int64_t cmd_value;
-*    assert(SWI_STATUS_OK == swi_dset_GetIntegerByName(data, "cmd_value", &cmd_value) );
+*    assert(RC_OK == swi_dset_GetIntegerByName(data, "cmd_value", &cmd_value) );
 *    setvalue(cmd_value);
 *   }
 *   else{ //unknown command
 *      printf("received data on path[%s]:\n", path);
-*      while(SWI_STATUS_DA_NOT_FOUND != swi_dset_Next(data) ){
+*      while(RC_NOT_FOUND != swi_dset_Next(data) ){
 *        printf("data name: [%s]\n", swi_dset_GetName(data));
 *        //...
 *      }
