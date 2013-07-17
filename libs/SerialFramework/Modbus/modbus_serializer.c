@@ -49,27 +49,27 @@ static const uint8_t cRCLo[] = { 0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2,
         0x5B, 0x99, 0x59, 0x58, 0x98, 0x88, 0x48, 0x49, 0x89, 0x4B, 0x8B, 0x8A, 0x4A, 0x4E, 0x8E, 0x8F, 0x4F, 0x8D, 0x4D, 0x4C, 0x8C, 0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42, 0x43,
         0x83, 0x41, 0x81, 0x80, 0x40 };
 
-static swi_status_t CreateRequest(Serializer* pSerializer);
-static swi_status_t ASCIICreateRequest(Serializer* pSerializer);
-static swi_status_t ASCIIParseResponse(Serializer* pSerializer);
+static SerialStatus CreateRequest(Serializer* pSerializer);
+static SerialStatus ASCIICreateRequest(Serializer* pSerializer);
+static SerialStatus ASCIIParseResponse(Serializer* pSerializer);
 static uint8_t ASCIIComputeLRC(uint8_t* pFrame, uint16_t length);
 static uint8_t ASCIIValidateLRC(uint8_t* pBuffer, uint16_t bufferSize, uint8_t lCR);
 static uint8_t HexDigit2Dec(char hexDigit);
-static swi_status_t RTUCreateRequest(Serializer* pSerializer);
-static swi_status_t RTUParseResponse(Serializer* pSerializer);
+static SerialStatus RTUCreateRequest(Serializer* pSerializer);
+static SerialStatus RTUParseResponse(Serializer* pSerializer);
 static uint16_t RTUComputeCRC(uint8_t* pFrame, uint16_t length);
 static uint8_t RTUValidateCRC(uint8_t* pBuffer, uint16_t bufferSize, uint16_t cRC);
-static swi_status_t TCPCreateRequest(Serializer* pSerializer);
-static swi_status_t TCPParseResponse(Serializer* pSerializer);
+static SerialStatus TCPCreateRequest(Serializer* pSerializer);
+static SerialStatus TCPParseResponse(Serializer* pSerializer);
 static ModbusFunctionCode ParseFunction(Serializer* pSerializer);
-static swi_status_t ParseReadInputs(Serializer* pSerializer);
-static swi_status_t ParseReadRegisters(Serializer* pSerializer);
-static swi_status_t ParseWriteObject(Serializer* pSerializer);
-static swi_status_t ParseRawData(Serializer* pSerializer);
+static SerialStatus ParseReadInputs(Serializer* pSerializer);
+static SerialStatus ParseReadRegisters(Serializer* pSerializer);
+static SerialStatus ParseWriteObject(Serializer* pSerializer);
+static SerialStatus ParseRawData(Serializer* pSerializer);
 
-swi_status_t TCPCreateRequest(Serializer* pSerializer) {
+SerialStatus TCPCreateRequest(Serializer* pSerializer) {
     if (pSerializer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     // fill MBAP
@@ -83,22 +83,22 @@ swi_status_t TCPCreateRequest(Serializer* pSerializer) {
 
     pSerializer->requestBufferLength = pSerializer->requestBufferLength + 6;
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
-swi_status_t TCPParseResponse(Serializer* pSerializer) {
+SerialStatus TCPParseResponse(Serializer* pSerializer) {
     uint16_t trId;
     uint16_t length;
 
     if (pSerializer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     trId = (pSerializer->pResponseBuffer[0] << 8) + pSerializer->pResponseBuffer[1];
     length = (pSerializer->pResponseBuffer[4] << 8) + pSerializer->pResponseBuffer[5];
     //TRACE((1 , "transactionID[%d/%d] - length[%d/%d]", trId, ((ModbusSpecifics*)pSerializer->pSpecifics)->requestTrId, length, pSerializer->responseBufferLength));
     if ((((ModbusSpecifics*) pSerializer->pSpecifics)->requestTrId != trId) || (pSerializer->responseBufferLength != length + 6)) {
-        return SWI_STATUS_SERIAL_RESPONSE_INVALID_FRAME;
+        return SERIAL_STATUS_RESPONSE_INVALID_FRAME;
     }
 
     // process frame
@@ -107,23 +107,23 @@ swi_status_t TCPParseResponse(Serializer* pSerializer) {
                     || (((ModbusSpecifics*) pSerializer->pSpecifics)->request.function == ((pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1])
                             ^ MODBUS_MASK_ERROR)))) {
 
-        return SWI_STATUS_OK;
+        return SERIAL_STATUS_OK;
     } else {
         if (pSerializer->responseBufferLength < 8) {
-            return SWI_STATUS_SERIAL_RESPONSE_SHORT_FRAME;
+            return SERIAL_STATUS_RESPONSE_SHORT_FRAME;
         }
 
         if (((ModbusSpecifics*) pSerializer->pSpecifics)->request.slaveId != pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset]) {
-            return SWI_STATUS_SERIAL_RESPONSE_BAD_SLAVE;
+            return SERIAL_STATUS_RESPONSE_BAD_SLAVE;
         }
 
         if ((((ModbusSpecifics*) pSerializer->pSpecifics)->request.function != pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1])
                 && (((ModbusSpecifics*) pSerializer->pSpecifics)->request.function != ((pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1])
                         ^ MODBUS_MASK_ERROR))) {
-            return SWI_STATUS_SERIAL_RESPONSE_BAD_FUNCTION;
+            return SERIAL_STATUS_RESPONSE_BAD_FUNCTION;
         }
 
-        return SWI_STATUS_SERIAL_RESPONSE_INVALID_FRAME;
+        return SERIAL_STATUS_RESPONSE_INVALID_FRAME;
     }
 }
 
@@ -145,11 +145,11 @@ uint8_t RTUValidateCRC(uint8_t* pBuffer, uint16_t bufferSize, uint16_t cRC) {
     return (tempCRC == cRC);
 }
 
-swi_status_t RTUCreateRequest(Serializer* pSerializer) {
+SerialStatus RTUCreateRequest(Serializer* pSerializer) {
     uint16_t cRC;
 
     if (pSerializer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     // add CRC
@@ -161,15 +161,15 @@ swi_status_t RTUCreateRequest(Serializer* pSerializer) {
 
     pSerializer->requestBufferLength = pSerializer->requestBufferLength + 2;
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
-swi_status_t RTUParseResponse(Serializer* pSerializer) {
+SerialStatus RTUParseResponse(Serializer* pSerializer) {
     uint16_t cRC;
     uint8_t cRCCheck;
 
     if (pSerializer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     // process frame
@@ -186,26 +186,26 @@ swi_status_t RTUParseResponse(Serializer* pSerializer) {
         cRCCheck = RTUValidateCRC(pSerializer->pResponseBuffer, pSerializer->responseBufferLength - 2, cRC);
 
         if (!cRCCheck) {
-            return SWI_STATUS_SERIAL_RESPONSE_BAD_CHECKSUM;
+            return SERIAL_STATUS_RESPONSE_BAD_CHECKSUM;
         } else {
-            return SWI_STATUS_OK;
+            return SERIAL_STATUS_OK;
         }
     } else {
         if (pSerializer->responseBufferLength < 4) {
-            return SWI_STATUS_SERIAL_RESPONSE_SHORT_FRAME;
+            return SERIAL_STATUS_RESPONSE_SHORT_FRAME;
         }
 
         if (((ModbusSpecifics*) pSerializer->pSpecifics)->request.slaveId != pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset]) {
-            return SWI_STATUS_SERIAL_RESPONSE_BAD_SLAVE;
+            return SERIAL_STATUS_RESPONSE_BAD_SLAVE;
         }
 
         if ((((ModbusSpecifics*) pSerializer->pSpecifics)->request.function != pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1])
                 && (((ModbusSpecifics*) pSerializer->pSpecifics)->request.function != ((pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1])
                         ^ MODBUS_MASK_ERROR))) {
-            return SWI_STATUS_SERIAL_RESPONSE_BAD_FUNCTION;
+            return SERIAL_STATUS_RESPONSE_BAD_FUNCTION;
         }
 
-        return SWI_STATUS_SERIAL_RESPONSE_INVALID_FRAME;
+        return SERIAL_STATUS_RESPONSE_INVALID_FRAME;
     }
 }
 
@@ -242,14 +242,14 @@ uint8_t HexDigit2Dec(char hexDigit) {
     return dec;
 }
 
-swi_status_t ASCIICreateRequest(Serializer* pSerializer) {
+SerialStatus ASCIICreateRequest(Serializer* pSerializer) {
     uint16_t lCR;
     char pHexToAscii[3];
     uint16_t index;
     uint16_t length;
 
     if (pSerializer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     // compute LCR
@@ -277,10 +277,10 @@ swi_status_t ASCIICreateRequest(Serializer* pSerializer) {
 
     pSerializer->requestBufferLength += 2;
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
-swi_status_t ASCIIParseResponse(Serializer* pSerializer) {
+SerialStatus ASCIIParseResponse(Serializer* pSerializer) {
     char* pStartSequence = NULL;
     char* pEndSequence = NULL;
     uint16_t messageSize;
@@ -288,7 +288,7 @@ swi_status_t ASCIIParseResponse(Serializer* pSerializer) {
     uint8_t lRCCheck;
 
     if (pSerializer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     // start sequence detected
@@ -314,7 +314,7 @@ swi_status_t ASCIIParseResponse(Serializer* pSerializer) {
         lRCCheck = ASCIIValidateLRC(pSerializer->pResponseBuffer, pSerializer->responseBufferLength - 1, pSerializer->pResponseBuffer[pSerializer->responseBufferLength - 1]);
 
         if (!lRCCheck) {
-            return SWI_STATUS_SERIAL_RESPONSE_BAD_CHECKSUM;
+            return SERIAL_STATUS_RESPONSE_BAD_CHECKSUM;
         } else {
             // response has been parsed verify is response is related to request
             if ((pSerializer->responseBufferLength >= 4) && (pSerializer->responseBufferLength <= MODBUS_RTU_MAX_FRAME_SIZE) && (((ModbusSpecifics*) pSerializer->pSpecifics)->request.slaveId
@@ -322,38 +322,38 @@ swi_status_t ASCIIParseResponse(Serializer* pSerializer) {
                     == pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1]) || (((ModbusSpecifics*) pSerializer->pSpecifics)->request.function
                     == ((pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1]) ^ MODBUS_MASK_ERROR)))) {
 
-                return SWI_STATUS_OK;
+                return SERIAL_STATUS_OK;
             } else {
                 if (pSerializer->responseBufferLength < 4) {
-                    return SWI_STATUS_SERIAL_RESPONSE_SHORT_FRAME;
+                    return SERIAL_STATUS_RESPONSE_SHORT_FRAME;
                 }
 
                 if (((ModbusSpecifics*) pSerializer->pSpecifics)->request.slaveId != pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset]) {
-                    return SWI_STATUS_SERIAL_RESPONSE_BAD_SLAVE;
+                    return SERIAL_STATUS_RESPONSE_BAD_SLAVE;
                 }
 
                 if ((((ModbusSpecifics*) pSerializer->pSpecifics)->request.function != pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1])
                         && (((ModbusSpecifics*) pSerializer->pSpecifics)->request.function != ((pSerializer->pResponseBuffer[((ModbusSpecifics*) pSerializer->pSpecifics)->slaveAddrOffset + 1])
                                 ^ MODBUS_MASK_ERROR))) {
-                    return SWI_STATUS_SERIAL_RESPONSE_BAD_FUNCTION;
+                    return SERIAL_STATUS_RESPONSE_BAD_FUNCTION;
                 }
 
-                return SWI_STATUS_SERIAL_RESPONSE_INVALID_FRAME;
+                return SERIAL_STATUS_RESPONSE_INVALID_FRAME;
             }
         }
     }
 
-    return SWI_STATUS_SERIAL_RESPONSE_INCOMPLETE_FRAME;
+    return SERIAL_STATUS_RESPONSE_INCOMPLETE_FRAME;
 }
 
 // serializer
-swi_status_t MODBUS_SER_InitSerializer(Serializer* pSerializer, /*ModbusRequestMode*/void* mode) {
+SerialStatus MODBUS_SER_InitSerializer(Serializer* pSerializer, /*ModbusRequestMode*/void* mode) {
     if (mode == NULL) {
-        return SWI_STATUS_WRONG_PARAMS;
+        return SERIAL_STATUS_WRONG_PARAMS;
     }
     pSerializer->pSpecifics = malloc(sizeof(ModbusSpecifics));
     if (pSerializer->pSpecifics == NULL) {
-        return SWI_STATUS_SERIAL_INIT_NULL_POINTER;
+        return SERIAL_STATUS_ALLOC_FAILED;
     }
     ModbusSpecifics* pSpecifics = (ModbusSpecifics*) pSerializer->pSpecifics;
 
@@ -400,10 +400,10 @@ swi_status_t MODBUS_SER_InitSerializer(Serializer* pSerializer, /*ModbusRequestM
         pSerializer->pResponseBuffer = malloc(sizeof(uint8_t) * pSerializer->maxSize);
         pSerializer->pTempBuffer = malloc(sizeof(uint8_t) * pSerializer->maxSize);
     } else {
-        return SWI_STATUS_CONTEXT_IS_CORRUPTED;
+        return SERIAL_STATUS_CORRUPTED_CONTEXT;
     }
     if (pSerializer->pRequestBuffer == NULL || pSerializer->pResponseBuffer == NULL || pSerializer->pTempBuffer == NULL) {
-        return SWI_STATUS_SERIAL_INIT_NULL_POINTER;
+        return SERIAL_STATUS_ALLOC_FAILED;
     }
 
     pSerializer->releaseSerializer = MODBUS_SER_ReleaseSerializer;
@@ -412,7 +412,7 @@ swi_status_t MODBUS_SER_InitSerializer(Serializer* pSerializer, /*ModbusRequestM
     pSerializer->responseChecker = MODBUS_SER_CheckResponse;
     pSerializer->responseAnalyzer = MODBUS_SER_AnalyzeResponse;
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
 void MODBUS_SER_ReleaseSerializer(Serializer* pSerializer) {
@@ -441,7 +441,7 @@ void MODBUS_SER_ReleaseSerializer(Serializer* pSerializer) {
     }
 }
 
-swi_status_t CreateRequest(Serializer* pSerializer) {
+SerialStatus CreateRequest(Serializer* pSerializer) {
     switch (((ModbusSpecifics*) pSerializer->pSpecifics)->requestMode) {
     default:
     case MODBUS_RTU:
@@ -455,31 +455,31 @@ swi_status_t CreateRequest(Serializer* pSerializer) {
     }
 }
 
-swi_status_t MODBUS_SER_GetRequestPDU(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength) {
+SerialStatus MODBUS_SER_GetRequestPDU(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength) {
     if (pSerializer->pRequestBuffer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     *pBufferLength = pSerializer->requestBufferLength;
     *ppBuffer = pSerializer->pRequestBuffer;
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
-swi_status_t MODBUS_SER_GetResponsePDU(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength) {
+SerialStatus MODBUS_SER_GetResponsePDU(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength) {
     if (pSerializer->pResponseBuffer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     *pBufferLength = pSerializer->responseBufferLength;
     *ppBuffer = pSerializer->pResponseBuffer;
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
 uint16_t MODBUS_SER_GetExpectedResponseLength(Serializer* pSerializer) {
     if (pSerializer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     if(((ModbusSpecifics*) pSerializer->pSpecifics)->isCustom) {
@@ -549,17 +549,17 @@ uint16_t MODBUS_SER_GetExpectedResponseLength(Serializer* pSerializer) {
     }
 }
 
-swi_status_t MODBUS_SER_CreateCustomRequest(Serializer* pSerializer, /*ModbusRequest*/void* pRequestData) {
+SerialStatus MODBUS_SER_CreateCustomRequest(Serializer* pSerializer, /*ModbusRequest*/void* pRequestData) {
     ModbusSpecifics* pSpecifics = (ModbusSpecifics*) pSerializer->pSpecifics;
     ModbusRequest* pRequest = (ModbusRequest*) pRequestData;
     uint16_t index;
 
     if (pSerializer->pRequestBuffer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     if (pRequest->slaveId <= 0) {
-        return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+        return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
     }
 
     pSpecifics->isCustom = 1;
@@ -581,13 +581,13 @@ swi_status_t MODBUS_SER_CreateCustomRequest(Serializer* pSerializer, /*ModbusReq
 }
 
 // read/write request
-swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/void* pRequestData) {
+SerialStatus MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/void* pRequestData) {
     ModbusSpecifics* pSpecifics = (ModbusSpecifics*) pSerializer->pSpecifics;
     ModbusRequest* pRequest = (ModbusRequest*) pRequestData;
     uint16_t index;
 
     if (pSerializer->pRequestBuffer == NULL) {
-        return SWI_STATUS_SERIAL_STACK_NOT_READY;
+        return SERIAL_STATUS_STACK_NOT_READY;
     }
 
     pSpecifics->isCustom = 0;
@@ -598,7 +598,7 @@ swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/
     pSpecifics->request.numberOfObjects = pRequest->numberOfObjects;
 
     if (pSpecifics->request.slaveId <= 0) {
-        return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+        return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
     }
 
     switch (pSpecifics->request.function) {
@@ -618,7 +618,7 @@ swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/
 
             return CreateRequest(pSerializer);
         } else {
-            return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+            return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
         }
 
     case MODBUS_FUNC_READ_INPUT_REGISTERS:
@@ -637,7 +637,7 @@ swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/
 
             return CreateRequest(pSerializer);
         } else {
-            return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+            return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
         }
 
     case MODBUS_FUNC_WRITE_SINGLE_REGISTER:
@@ -668,7 +668,7 @@ swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/
             pSerializer->pRequestBuffer[pSpecifics->slaveAddrOffset + 6] = pSpecifics->request.byteCount;
 
             if ((pSpecifics->slaveAddrOffset + 7 + pRequest->byteCount - 1) >= pSerializer->maxSize) {
-                return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+                return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
             }
 
             for (index = 0; index < pSpecifics->request.byteCount; index++) {
@@ -679,7 +679,7 @@ swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/
 
             return CreateRequest(pSerializer);
         } else {
-            return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+            return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
         }
         break;
 
@@ -696,7 +696,7 @@ swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/
             pSerializer->pRequestBuffer[pSpecifics->slaveAddrOffset + 6] = pSpecifics->request.byteCount;
 
             if ((pSpecifics->slaveAddrOffset + 7 + (pSpecifics->request.numberOfObjects - 1) * 2 + 1) >= pSerializer->maxSize) {
-                return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+                return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
             }
 
             for (index = 0; index < pSpecifics->request.numberOfObjects; index++) {
@@ -709,7 +709,7 @@ swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/
 
             return CreateRequest(pSerializer);
         } else {
-            return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+            return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
         }
         break;
 
@@ -729,11 +729,11 @@ swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/
 
           return CreateRequest(pSerializer);
         } else {
-            return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+            return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
         }
 
     default:
-        return SWI_STATUS_SERIAL_REQUEST_PARAMETER_ERROR;
+        return SERIAL_STATUS_REQUEST_PARAMETER_ERROR;
     }
 }
 
@@ -771,7 +771,7 @@ uint8_t MODBUS_SER_IsResponseComplete(Serializer* pSerializer) {
     }
 }
 
-swi_status_t MODBUS_SER_CheckResponse(Serializer* pSerializer) {
+SerialStatus MODBUS_SER_CheckResponse(Serializer* pSerializer) {
     switch (((ModbusSpecifics*) pSerializer->pSpecifics)->requestMode) {
     default:
     case MODBUS_RTU:
@@ -785,10 +785,10 @@ swi_status_t MODBUS_SER_CheckResponse(Serializer* pSerializer) {
     }
 }
 
-swi_status_t MODBUS_SER_AnalyzeResponse(Serializer* pSerializer, swi_status_t status) {
+SerialStatus MODBUS_SER_AnalyzeResponse(Serializer* pSerializer, SerialStatus status) {
     // response has been parsed
     ModbusSpecifics* pSpecifics = (ModbusSpecifics*) pSerializer->pSpecifics;
-    if (status == SWI_STATUS_OK) {
+    if (status == SERIAL_STATUS_OK) {
         // get function code
         pSpecifics->response.function = ParseFunction(pSerializer);
 
@@ -819,7 +819,7 @@ swi_status_t MODBUS_SER_AnalyzeResponse(Serializer* pSerializer, swi_status_t st
                 break;
 
             case MODBUS_MASK_ERROR:
-                status = SWI_STATUS_SERIAL_RESPONSE_EXCEPTION;
+                status = SERIAL_STATUS_RESPONSE_EXCEPTION;
                 pSpecifics->response.function = (ModbusFunctionCode)((pSpecifics->response.function) ^ MODBUS_MASK_ERROR);
                 pSpecifics->response.exception = (ModbusExceptionCode) pSerializer->pResponseBuffer[pSpecifics->slaveAddrOffset + 2];
                 break;
@@ -828,7 +828,7 @@ swi_status_t MODBUS_SER_AnalyzeResponse(Serializer* pSerializer, swi_status_t st
                 break;
             }
         }
-    } else if (status == SWI_STATUS_SERIAL_RESPONSE_TIMEOUT) {
+    } else if (status == SERIAL_STATUS_RESPONSE_TIMEOUT) {
         pSpecifics->response.function = (ModbusFunctionCode) pSpecifics->request.function;
     }
 
@@ -837,7 +837,7 @@ swi_status_t MODBUS_SER_AnalyzeResponse(Serializer* pSerializer, swi_status_t st
     return status;
 }
 
-swi_status_t ParseReadInputs(Serializer* pSerializer) {
+SerialStatus ParseReadInputs(Serializer* pSerializer) {
     uint8_t index;
     ModbusSpecifics* pSpecifics = (ModbusSpecifics*) pSerializer->pSpecifics;
     // get address
@@ -846,7 +846,7 @@ swi_status_t ParseReadInputs(Serializer* pSerializer) {
     // get byte count
     pSpecifics->response.byteCount = pSerializer->pResponseBuffer[pSpecifics->slaveAddrOffset + 2];
     if (pSpecifics->request.byteCount != pSpecifics->response.byteCount) {
-        return SWI_STATUS_SERIAL_ERROR;
+        return SERIAL_STATUS_UNEXPECTED_ERROR;
     }
 
     // fill tab
@@ -856,10 +856,10 @@ swi_status_t ParseReadInputs(Serializer* pSerializer) {
         ((uint8_t*) pSpecifics->response.value.pValues)[index] = pSerializer->pResponseBuffer[pSpecifics->slaveAddrOffset + 3 + index];
     }
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
-swi_status_t ParseReadRegisters(Serializer* pSerializer) {
+SerialStatus ParseReadRegisters(Serializer* pSerializer) {
     uint8_t index;
     ModbusSpecifics* pSpecifics = (ModbusSpecifics*) pSerializer->pSpecifics;
     // get address
@@ -868,7 +868,7 @@ swi_status_t ParseReadRegisters(Serializer* pSerializer) {
     // get byte count
     pSpecifics->response.byteCount = pSerializer->pResponseBuffer[pSpecifics->slaveAddrOffset + 2];
     if (pSpecifics->request.byteCount != pSpecifics->response.byteCount) {
-        return SWI_STATUS_SERIAL_ERROR;
+        return SERIAL_STATUS_UNEXPECTED_ERROR;
     }
     pSpecifics->response.numberOfObjects = (pSpecifics->response.byteCount >> 1);
 
@@ -880,10 +880,10 @@ swi_status_t ParseReadRegisters(Serializer* pSerializer) {
                 + (pSerializer->pResponseBuffer[pSpecifics->slaveAddrOffset + 3 + (index * 2 + 1)]);
     }
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
-swi_status_t ParseWriteObject(Serializer* pSerializer) {
+SerialStatus ParseWriteObject(Serializer* pSerializer) {
     ModbusSpecifics* pSpecifics = (ModbusSpecifics*) pSerializer->pSpecifics;
     // get address
     pSpecifics->response.startingAddress = ((pSerializer->pResponseBuffer[pSpecifics->slaveAddrOffset + 2]) << 8) + (pSerializer->pResponseBuffer[pSpecifics->slaveAddrOffset + 3]);
@@ -893,10 +893,10 @@ swi_status_t ParseWriteObject(Serializer* pSerializer) {
 
     pSpecifics->response.byteCount = 0;
     pSpecifics->response.value.pValues = NULL;
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
-swi_status_t ParseRawData(Serializer* pSerializer) {
+SerialStatus ParseRawData(Serializer* pSerializer) {
     uint8_t index;
 
     ModbusSpecifics* pSpecifics = (ModbusSpecifics*) pSerializer->pSpecifics;
@@ -915,7 +915,7 @@ swi_status_t ParseRawData(Serializer* pSerializer) {
         ((uint8_t*) pSpecifics->response.value.pValues)[index] = (pSerializer->pResponseBuffer[pSpecifics->slaveAddrOffset + index]);
     }
 
-    return SWI_STATUS_OK;
+    return SERIAL_STATUS_OK;
 }
 
 const char* MODBUS_SER_GetExceptionString(ModbusExceptionCode exception) {

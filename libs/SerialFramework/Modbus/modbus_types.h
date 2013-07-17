@@ -19,8 +19,6 @@
  * @ingroup modbus
  */
 
-#include "swi_status.h"
-
 #include <stdint.h>
 #include <stddef.h>
 
