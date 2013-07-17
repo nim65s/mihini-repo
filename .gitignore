@@ -7,3 +7,4 @@ scratch
 .buildpath
 bin/lua
 build_version
+porting/archlinux/mihini.tar.gz
