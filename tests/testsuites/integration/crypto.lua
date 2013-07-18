@@ -7,6 +7,7 @@ local platformTable = nil
 local appprefix     = "MihiniModel_"
 local p             = p
 local sprint        = sprint
+local loader        = require 'utils.loader'
 
 
 local t = u.newtestsuite 'Crypto Integration'
@@ -132,7 +133,6 @@ local function modifyDefaultConfigFile(url, deviceId, auth, encrypt, path)
   
   defconf.agent.deviceId = deviceId
   
-  local s = "local config = {}\nsetfenv(1, config)\n" .. sprint(defconf) .. "\nreturn config"
   local s = "local config = " .. sprint(defconf) .. "\nreturn config"
   local file,err = io.open(path .. "/runtime/lua/agent/defaultconfig.lua", "w")
   u.assert_not_nil(file, err)
@@ -363,14 +363,7 @@ function t:setup()
   u.assert_not_nil(targetManager.config)
   u.assert_not_nil(targetManager.config.integConfig)
   pltconf = targetManager.config.integConfig
-  p(pltconf)
---   {
---   deviceSN     = "CA1222104501002",
---   serverURL    = "http://dev-airlink.m2mop.net/api/",
---   userName     = "administrator@m2mop.net",
---   password     = "zs18mk--",
---   clientId     = "085d82466f824079a829f301b8a1f492",
---   clientSecret = "6854fa72f98e492db163458085d5b89c"}
+
   
   local platform,errmess = platformAPI.new(pltconf)
   u.assert_not_nil(platform,errmess)
@@ -393,12 +386,18 @@ function t:setup()
   platformAPI.delDevice(platformTable, "testautoNoneNone")
   
   -- backup defaultconfig file
+  os.execute("rm -rf "..targetManager.targetdir.."/runtime/persist")
+  os.execute("rm -rf "..targetManager.targetdir.."/runtime/crypto")
   os.execute("cp "..targetManager.targetdir.."/runtime/lua/agent/defaultconfig.lua "..targetManager.targetdir.."/runtime/lua/agent/defaultconfig.lua.backup")
   
 end
 
 function t:teardown()
   os.execute("mv "..targetManager.targetdir.."/runtime/lua/agent/defaultconfig.lua.backup "..targetManager.targetdir.."/runtime/lua/agent/defaultconfig.lua")
+  os.execute("rm -rf "..targetManager.targetdir.."/runtime/persist")
+  os.execute("rm -rf "..targetManager.targetdir.."/runtime/crypto")
+  
+  loader.unload("agent.defaultconfig")
 end
 
 function t:test_cryptMd5AesCbc128()

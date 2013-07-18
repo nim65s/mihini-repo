@@ -6,6 +6,7 @@ local pairs = pairs
 local assert = assert
 local unittest = require 'unittest'
 local require = require
+local os = require "os"
 
 module(...)
 local results = nil

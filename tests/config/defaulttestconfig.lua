@@ -47,6 +47,8 @@ local tests = {
   
   -- integration tests
   crypto      = { target = {"native"}, environment = {"integration"}, TestPolicy = "Daily"},
+  rest        = { target = {"native"}, environment = {"integration"}, TestPolicy = "Daily"},
+  restdigest  = { target = {"native"}, environment = {"integration"}, TestPolicy = "Daily"},
 
   -- end to end tests
   --Legacy simulated target tests

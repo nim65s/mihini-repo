@@ -32,7 +32,7 @@ function compile(config, svndir, targetdir)
 
   -- Compile the Agent using the default toolchain
   --local result = os.execute(svndir.."/bin/build.sh -n -C " ..targetdir)
-  local result = os.execute(svndir.."/bin/build.sh -C " ..targetdir)
+  local result = os.execute(svndir.."/bin/build.sh -n -C " ..targetdir)
   if result ~= 0 then error("Compilation error for module: "..config.ConfigModule) end
 
   --result = os.execute("cd " .. targetdir.. " && make all embeddedtestsluafwk luafwktests readyagenttests lua embeddedteststools modbusserializertests readyagentconnectortests")
@@ -48,6 +48,7 @@ function compile(config, svndir, targetdir)
   result = os.execute("cd " .. targetdir.. " && make testsauto test_luafwk test_agent test_racon test_fwkemb agent_treemgr_ramstore")
   if result ~= 0 then error("Make Tests error for module: "..config.ConfigModule) end
 
+  result = os.execute("cp " .. targetdir.. "/runtime/lua/agent/defaultconfig.lua "  .. targetdir.. "/runtime/lua/agent/defaultconfigtemplate.lua")
   --result = os.execute("cp "..svndir.."/tests/defaultconfig.lua "..targetdir.."/runtime/lua/agent")
   --if result ~= 0 then error("Can't copy defaultconfig file for"..config.ConfigModule) end
 
