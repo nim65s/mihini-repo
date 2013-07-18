@@ -8,7 +8,7 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-#include "awt_endian.h"
+#include "rc_endian.h"
 //#include <stdio.h>
 
 //static void pprint(unsigned char *p, size_t n) {

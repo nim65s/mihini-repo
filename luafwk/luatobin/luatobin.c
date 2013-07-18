@@ -20,7 +20,7 @@
  * 'table' type = LUA_TTABLE, size = #table
  * 'nil' type = LUA_TNIL, size = 0 (not serialized)
  */
-#include "awt_endian.h"
+#include "rc_endian.h"
 
 #include "lua.h"
 #include "lauxlib.h"

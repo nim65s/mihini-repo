@@ -19,7 +19,7 @@ SET(BYSANT_SRC
     bysantd.c
     bysant_common.c
     bysant_class.c
-    ${LIB_MIHINI_COMMON_SOURCE_DIR}/awt_endian.c)
+    ${LIB_MIHINI_COMMON_SOURCE_DIR}/rc_endian.c)
 
 ADD_LIBRARY(lib_bysant SHARED ${BYSANT_SRC})
 TARGET_LINK_LIBRARIES(lib_bysant m)

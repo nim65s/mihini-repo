@@ -15,7 +15,7 @@
 #include <inttypes.h>
 #include <string.h> // for memcpy
 #include <stdlib.h>
-#include <awt_endian.h>
+#include <rc_endian.h>
 #include "bysantd.h"
 
 static SEndian sendian;
