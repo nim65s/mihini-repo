@@ -10,7 +10,7 @@
  *******************************************************************************/
 #include "swi_log.h"
 #include "luasignal.h"
-#include "awt_std.h"
+#include <stdlib.h>
 
 #define LUASIGTRC 1
 

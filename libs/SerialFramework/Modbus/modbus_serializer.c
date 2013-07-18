@@ -10,7 +10,7 @@
  *******************************************************************************/
 
 #include "modbus_serializer.h"
-#include "awt_std.h"
+
 
 #include <stdio.h>
 #include <string.h>

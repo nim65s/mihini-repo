@@ -32,7 +32,7 @@
 
 
 #else //SWI_ENABLE_TRACE
-#include "awt_std.h"
+
 
 
 /** \def SWI_TRACE(lvl, fmt, ...)
@@ -52,12 +52,7 @@
  * \endcode
  */
 
-#ifdef SYSTEM_LINUX
-  #define printer printf
-#else
-  #include "wip.h"
-  #define printer wip_debug
-#endif
+#define printer printf
 
 #define SWI_TRACE(lvl, fmt, ...) do { if (lvl) printer(#lvl":\t"fmt"\n", ## __VA_ARGS__); } while(0)
 

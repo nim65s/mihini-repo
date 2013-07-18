@@ -16,8 +16,8 @@
  */
 
 #include "pointer_list.h"
-#include "awt_std.h"
 #include <stdlib.h> //malloc
+#include <string.h> //memcpy
 
 #define POINTERLIST_MAGIC_ID 0x12af85d3
 

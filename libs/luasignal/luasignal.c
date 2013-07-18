@@ -29,7 +29,6 @@
 #include <stdarg.h>
 #include <assert.h>
 #include "luasignal.h"
-#include "awt_std.h"
 
 #define MAGIC               0xf56a2fa6
 #define LUASIGNAL_ADDRESS   "127.0.0.1"

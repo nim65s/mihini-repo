@@ -118,7 +118,6 @@
 #include <poll.h>
 #include <grp.h>
 //internal includes
-#include "awt_std.h"
 #include "swi_log.h"
 #include "pointer_list.h"
 
