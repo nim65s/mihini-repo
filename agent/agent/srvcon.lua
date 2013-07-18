@@ -113,7 +113,7 @@ function M.dosession()
     local status, errmsg = agent.netman.withnetwork(M.session.send, M.session, source_factory)
     if not status then
         log('SRVCON', 'ERROR', "Error while sending data to server: %s", tostring(errmsg))
-        rollback_session(factories, callbacks)
+        rollback_session(pending_factories, pending_callbacks)
         lock.unlock(M)
         return nil, errmsg
     end
