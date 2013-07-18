@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------
 
 require 'web.server'
+require 'web.auth.digest'
 local config = require 'agent.config'
 local yajl = require 'yajl'
 
@@ -19,28 +20,46 @@ local initialiazed = false
 local serialize = yajl.to_string
 
 local function deserialize(str)
-   return str and yajl.to_value('['..str..']')[1] or yajl.null
+   if not str then
+      return yajl.null
+   end
+   local status, result = pcall(yajl.to_value, '['..str..']')
+   return status and result[1] or nil, "Invalid JSON input: " .. str
 end
 
 function M.register(URL, rtype, handler, payload_sink)
    log("REST", "DEBUG", "Registering handler %p on URL %s for type %s", handler, URL, rtype)
 
    local closure = function (echo, env)
-                       local payload = payload_sink and nil or deserialize(env.body)
+                       local payload, res, err
+                       if not payload_sink then
+                          payload, err = deserialize(env.body)
+                          if not payload and err then return nil, err end
+                       end
                        local suburl = env.url:find("/") and env.url:match("/.*"):sub(2) or nil
                        local environment = { ["suburl"] = suburl, ["params"] = env.params, ["payload"] = payload}
-                       local res, err = handler(environment)
+                       res, err = handler(environment)
                        if not res and type(err) == "string" then
                            log("REST", "ERROR", "Unexpected error while executing rest request %s: %s", env.url, err)
                            return res, err
                        end
-	               echo(serialize(res))
+	               echo(res ~= "ok" and serialize(res) or nil)
 		       return "ok"
                    end
      if not web.pattern[URL] then
         web.pattern[URL] = { }
      end
-     web.pattern[URL]["".. rtype ..""] = { ["content"] = closure, ["sink"] = (rtype == "POST" or rtype == "PUT") and payload_sink or nil }
+     local authentication = nil
+     if config.rest.restricted_uri and config.rest.restricted_uri[URL] then
+           authentication = true
+     elseif config.rest.restricted_uri and config.rest.restricted_uri["*"] then
+           authentication = true
+     end
+     web.pattern[URL]["".. rtype ..""] = {
+                ["content"] = closure,
+                ["header"] = authentication and web.authenticate_header(config.rest.authentication.realm, config.rest.authentication.ha1) or nil,
+                ["sink"] = (rtype == "POST" or rtype == "PUT") and payload_sink or nil
+     }
    return "ok"
 end
 

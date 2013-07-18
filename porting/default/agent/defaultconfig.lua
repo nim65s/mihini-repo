@@ -69,6 +69,25 @@
     rest.activate = true
     rest.port = 8357
 
+    -- Uncomment these lines to activate
+    -- http digest authentication
+    --rest.authentication = {}
+    --rest.authentication.realm = "username@localhost"
+    -- HA1 is the MD5 sum of the string "username:realm:password"
+    --rest.authentication.ha1 = "your hash here"
+    --rest.restricted_uri = {}
+    -- Either globally
+    --rest.restricted_uri["*"] = true
+
+    -- Or per URI
+    --rest.restricted_uri["devicetree/[%w.]+"] = true
+    --rest.restricted_uri["application$"] = true
+    --rest.restricted_uri["application/[%w%.]+"] = true
+    --rest.restricted_uri["application/[%w%.]+/start"] = true
+    --rest.restricted_uri["application/[%w%.]+/stop"] = true
+    --rest.restricted_uri["application/[%w%.]+/configure"] = true
+    --rest.restricted_uri["update[/%w%?]*$"] = true
+
     -- Time related settings
     time = {}
     -- activate Time Services: periodic polling only for now, sync can always be done using synchronize API on demand.
