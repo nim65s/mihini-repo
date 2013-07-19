@@ -53,11 +53,7 @@ ELSE()
     ENDIF()
 ENDIF()
 
-IF(EXISTS "${PROJECT_SOURCE_DIR}/non-free/porting/${PLATFORM}/CMakeLists.txt")
-    ADD_SUBDIRECTORY(non-free/porting/${PLATFORM})
-ELSE()
-    ADD_SUBDIRECTORY(porting/${PLATFORM})
-ENDIF()
+ADD_SUBDIRECTORY(porting/${PLATFORM})
 
 ADD_SUBDIRECTORY (libs)
 ADD_SUBDIRECTORY (luafwk)
@@ -69,10 +65,6 @@ ADD_SUBDIRECTORY (tools/luasignalcmd)
 ADD_SUBDIRECTORY (tests)
 ADD_SUBDIRECTORY (tools/LuaPlatformServer)
 ADD_SUBDIRECTORY (doc)
-
-IF(EXISTS "${PROJECT_SOURCE_DIR}/non-free/CMakeLists.txt")
-ADD_SUBDIRECTORY (non-free)
-ENDIF()
 
 ADD_CUSTOM_TARGET(mihini)
 ADD_DEPENDENCIES(mihini agent cfwk luafwk)

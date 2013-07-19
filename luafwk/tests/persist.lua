@@ -11,9 +11,7 @@
 local u = require 'unittest'
 local _G = _G
 
---there is 2 impl of persist, 1 is in non-free sub-mobule (persist.qdbm)
--- the other one (persist.file) is regular open source impl.
--- non-free sub-module might not be available in all environments
+--it used to exist 2 impl of persist, persist.qdbm and persist.file.
 -- dynamic detection of available implementation is made at the end of this file.
 
 --the point of this function is to generate 1 test suite per available persist implementation
@@ -91,7 +89,7 @@ for _,v in pairs(impls) do
     status, persist_impl = pcall(require, impl)
     if status then persist_testsuite(persist_impl, v)
     --if the error is "module not found" returned by require, then silently ignore it
-    --to handle gracefully env with non-free not available
+    --to handle gracefully case with qdbm not available
     --other persist impl loading issues generate a "failure only" test suite
     elseif type(persist_impl)~="string" or not persist_impl:match("module '"..impl.."' not found") then
             local t = u.newtestsuite(impl)
