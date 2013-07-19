@@ -13,6 +13,7 @@ local racon = require 'racon'
 local u = require 'unittest'
 local t = u.newtestsuite("racon")
 local waiting_notification = 1
+local ASSET_ID = "racon_asset_id"
 
 local function updateNotificationCb(package, version, url, parameters)
    if package == "my_pkg" and version == "my_version" and url == "/toto/my_file" then
@@ -64,14 +65,14 @@ function t: test_03_connectToServer()
 end
 
 function t: test_04_Create_Start_Close()
-   local asset = racon.newAsset("TOTO")
+   local asset = racon.newAsset(ASSET_ID)
    assert(asset)
    assert(asset:start())
    assert(asset:close())
 end
 
 function t: test_05_asset_pushData()
-   local asset = racon.newAsset("TOTO")
+   local asset = racon.newAsset(ASSET_ID)
    assert(asset)
    assert(asset:start())
 
@@ -95,18 +96,18 @@ end
 
 function t: test_07_UpdateNotification()
    local rpc = require 'rpc'
-   local asset = racon.newAsset("TOTO")
+   local asset = racon.newAsset(ASSET_ID)
    assert(asset)
 
    assert(asset:start())
    assert(asset:setUpdateHook(updateNotificationCb))
-   rpc.newclient():call('agent.asscon.sendcmd', 'TOTO', 'SoftwareUpdate', { 'TOTO.my_pkg', 'my_version', '/toto/my_file', {foo='bar', num=42, float=0.23}})
+   rpc.newclient():call('agent.asscon.sendcmd', 'racon_asset_id', 'SoftwareUpdate', { 'racon_asset_id.my_pkg', 'my_version', '/toto/my_file', {foo='bar', num=42, float=0.23}})
 
    assert(asset:close())
 end
 
 function t: test_08_TableManipulation()
-   local asset = racon.newAsset("TOTO")
+   local asset = racon.newAsset(ASSET_ID)
    assert(asset)
 
    assert(asset:start())

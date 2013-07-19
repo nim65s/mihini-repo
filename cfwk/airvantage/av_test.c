@@ -24,7 +24,7 @@
 #include "lauxlib.h"
 #include "testutils.h"
 
-#define ASSET_ID "TOTO"
+#define ASSET_ID "av_test_asset_id"
 #define NUMBER_MAX_ID 10000
 #define SIZE_ALLOC 5 /* size allocated for id number */
 static volatile char waiting_notification = 1;
@@ -61,7 +61,7 @@ static void exec_lua_code(const char* cmd)
       "client.call(client, ...)\n"
       "os.exit(0)\n"
       "end\n"
-      "sched.run(invoke, 'agent.asscon.sendcmd', 'TOTO', ";
+      "sched.run(invoke, 'agent.asscon.sendcmd', 'av_test_asset_id', ";
   const char* str3 = "sched.loop()\n";
 
   /*concatenate str1 + cmd + str2 in other to create lua_script*/
@@ -94,7 +94,7 @@ static void exec_lua_code(const char* cmd)
 }
 
 //sendDataCommandMap: not used for now
-//"sched.run(invoke, 'agent.asscon.sendcmd', assetID, 'SendData', { Path = 'TOTO.sub.path', Body = { Command = 'plop',  Args = {foo = 'bar'}, __class = 'AWT-DA::Command' },  TicketId = 75, Type = 2,  __class = 'AWT-DA::Message' })\n"
+//"sched.run(invoke, 'agent.asscon.sendcmd', assetID, 'SendData', { Path = 'av_test_asset_id.sub.path', Body = { Command = 'plop',  Args = {foo = 'bar'}, __class = 'AWT-DA::Command' },  TicketId = 75, Type = 2,  __class = 'AWT-DA::Message' })\n"
 
 
 static void updateNotificationCb(swi_av_Asset_t *asset, const char* componentNamePtr, const char* versionPtr,
@@ -630,7 +630,7 @@ static int test_8_UpdateNotification()
   if (res != RC_OK)
     return res;
 
-  const char *cmd_SoftwareUpdate ="'SoftwareUpdate', { 'TOTO.my_pkg', 'my_version', '/toto/my_file', {foo='bar', num=42, float=0.23}})\n";
+  const char *cmd_SoftwareUpdate ="'SoftwareUpdate', { 'av_test_asset_id.my_pkg', 'my_version', '/toto/my_file', {foo='bar', num=42, float=0.23}})\n";
   exec_lua_code(cmd_SoftwareUpdate);
   SWI_LOG("AV_TEST", DEBUG, "exec_lua_code SoftwareUpdate done\n");
   while (waiting_notification)
@@ -716,8 +716,8 @@ static int test_10_asset_receiveDataWriting()
   if (res != RC_OK)
     return res;
 
-  /*command sends to TOTO asset*/
-  const char* str = "'SendData', { Path = 'TOTO.sub.path', Body = { foo = 'bar' }, TicketId = %u, Type = 5, __class = 'AWT-DA::Message' })\n";
+  /*command sends to av_test_asset_id asset*/
+  const char* str = "'SendData', { Path = 'av_test_asset_id.sub.path', Body = { foo = 'bar' }, TicketId = %u, Type = 5, __class = 'AWT-DA::Message' })\n";
   char* cmd_SendDataWriting = addTicketId(str);
 
   exec_lua_code(cmd_SendDataWriting);
@@ -760,7 +760,7 @@ static int test_11_asset_receiveDataWritingList()
   if (res != RC_OK)
     return res;
 
-  const char* str = "'SendData', { Path = 'TOTO.sub.path', Body = { 42, 'bar' }, TicketId = %u, Type = 5, __class = 'AWT-DA::Message' })\n";
+  const char* str = "'SendData', { Path = 'av_test_asset_id.sub.path', Body = { 42, 'bar' }, TicketId = %u, Type = 5, __class = 'AWT-DA::Message' })\n";
   char* cmd_SendDataWrittingList = addTicketId(str);
 
   exec_lua_code(cmd_SendDataWrittingList);
@@ -803,7 +803,7 @@ static int test_12_asset_receiveDataCommandList()
   if (res != RC_OK)
     return res;
 
-  const char* str = "'SendData', { Path = 'TOTO.sub.path', Body = { Command = 'plop',  Args = {42, 'bar'}, __class = 'AWT-DA::Command' },  TicketId = %u, Type = 2,  __class = 'AWT-DA::Message' })\n";
+  const char* str = "'SendData', { Path = 'av_test_asset_id.sub.path', Body = { Command = 'plop',  Args = {42, 'bar'}, __class = 'AWT-DA::Command' },  TicketId = %u, Type = 2,  __class = 'AWT-DA::Message' })\n";
   char* cmd_SendDataCommandList = addTicketId(str);
 
   exec_lua_code(cmd_SendDataCommandList);
