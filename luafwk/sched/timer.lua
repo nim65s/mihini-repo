@@ -95,7 +95,8 @@ function removetimer(timer)
     local entries = events[timer.nd]
     if not entries or not entries[timer] then return nil, "not a registered timer object" end
     entries[timer] = nil
-    if not next(entries) then
+    if not next(entries) then -- when there's no more entry for this date, clean up the list
+        -- TODO: the date itself could be removed from the array-part of `events`.
         events[timer.nd] = nil
         if update_first_timer then update_first_timer() end -- On some targets, the timer must be rearmed when it changes
     end
@@ -132,8 +133,8 @@ end
 -------------------------------------------------------------------------------------
 -- Simple timer API used by the scheduler; cause a signal ('timer', '@<date>') after
 -- the delay has elapsed.
--- Those timers are non cancelable.
--- Return the name of the event that will be sent at expiration.
+-- Return the name of the event that will be sent at expiration, and the timer
+-- itself, which can be used e.g. to cancel the event before it occurs.
 -------------------------------------------------------------------------------------
 function set(t, em, ev)
     assert(t>=0, "parameter must be a positive number")
@@ -142,7 +143,7 @@ function set(t, em, ev)
     ev = ev or "@"..nd
     local timer = { nextevent=stimer_nextevent, nd=nd, emitter=em, event=ev }
     addevent(timer)
-    return ev
+    return ev, timer
 end
 
 -------------------------------------------------------------------------------------

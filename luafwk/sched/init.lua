@@ -601,7 +601,12 @@ local function runcell(c, emitter, event, args, wokenup_tasks, new_queue)
         nargs = nargs + nxtrargs
     end
 
-    if c.multi then CLEANUP_REQUIRED = true end -- remember to clean ptw
+    if c.multi then
+        CLEANUP_REQUIRED = true -- remember to clean pt.waiting
+        -- A cell might have a timer plus other events; the timer must be cleaned ASAP anyway
+        local timer = c.timer
+        if timer then sched.timer.removetimer(timer) end
+    end
 
     local thread = c.thread
     if thread then -- coroutine to reschedule
@@ -762,7 +767,8 @@ local function register (cell, emitter, events)
             end
             hastimeout  = true
             local delay = event
-            local ev    = sched.timer.set(delay, emitter, timeout_callback)
+            local ev, timer = sched.timer.set(delay, emitter, timeout_callback)
+            cell.timer = timer -- so that it can be released when the cell is run or killed
             local ptwet = ptwe.timeout
             if ptwet then table.insert(ptwet, cell) else ptwe.timeout={cell} end
             log.trace('SCHED', 'DEBUG', "Registered cell for %ds timeout event", event)
@@ -1132,6 +1138,8 @@ end
 function sched.kill (x)
     local tx = type(x)
     if tx=='table' then
+        local timer = x.timer -- if there's an associated timer event, clean it up
+        if timer then sched.timer.removetimer(timer) end
         if x.hook then
             -- Cancel a hook
             for k in pairs(x) do x[k]=nil end
