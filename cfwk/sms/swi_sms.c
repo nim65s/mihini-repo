@@ -31,17 +31,17 @@ typedef struct cb_list
   struct cb_list *next;
 } cb_list_t;
 
-static swi_status_t newSmsHdlr(uint32_t payloadsize, char* payload);
+static rc_ReturnCode_t newSmsHdlr(uint32_t payloadsize, char* payload);
 static cb_list_t *cb_list;
 static EmpCommand empCmds[] = { EMP_NEWSMS };
 static emp_command_hdl_t empHldrs[] = { newSmsHdlr };
 static uint8_t module_initialized = 0;
 static pthread_mutex_t handler_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static swi_status_t newSmsHdlr(uint32_t payloadsize, char* payload)
+static rc_ReturnCode_t newSmsHdlr(uint32_t payloadsize, char* payload)
 {
   int regId;
-  swi_status_t res;
+  rc_ReturnCode_t res;
   cb_list_t *entry;
   char *sender, *message, *jsonPayload;
   yajl_val yval;
@@ -54,7 +54,7 @@ static swi_status_t newSmsHdlr(uint32_t payloadsize, char* payload)
   if (yval->u.array.values[0]->type != yajl_t_string)
   {
     SWI_LOG("SMS", ERROR, "%s: sender is not an string, got type=%d\n", __FUNCTION__, yval->u.array.values[0]->type);
-    res = SWI_STATUS_WRONG_PARAMS;
+    res = RC_BAD_PARAMETER;
     goto quit;
   }
   sender = YAJL_GET_STRING(yval->u.array.values[0]);
@@ -62,7 +62,7 @@ static swi_status_t newSmsHdlr(uint32_t payloadsize, char* payload)
   if (yval->u.array.values[1]->type != yajl_t_string)
   {
     SWI_LOG("SMS", ERROR, "%s: message is not an string, got type=%d\n", __FUNCTION__, yval->u.array.values[1]->type);
-    res = SWI_STATUS_WRONG_PARAMS;
+    res = RC_BAD_PARAMETER;
     goto quit;
   }
   message = YAJL_GET_STRING(yval->u.array.values[1]);
@@ -70,7 +70,7 @@ static swi_status_t newSmsHdlr(uint32_t payloadsize, char* payload)
   if (yval->u.array.values[2]->type != yajl_t_number)
   {
     SWI_LOG("SMS", ERROR, "%s: regId is not an number, got type=%d\n", __FUNCTION__, yval->u.array.values[2]->type);
-    res = SWI_STATUS_WRONG_PARAMS;
+    res = RC_BAD_PARAMETER;
     goto quit;
   }
   regId = YAJL_GET_INTEGER(yval->u.array.values[2]);
@@ -93,22 +93,22 @@ quit:
   return res;
 }
 
-static swi_status_t send_reg_payload(const char *payload, size_t payloadLen, int *regId)
+static rc_ReturnCode_t send_reg_payload(const char *payload, size_t payloadLen, int *regId)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *rpayload = NULL, *respPayload = NULL;
   uint32_t respPayloadLen;
   yajl_val yval = NULL;
 
   res = emp_send_and_wait_response(EMP_REGISTERSMSLISTENER, 0, payload, payloadLen, &respPayload, &respPayloadLen);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     goto quit;
 
   rpayload = strndup(respPayload, respPayloadLen);
   if (rpayload == NULL)
   {
-    res = SWI_STATUS_ALLOC_FAILED;
+    res = RC_NO_MEMORY;
     goto quit;
   }
 
@@ -116,7 +116,7 @@ static swi_status_t send_reg_payload(const char *payload, size_t payloadLen, int
   if (yval->type != yajl_t_number)
   {
     SWI_LOG("SMS", ERROR, "Invalid regId type received from RA, got type=%u, expected %u\n", __FUNCTION__, yval->type, yajl_t_number);
-    res = SWI_STATUS_WRONG_PARAMS;
+    res = RC_BAD_PARAMETER;
     goto quit;
   }
   *regId = YAJL_GET_INTEGER(yval);
@@ -130,49 +130,49 @@ quit:
 static void empReregisterServices()
 {
   cb_list_t *entry;
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   for (entry = cb_list; entry; entry = entry->next)
   {
     res = send_reg_payload(entry->payload, strlen(entry->payload), &entry->regId);
-    if (res != SWI_STATUS_OK)
+    if (res != RC_OK)
       SWI_LOG("SMS", WARNING, "Failed to register back callback %p with regId %p\n", entry->cb, entry);
   }
 }
 
-swi_status_t swi_sms_Init()
+rc_ReturnCode_t swi_sms_Init()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   if (module_initialized)
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   res = emp_parser_init(1, empCmds, empHldrs, empReregisterServices); // No async EMP cmd is managed by this lib
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("SMS", ERROR, "%s: Error while init emp lib, res=%d\n", __FUNCTION__, res);
     return res;
   }
   module_initialized = 1;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_sms_Destroy()
+rc_ReturnCode_t swi_sms_Destroy()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   if (!module_initialized)
-    return SWI_STATUS_OK;
+    return RC_OK;
   res = emp_parser_destroy(1, empCmds, empReregisterServices);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     SWI_LOG("SMS", ERROR, "error while destroy emp lib, res=%d\n", res);
   module_initialized = 0;
   return res;
 }
 
-swi_status_t swi_sms_Send(const char *recipientPtr, const char* messagePtr, swi_sms_Format_t format)
+rc_ReturnCode_t swi_sms_Send(const char *recipientPtr, const char* messagePtr, swi_sms_Format_t format)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload, *respPayload;
   const char *smsFormat = "";
   size_t payloadLen;
@@ -180,7 +180,7 @@ swi_status_t swi_sms_Send(const char *recipientPtr, const char* messagePtr, swi_
   yajl_gen gen;
 
   if (recipientPtr == NULL || messagePtr == NULL || format < SWI_SMS_7BITS || format > SWI_SMS_UCS2)
-    return SWI_STATUS_WRONG_PARAMS;
+    return RC_BAD_PARAMETER;
 
   switch(format)
   {
@@ -213,7 +213,7 @@ swi_status_t swi_sms_Send(const char *recipientPtr, const char* messagePtr, swi_
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("SMS", ERROR, "error while sending sms, res=%d\n", res);
     SWI_LOG("SMS", ERROR, "got error msg=%s\n", respPayload);
@@ -222,10 +222,10 @@ swi_status_t swi_sms_Send(const char *recipientPtr, const char* messagePtr, swi_
   return res;
 }
 
-swi_status_t swi_sms_Register(swi_sms_ReceptionCB_t callback, const char* senderPatternPtr,
+rc_ReturnCode_t swi_sms_Register(swi_sms_ReceptionCB_t callback, const char* senderPatternPtr,
     const char* messagePatternPtr, swi_sms_regId_t *regIdPtr)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload;
   size_t payloadLen;
   const char *senderP, *messageP;
@@ -234,7 +234,7 @@ swi_status_t swi_sms_Register(swi_sms_ReceptionCB_t callback, const char* sender
   int regId;
 
   if (callback == NULL || regIdPtr == NULL)
-    return SWI_STATUS_WRONG_PARAMS;
+    return RC_BAD_PARAMETER;
 
   senderP = senderPatternPtr ? senderPatternPtr : "";
   messageP = messagePatternPtr ? messagePatternPtr : "";
@@ -252,7 +252,7 @@ swi_status_t swi_sms_Register(swi_sms_ReceptionCB_t callback, const char* sender
 
   res = send_reg_payload(payload, payloadLen, &regId);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     goto quit;
 
   pthread_mutex_lock(&handler_lock);
@@ -280,9 +280,9 @@ quit:
   return res;
 }
 
-swi_status_t swi_sms_Unregister(swi_sms_regId_t regId)
+rc_ReturnCode_t swi_sms_Unregister(swi_sms_regId_t regId)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload, *respPayload;
   size_t payloadLen;
   uint32_t respPayloadLen;
@@ -293,7 +293,7 @@ swi_status_t swi_sms_Unregister(swi_sms_regId_t regId)
     if (entry == regId)
       break;
   if (entry == NULL)
-    return SWI_STATUS_WRONG_PARAMS;
+    return RC_BAD_PARAMETER;
 
   YAJL_GEN_ALLOC(gen);
 
@@ -305,7 +305,7 @@ swi_status_t swi_sms_Unregister(swi_sms_regId_t regId)
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("SMS", ERROR, "Error while unregister sms, res=%d\n", res);
     SWI_LOG("SMS", ERROR, "got error msg=%s\n", respPayload);

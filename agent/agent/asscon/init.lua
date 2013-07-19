@@ -35,7 +35,7 @@ local next = next
 local print = print
 local p = p
 local tostring = tostring
-local errnum = require 'status'.tonumber
+local errnum = require 'returncodes'.tonumber
 
 module (...)
 
@@ -83,12 +83,12 @@ local function EMPRegisterAsset(assetid, name)
     -- check name
     if name:find("%.") or name=="" then
         log("ASSCON", "ERROR", "Asset name %q is not respecting naming policy. Rejecting registration.", name)
-        return errnum 'WRONG_PARAMS'
+        return errnum 'BAD_PARAMETER'
     end
     -- check name availability
     if assets[name] then
         log("ASSCON", "ERROR", "An asset was already registered with name %q ([%s]). Rejecting registration !", name, tostring(assets[name]))
-        return errnum 'WRONG_PARAMS'
+        return errnum 'BAD_PARAMETER'
     end
     -- register new asset
     assets[name] = assetid
@@ -102,7 +102,7 @@ local function EMPUnregisterAsset(assetid, name)
     log("ASSCON", "DETAIL", "Unregistering [%s] as asset (%s)...", tostring(assetid), name)
     if not assets[name] then
         log("ASSCON", "ERROR", "No asset registered with name %q. Rejecting unregistration !", name)
-        return errnum 'WRONG_PARAMS'
+        return errnum 'BAD_PARAMETER'
     end
     unregisterasset(name)
     return 0
@@ -158,13 +158,13 @@ function connectionhandler(skt)
                 local s, c, p = copcall(cmd, instance, payload)
                 if not s then
                     log("ASSCON", "ERROR", "Error while executing EMP command (%s) for asset (%s): '%s'.", tostring(cmdname), getassetids(instance), c)
-                    return errnum 'WRONG_PARAMS', c
+                    return errnum 'BAD_PARAMETER', c
                 else
                     return c, p
                 end
             else
                 log("ASSCON", "ERROR", "Asset (%s) sent an unsupported EMP command (%s)", getassetids(instance), tostring(cmdname))
-                return errnum 'UNKNOWN_COMMAND', "unsupported EMP command"
+                return errnum 'BAD_PARAMETER', "unsupported EMP command"
             end
         end
     end

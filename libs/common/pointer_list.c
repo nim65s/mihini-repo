@@ -16,7 +16,8 @@
  */
 
 #include "pointer_list.h"
-#include "awt_std.h"
+#include <stdlib.h> //malloc
+#include <string.h> //memcpy
 
 #define POINTERLIST_MAGIC_ID 0x12af85d3
 
@@ -31,9 +32,9 @@ struct PointerList_s
 };
 
 
-#define CHECK_CONTEXT(ctx)  if (!ctx || ctx->magic != POINTERLIST_MAGIC_ID) return SWI_STATUS_CONTEXT_IS_CORRUPTED
+#define CHECK_CONTEXT(ctx)  if (!ctx || ctx->magic != POINTERLIST_MAGIC_ID) return RC_BAD_FORMAT
 
-swi_status_t PointerList_Create(PointerList** list_, unsigned int prealloc)
+rc_ReturnCode_t PointerList_Create(PointerList** list_, unsigned int prealloc)
 {
   PointerList* list;
 
@@ -43,13 +44,13 @@ swi_status_t PointerList_Create(PointerList** list_, unsigned int prealloc)
 
   list = malloc(sizeof(*list));
   if (!list)
-    return SWI_STATUS_ALLOC_FAILED;
+    return RC_NO_MEMORY;
 
   list->buffer = malloc(sizeof(*list->buffer) * prealloc);
   if (!list->buffer)
   {
     free(list);
-    return SWI_STATUS_ALLOC_FAILED;
+    return RC_NO_MEMORY;
   }
 
   list->magic = POINTERLIST_MAGIC_ID;
@@ -60,19 +61,19 @@ swi_status_t PointerList_Create(PointerList** list_, unsigned int prealloc)
 
   *list_ = list;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t PointerList_Destroy(PointerList* list)
+rc_ReturnCode_t PointerList_Destroy(PointerList* list)
 {
   CHECK_CONTEXT(list);
   list->magic = ~list->magic;
   free(list->buffer);
   free(list);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t PointerList_GetSize(PointerList* list, unsigned int* nbOfElements, unsigned int* allocatedSize)
+rc_ReturnCode_t PointerList_GetSize(PointerList* list, unsigned int* nbOfElements, unsigned int* allocatedSize)
 {
   CHECK_CONTEXT(list);
   if (nbOfElements)
@@ -80,10 +81,10 @@ swi_status_t PointerList_GetSize(PointerList* list, unsigned int* nbOfElements, 
   if (allocatedSize)
     *allocatedSize = list->allocatedSize;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t PointerList_PushLast(PointerList* list, void* pointer)
+rc_ReturnCode_t PointerList_PushLast(PointerList* list, void* pointer)
 {
   CHECK_CONTEXT(list);
 
@@ -93,7 +94,7 @@ swi_status_t PointerList_PushLast(PointerList* list, void* pointer)
     // Allocate the new buffer
     void** buffer = malloc(list->allocatedSize*2*sizeof(*list->buffer));
     if (!buffer)
-      return SWI_STATUS_ALLOC_FAILED;
+      return RC_NO_MEMORY;
     // Copy the data from the previous buffer
     if (list->readIdx < list->writeIdx)
       memcpy(buffer, list->buffer + list->readIdx, (list->writeIdx - list->readIdx)*sizeof(*list->buffer));
@@ -114,10 +115,10 @@ swi_status_t PointerList_PushLast(PointerList* list, void* pointer)
   list->writeIdx = (list->writeIdx+1) % list->allocatedSize;
   list->nbOfElements++;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t PointerList_PopFirst(PointerList* list, void** pointer)
+rc_ReturnCode_t PointerList_PopFirst(PointerList* list, void** pointer)
 {
   CHECK_CONTEXT(list);
 
@@ -125,52 +126,52 @@ swi_status_t PointerList_PopFirst(PointerList* list, void** pointer)
   if (!list->nbOfElements)
   {
     *pointer = NULL;
-    return SWI_STATUS_EMPTY;
+    return RC_NOT_FOUND;
   }
 
   *pointer = list->buffer[list->readIdx];
   list->readIdx = (list->readIdx+1) % list->allocatedSize;
   list->nbOfElements--;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t PointerList_Poke(PointerList* list, unsigned int index, void* pointer)
+rc_ReturnCode_t PointerList_Poke(PointerList* list, unsigned int index, void* pointer)
 {
   CHECK_CONTEXT(list);
 
   if (index >= list->nbOfElements)
-    return SWI_STATUS_VALUE_OUT_OF_BOUND;
+    return RC_OUT_OF_RANGE;
 
   unsigned int i = (index+list->readIdx) % list->allocatedSize;
   list->buffer[i] = pointer;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t PointerList_Peek(PointerList* list, unsigned int index, void** pointer)
+rc_ReturnCode_t PointerList_Peek(PointerList* list, unsigned int index, void** pointer)
 {
   CHECK_CONTEXT(list);
 
   if (index >= list->nbOfElements)
   {
     *pointer = NULL;
-    return SWI_STATUS_VALUE_OUT_OF_BOUND;
+    return RC_OUT_OF_RANGE;
   }
 
   unsigned int i = (index+list->readIdx) % list->allocatedSize;
   *pointer = list->buffer[i];
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t PointerList_Remove(PointerList* list, unsigned int index, void** pointer)
+rc_ReturnCode_t PointerList_Remove(PointerList* list, unsigned int index, void** pointer)
 {
   CHECK_CONTEXT(list);
 
   if (index >= list->nbOfElements)
   {
     *pointer = NULL;
-    return SWI_STATUS_VALUE_OUT_OF_BOUND;
+    return RC_OUT_OF_RANGE;
   }
 
   unsigned int i = (index+list->readIdx) % list->allocatedSize;
@@ -191,6 +192,6 @@ swi_status_t PointerList_Remove(PointerList* list, unsigned int index, void** po
 
   list->writeIdx = (list->writeIdx - 1 + list->allocatedSize) % list->allocatedSize;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 

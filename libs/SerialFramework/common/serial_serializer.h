@@ -18,30 +18,29 @@
 #ifndef SERIAL_SERIALIZER_H_
 #define SERIAL_SERIALIZER_H_
 
-#include "swi_status.h"
-
 #include <stdint.h>
+#include "serial_types.h"
 
 struct Serializer_;
 typedef struct Serializer_ Serializer;
 
 /* initialize */
-typedef swi_status_t (* SRLFWK_SER_InitSerializer)(Serializer* pSerializer, void* pSerializerData);
+typedef SerialStatus (* SRLFWK_SER_InitSerializer)(Serializer* pSerializer, void* pSerializerData);
 /* release all allocated resources */
 typedef void (*SRLFWK_SER_ReleaseSerializer)(Serializer* pSerializer);
 /* builds requests */
-typedef swi_status_t (*SRLFWK_SER_RequestBuilder)(Serializer* pSerializer, void* pRequestData);
+typedef SerialStatus (*SRLFWK_SER_RequestBuilder)(Serializer* pSerializer, void* pRequestData);
 /* verify on the fly the response buffer and returns true if this buffer contains a complete response */
 typedef uint8_t (*SRLFWK_SER_IsResponseComplete)(Serializer* pSerializer);
 /* check the response buffer and compute a status */
-typedef swi_status_t (*SRLFWK_SER_ResponseChecker)(Serializer* pSerializer);
+typedef SerialStatus (*SRLFWK_SER_ResponseChecker)(Serializer* pSerializer);
 /* analyze the response buffer to compute a status and extract all required data */
-typedef swi_status_t (*SRLFWK_SER_ResponseAnalyzer)(Serializer* pSerializer, swi_status_t status);
+typedef SerialStatus (*SRLFWK_SER_ResponseAnalyzer)(Serializer* pSerializer, SerialStatus status);
 /* retrieve request and response buffers */
-typedef swi_status_t (* SRLFWK_SER_GetRequestPDU)(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength);
-typedef swi_status_t (* SRLFWK_SER_GetResponsePDU)(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength);
+typedef SerialStatus (* SRLFWK_SER_GetRequestPDU)(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength);
+typedef SerialStatus (* SRLFWK_SER_GetResponsePDU)(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength);
 /* get length of an anticipated response */
-typedef swi_status_t (* SRLFWK_SER_GetExpectedResponseLength)(Serializer* pSerializer);
+typedef SerialStatus (* SRLFWK_SER_GetExpectedResponseLength)(Serializer* pSerializer);
 
 /* protocol types */
 typedef enum {

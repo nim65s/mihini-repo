@@ -47,7 +47,7 @@ local log          = require 'log'
 local upath        = require 'utils.path'
 local asset_tree   = require 'racon.asset.tree'
 local niltoken     = require "niltoken"
-local errnum       = require 'status'.tonumber
+local errnum       = require 'returncodes'.tonumber
 
 local M = { initialized=false; sem_value = 1}
 

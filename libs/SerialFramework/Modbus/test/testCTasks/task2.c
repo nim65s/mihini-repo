@@ -17,7 +17,7 @@ static ModbusUserData modbusData;
 
 static void MAIN_StartAppTimerHandler(u8 id, void* pContext);
 static void MAIN_PollingTimerHandler(/*u8 id, void* pContext*/ModbusUserData* pModbusData);
-static void ModbusHandler(SerialContext * pModbusContext, swi_status_t status, void* pUserData);
+static void ModbusHandler(SerialContext * pModbusContext, SerialStatus status, void* pUserData);
 static void UART_Init(void);
 static s16 UART_DummyAtCmdRespHandler(adl_atResponse_t* apu_Rsp);
 
@@ -32,14 +32,14 @@ void UART_Init(void) {
     adl_atCmdCreate("AT+WMFM=0,0,2", FALSE, (adl_atRspHandler_t) UART_DummyAtCmdRespHandler, "*", NULL);
 }
 
-void ModbusHandler(SerialContext* pSerialContext, swi_status_t status, void* pUserData) {
+void ModbusHandler(SerialContext* pSerialContext, SerialStatus status, void* pUserData) {
     u8* pduBuff = NULL;
     u16 bufferLength = 0;
     int index;
     ModbusSpecifics* pSpecifics = SRLFWK_ADP_GetProtocolData(pSerialContext);
     ModbusUserData* pModbusData = (ModbusUserData*) pUserData;
 
-    if (/*status != SWI_STATUS_SERIAL_RESPONSE_TIMEOUT*/1) {
+    if (/*status != SERIAL_STATUS_RESPONSE_TIMEOUT*/1) {
         wm_sprintf(ltsc_Temp, "\r\n[Task2] >>>>");
         adl_atSendResponse(ADL_AT_UNS, ltsc_Temp);
         SRLFWK_ADP_GetRequestPDU(pSerialContext, &pduBuff, &bufferLength);
@@ -52,7 +52,7 @@ void ModbusHandler(SerialContext* pSerialContext, swi_status_t status, void* pUs
         pduBuff = NULL;
         wm_sprintf(ltsc_Temp, "\r\n[Task2] <<<<");
         adl_atSendResponse(ADL_AT_UNS, ltsc_Temp);
-        if (status != SWI_STATUS_SERIAL_RESPONSE_TIMEOUT) {
+        if (status != SERIAL_STATUS_RESPONSE_TIMEOUT) {
             SRLFWK_ADP_GetResponsePDU(pSerialContext, &pduBuff, &bufferLength);
             for (index = 0; index < bufferLength; index++) {
                 wm_sprintf(ltsc_Temp, " %02X ", pduBuff[index]);
@@ -62,7 +62,7 @@ void ModbusHandler(SerialContext* pSerialContext, swi_status_t status, void* pUs
     }
 
     switch (status) {
-    case SWI_STATUS_OK:
+    case SERIAL_STATUS_OK:
         switch (pSpecifics->response.function) {
         case MODBUS_FUNC_READ_COILS:
             wm_sprintf(ltsc_Temp, "\r\n[Task2] <<<< READ COILS");
@@ -146,12 +146,12 @@ void ModbusHandler(SerialContext* pSerialContext, swi_status_t status, void* pUs
         }
         break;
 
-    case SWI_STATUS_SERIAL_RESPONSE_TIMEOUT:
+    case SERIAL_STATUS_RESPONSE_TIMEOUT:
         wm_sprintf(ltsc_Temp, "\r\n[Task2] <<<< ERROR TIMEOUT");
         adl_atSendResponse(ADL_AT_UNS, ltsc_Temp);
         break;
 
-    case SWI_STATUS_SERIAL_RESPONSE_EXCEPTION:
+    case SSERIAL_STATUS_RESPONSE_EXCEPTION:
         switch (pSpecifics->response.function) {
         case MODBUS_FUNC_READ_COILS:
             wm_sprintf(ltsc_Temp, "\r\n[Task2] <<<< ERROR READ COILS  - exception '%02X'", pSpecifics->response.exception);
@@ -200,13 +200,13 @@ void ModbusHandler(SerialContext* pSerialContext, swi_status_t status, void* pUs
         }
         break;
 
-    case SWI_STATUS_SERIAL_RESPONSE_BAD_CHECKSUM:
+    case SERIAL_STATUS_RESPONSE_BAD_CHECKSUM:
         wm_sprintf(ltsc_Temp, "\r\n[Task2] <<<< ERROR CHECKSUM BAD");
         adl_atSendResponse(ADL_AT_UNS, ltsc_Temp);
         break;
 
     default:
-    case SWI_STATUS_SERIAL_RESPONSE_INVALID_FRAME:
+    case SERIAL_STATUS_RESPONSE_INVALID_FRAME:
         wm_sprintf(ltsc_Temp, "\r\n[Task2] <<<< ERROR INVALID FRAME");
         adl_atSendResponse(ADL_AT_UNS, ltsc_Temp);
         break;
@@ -225,7 +225,7 @@ void ModbusHandler(SerialContext* pSerialContext, swi_status_t status, void* pUs
 }
 
 void MAIN_PollingTimerHandler(/*u8 id, void* pContext*/ModbusUserData* pModbusData) {
-    swi_status_t result = SWI_STATUS_SERIAL_ERROR;
+    SerialStatus result = SERIAL_STATUS_UNEXPECTED_ERROR;
     //ModbusUserData* pModbusData = (ModbusUserData*) pContext;
     pModbusData->request.slaveId = 1;
 
@@ -345,7 +345,7 @@ void MAIN_PollingTimerHandler(/*u8 id, void* pContext*/ModbusUserData* pModbusDa
     }
 
     result = SRLFWK_ADP_Request(pModbusData->pSerialContext, &pModbusData->request);
-    if (result == SWI_STATUS_OK) {
+    if (result == SERIAL_STATUS_OK) {
         // print pModbusData->request
         wm_sprintf(ltsc_Temp, "\r\n[Task2] >>>> polling DONE '%d'", result);
         adl_atSendResponse(ADL_AT_UNS, ltsc_Temp);
@@ -378,11 +378,11 @@ void MAIN_StartAppTimerHandler(u8 id, void* pContext) {
     serialConfig.timeout = 10;
     serialConfig.retry = 0;
     modbusData.allocated = NULL;
-    if (SWI_STATUS_SERIAL_INIT_STACK_READY == SRLFWK_ADP_InitAdapter(&(modbusData.pSerialContext), &serialConfig, ModbusHandler, MODBUS_SER_InitSerializer, (void*) MODBUS_RTU, &modbusData)) {
+    if (SERIAL_STATUS_OK == SRLFWK_ADP_InitAdapter(&(modbusData.pSerialContext), &serialConfig, ModbusHandler, MODBUS_SER_InitSerializer, (void*) MODBUS_RTU, &modbusData)) {
         wm_sprintf(ltsc_Temp, "\r\n[Task2]OK Stack initialized");
         adl_atSendResponse(ADL_AT_UNS, ltsc_Temp);
 
-        //        if (SWI_STATUS_OK == SRLFWK_ADP_EnableHardwareSwitch(pSerialContext, 12, MODBUS_GPIO_HIGH)) {
+        //        if (SERIAL_STATUS_OK == SRLFWK_ADP_EnableHardwareSwitch(pSerialContext, 12, MODBUS_GPIO_HIGH)) {
         //            wm_sprintf(ltsc_Temp, "\r\n[Task2]OK GPIO online");
         //            adl_atSendResponse(ADL_AT_UNS, ltsc_Temp) ;
         //        } else {

@@ -23,7 +23,7 @@ local function SoftwareUpdate(asset, data, path, ticketid)
 
     local url = data and (data.url or data[1])
     local signature = data and (data.signature or data[2])
-    if not url or not signature then return errnum 'WRONG_PARAMS', "Wrong params in SoftwareUpdate command: need package url and package signature" end
+    if not url or not signature then return errnum 'BAD_PARAMETER', "Wrong params in SoftwareUpdate command: need package url and package signature" end
 
     local newupdate = {proto= "m3da", url = url, signature=signature, ticketid = ticketid}
     local res, errcode, errstr = update.notifynewupdate(newupdate)
@@ -32,7 +32,7 @@ local function SoftwareUpdate(asset, data, path, ticketid)
         -- if update accepted the job, return "async" to indicate asynchronous update status acknowledge
         return "async"
     else
-        errcode = tonumber(errcode) or errnum 'UPDATE_REJECTED' -- update rejected by update module
+        errcode = tonumber(errcode) or errnum 'UNSPECIFIED_ERROR' -- update rejected by update module
         return errcode, errstr or "update rejected by update module"
     end
 end

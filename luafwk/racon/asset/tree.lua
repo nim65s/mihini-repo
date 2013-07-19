@@ -13,7 +13,7 @@
 
 local utils_path  = require 'utils.path'
 local utils_table = require 'utils.table'
-local errnum      = require 'status'.tonumber
+local errnum      = require 'returncodes'.tonumber
 
 require 'coxpcall'
 require 'print'

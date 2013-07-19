@@ -71,16 +71,16 @@ static EmpParser *parser;
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
-static swi_status_t reader_dispatch_message(EmpCommand command, uint32_t rid, uint8_t type, char* payload,
+static rc_ReturnCode_t reader_dispatch_message(EmpCommand command, uint32_t rid, uint8_t type, char* payload,
     uint32_t payloadsize);
-static swi_status_t ipc_send(const char* payload, uint32_t payloadsize);
+static rc_ReturnCode_t ipc_send(const char* payload, uint32_t payloadsize);
 static uint32_t ipc_read(char* buffer, uint32_t size);
 static void reader_emp_parse();
-static swi_status_t emp_sendmessage(EmpCommand command, uint8_t type, uint8_t* rid, const char* payload,
+static rc_ReturnCode_t emp_sendmessage(EmpCommand command, uint8_t type, uint8_t* rid, const char* payload,
     uint32_t payloadsize);
 
-static swi_status_t emp_addCmdHandler(EmpCommand cmd, emp_command_hdl_t h);
-static swi_status_t emp_removeCmdHandler(EmpCommand cmd);
+static rc_ReturnCode_t emp_addCmdHandler(EmpCommand cmd, emp_command_hdl_t h);
+static rc_ReturnCode_t emp_removeCmdHandler(EmpCommand cmd);
 static struct sockaddr_in agent_addr;
 
 #ifdef __ARMEL__
@@ -124,31 +124,31 @@ static void freerequestid(uint8_t rid)
   SWI_LOG("EMP", DEBUG, "%s: freed rid = %u\n", __FUNCTION__, rid);
 }
 
-static swi_status_t getrequestid(uint8_t *rid)
+static rc_ReturnCode_t getrequestid(uint8_t *rid)
 {
   *rid = atomic_rid_lookup();
   if (*rid == 255)
-    return SWI_STATUS_BUSY;
+    return RC_BUSY;
   parser->commandInProgress[*rid].status = EMP_RID_ALLOCATED;
   sem_init(&parser->commandInProgress[*rid].respSem, 0, 0);
   SWI_LOG("EMP", DEBUG, "%s: new rid = %d\n", __FUNCTION__, *rid);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-static swi_status_t emp_sendmessage(EmpCommand command, uint8_t type, uint8_t* rid, const char* payload, uint32_t payloadsize)
+static rc_ReturnCode_t emp_sendmessage(EmpCommand command, uint8_t type, uint8_t* rid, const char* payload, uint32_t payloadsize)
 {
   unsigned char header[8];
-  swi_status_t res;
+  rc_ReturnCode_t res;
   uint8_t *buffer;
 
   if (parser->sockfd == -1)
-    return SWI_STATUS_SERVER_UNREACHABLE;
+    return RC_COMMUNICATION_ERROR;
 
   // if the message is a (new) Command, let's generate a new rid (and  don't use rid parameter)
   if ((type & 1) == 0)
   {
     res = getrequestid(rid);
-    if (SWI_STATUS_OK != res)
+    if (RC_OK != res)
       return res;
   }
   // else we are sending a response, then the rid to used will be the fct parameter rid.
@@ -172,7 +172,7 @@ static swi_status_t emp_sendmessage(EmpCommand command, uint8_t type, uint8_t* r
   buffer = malloc (8 + payloadsize);
   if (buffer == NULL)
   {
-    res = SWI_STATUS_ALLOC_FAILED;
+    res = RC_NO_MEMORY;
     goto quit;
   }
   memcpy(buffer, header, 8);
@@ -183,7 +183,7 @@ static swi_status_t emp_sendmessage(EmpCommand command, uint8_t type, uint8_t* r
   res = ipc_send((const char *)buffer, 8+payloadsize);
 
 quit:
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     freerequestid(*rid);
   SWI_LOG("EMP", DEBUG, "%s: [%d] exiting with res %d\n", __FUNCTION__, *rid, res);
   free(buffer);
@@ -270,7 +270,7 @@ void emp_freemessage(char *buffer)
     free(buffer - 8);
 }
 
-static void throw_and_broadcast_err(swi_status_t status)
+static void throw_and_broadcast_err(rc_ReturnCode_t status)
 {
   int i;
 
@@ -323,7 +323,7 @@ static int ipc_reconnect()
 
   SWI_LOG("EMP", ERROR, "Reconnecting to agent has failed, closing socket\n");
   // Signal an error to the blocked thread which is waiting for a reply
-  throw_and_broadcast_err(SWI_STATUS_SERVER_UNREACHABLE);
+  throw_and_broadcast_err(RC_COMMUNICATION_ERROR);
   if (parser->sockfd >= 0)
     close(parser->sockfd);
   parser->sockfd = -1;
@@ -395,7 +395,7 @@ static void emp_removeIpcHandler(emp_ipc_broken_hdl_t handler)
   }
 }
 
-swi_status_t emp_parser_init(size_t nbCmds, EmpCommand* cmds, emp_command_hdl_t* cmdHdlrs,  emp_ipc_broken_hdl_t ipcHdlr)
+rc_ReturnCode_t emp_parser_init(size_t nbCmds, EmpCommand* cmds, emp_command_hdl_t* cmdHdlrs,  emp_ipc_broken_hdl_t ipcHdlr)
 {
   SWI_LOG("EMP", DEBUG, "%s: init parser\n", __FUNCTION__);
 
@@ -408,7 +408,7 @@ swi_status_t emp_parser_init(size_t nbCmds, EmpCommand* cmds, emp_command_hdl_t*
     {
       SWI_LOG("EMP", ERROR, "socket creation failed\n");
       emp_parser_destroy(nbCmds, cmds, ipcHdlr);
-      return SWI_STATUS_RESOURCE_INITIALIZATION_FAILED;
+      return RC_UNSPECIFIED_ERROR;
     }
 
     agent_addr.sin_family = AF_INET;
@@ -425,7 +425,7 @@ swi_status_t emp_parser_init(size_t nbCmds, EmpCommand* cmds, emp_command_hdl_t*
     {
       SWI_LOG("EMP", ERROR, "socket connection failed\n");
       emp_parser_destroy(nbCmds, cmds, ipcHdlr);
-      return SWI_STATUS_RESOURCE_INITIALIZATION_FAILED;
+      return RC_COMMUNICATION_ERROR;
     }
 
     pthread_mutex_init(&parser->sockLock, 0);
@@ -440,7 +440,7 @@ swi_status_t emp_parser_init(size_t nbCmds, EmpCommand* cmds, emp_command_hdl_t*
     emp_addCmdHandler(cmds[i], cmdHdlrs[i]);
   if (ipcHdlr)
     emp_addIpcHandler(ipcHdlr);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 /*
@@ -457,18 +457,18 @@ static int check_cmd_handlers()
   return 0;
 }
 
-swi_status_t emp_parser_destroy(size_t nbCmds, EmpCommand* cmds, emp_ipc_broken_hdl_t ipcHdlr)
+rc_ReturnCode_t emp_parser_destroy(size_t nbCmds, EmpCommand* cmds, emp_ipc_broken_hdl_t ipcHdlr)
 {
   SWI_LOG("EMP", DEBUG, "%s: destroying parser\n", __FUNCTION__);
   if (!parser)
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   int i;
   for (i = 0; i < nbCmds; i++)
     emp_removeCmdHandler(cmds[i]);
 
   if (check_cmd_handlers())
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   if (ipcHdlr)
     emp_removeIpcHandler(ipcHdlr);
@@ -487,29 +487,29 @@ swi_status_t emp_parser_destroy(size_t nbCmds, EmpCommand* cmds, emp_ipc_broken_
 
   free(parser);
   parser = NULL;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 //note add and remove hdl function can be removed and handler install can be
 // done at lib init
 // repeat cmds in destroy to clean ?
 
-static swi_status_t emp_addCmdHandler(EmpCommand cmd, emp_command_hdl_t h)
+static rc_ReturnCode_t emp_addCmdHandler(EmpCommand cmd, emp_command_hdl_t h)
 {
   if (!parser)
-    return SWI_STATUS_RESOURCE_NOT_INITIALIZED;
+    return RC_NOT_INITIALIZED;
   //todo protect handler data
   parser->commandHdlrs[cmd] = h;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-static swi_status_t emp_removeCmdHandler(EmpCommand cmd)
+static rc_ReturnCode_t emp_removeCmdHandler(EmpCommand cmd)
 {
   if (!parser)
-    return SWI_STATUS_RESOURCE_NOT_INITIALIZED;
+    return RC_NOT_INITIALIZED;
   //todo protect handler data
   parser->commandHdlrs[cmd] = NULL;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 typedef struct thread_cmd_data
@@ -540,7 +540,7 @@ static void * thread_cmd_routine(void* ud)
     pthread_exit(NULL);
   }
 
-  swi_status_t res = parser->commandHdlrs[command](payloadsize, payload);
+  rc_ReturnCode_t res = parser->commandHdlrs[command](payloadsize, payload);
   emp_sendmessage(command, 1, &rid, (char *)&status, sizeof(uint16_t));
 
   SWI_LOG("EMP", DEBUG, "%s: [%d] res = %d\n", __FUNCTION__, rid, res);
@@ -551,21 +551,21 @@ static void * thread_cmd_routine(void* ud)
  * dispatching incoming messages, both new cmds and response.
  * this function runs in reader thread.
  */
-static swi_status_t reader_dispatch_message(EmpCommand command, uint32_t rid, uint8_t type, char* payload,
+static rc_ReturnCode_t reader_dispatch_message(EmpCommand command, uint32_t rid, uint8_t type, char* payload,
     uint32_t payloadsize)
 {
 
   if (type) // that'is a response
   {
     unsigned char* p;
-    swi_status_t status;
+    rc_ReturnCode_t status;
     //status must always be in response
     if (payloadsize < 2)
     {
       SWI_LOG("EMP", ERROR, "%s: Response for rid[%d], payloadsize = %d, error: payload too small to get error\n",
           __FUNCTION__, rid, payloadsize);
       //setting default status, might not be the perfect value:
-      status = SWI_STATUS_OPERATION_FAILED;
+      status = RC_UNSPECIFIED_ERROR;
     }
     else
     {
@@ -588,7 +588,7 @@ static swi_status_t reader_dispatch_message(EmpCommand command, uint32_t rid, ui
         parser->commandInProgress[rid].respPayload = malloc(parser->commandInProgress[rid].respPayloadLen);
         if (NULL == parser->commandInProgress[rid].respPayload)
         {
-          parser->commandInProgress[rid].respStatus = SWI_STATUS_ALLOC_FAILED;
+          parser->commandInProgress[rid].respStatus = RC_NO_MEMORY;
           //don't return here: at least the cmd sender will get emp status, but not additional data.
         }
         else
@@ -612,7 +612,7 @@ static swi_status_t reader_dispatch_message(EmpCommand command, uint32_t rid, ui
           command, payload, rid);
     }
     emp_freemessage(payload);
-    return SWI_STATUS_OK;
+    return RC_OK;
   }
   else //that's new emp cmd coming from RA
   {
@@ -620,13 +620,13 @@ static swi_status_t reader_dispatch_message(EmpCommand command, uint32_t rid, ui
     {
       SWI_LOG("EMP", DEBUG, "no handler set for %d\n", command);
       //todo check status!!
-      return SWI_STATUS_SERVICE_UNAVAILABLE;
+      return RC_NOT_AVAILABLE;
     }
     //spawn new thread
     pthread_t thread;
     thread_cmd_data_t* ud = malloc(sizeof(*ud));
     if (NULL == ud)
-      return SWI_STATUS_ALLOC_FAILED;
+      return RC_NO_MEMORY;
 
     ud->command = command;
     ud->payloadsize = payloadsize;
@@ -637,14 +637,14 @@ static swi_status_t reader_dispatch_message(EmpCommand command, uint32_t rid, ui
 
     //it's up to the thread to send the response and free the payload!!
 
-    return SWI_STATUS_OK;
+    return RC_OK;
   }
 }
 
-static swi_status_t ipc_send(const char* payload, uint32_t payloadsize)
+static rc_ReturnCode_t ipc_send(const char* payload, uint32_t payloadsize)
 {
   int s;
-  swi_status_t status;
+  rc_ReturnCode_t status;
 
   pthread_mutex_lock(&parser->sockLock);
   s = send(parser->sockfd, payload, payloadsize, MSG_NOSIGNAL);
@@ -652,20 +652,20 @@ static swi_status_t ipc_send(const char* payload, uint32_t payloadsize)
   {
     if (errno == EPIPE || errno == ECONNRESET)
     {
-      status = SWI_STATUS_IPC_BROKEN;
+      status = RC_CLOSED;
       goto quit;
     }
     SWI_LOG("EMP", DEBUG, "%s: fd=%d, errno=%d, error=%s\n", __FUNCTION__, parser->sockfd, errno, strerror(errno));
-    status = SWI_STATUS_IPC_WRITE_ERROR;
+    status = RC_IO_ERROR;
     goto quit;
   }
   if (s != payloadsize)
   {
     SWI_LOG("EMP", ERROR, "%s: send was partial, sent size=%d, expected payloadsize=%u\n", __FUNCTION__, s, payloadsize);
-    status = SWI_STATUS_OPERATION_FAILED;
+    status = RC_BAD_FORMAT;
     goto quit;
   }
-  status = SWI_STATUS_OK;
+  status = RC_OK;
 quit:
   pthread_mutex_unlock(&parser->sockLock);
   return status;
@@ -695,13 +695,13 @@ static uint32_t ipc_read(char* buffer, uint32_t size)
     if (parser->sockfd != -1 && (errno == 0 || errno == ECONNRESET))
     {
       // Signal a broken pipe to the blocked thread which is waiting for a reply
-      throw_and_broadcast_err(SWI_STATUS_IPC_BROKEN);
+      throw_and_broadcast_err(RC_CLOSED);
 
       errno = EPIPE;
       return 0;
     }
     // Signal an error to the blocked thread which is waiting for a reply
-    throw_and_broadcast_err(SWI_STATUS_IPC_READ_ERROR);
+    throw_and_broadcast_err(RC_IO_ERROR);
     if (parser->sockfd >= 0)
       close(parser->sockfd);
     parser->sockfd = -1;
@@ -717,21 +717,21 @@ static int wait_for_response(uint8_t rid, const struct timespec *abs_timeout)
   return ret;
 }
 
-swi_status_t emp_send_and_wait_response(EmpCommand command, uint8_t type, const char* payload, uint32_t payloadsize,
+rc_ReturnCode_t emp_send_and_wait_response(EmpCommand command, uint8_t type, const char* payload, uint32_t payloadsize,
     char **respPayload, uint32_t* respPayloadLen)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   int ret;
   uint8_t rid = 0;
   struct timeval  tv;
   struct timespec timeout = {0, 0};
 
   if (parser == NULL)
-    return SWI_STATUS_RESOURCE_NOT_INITIALIZED;
+    return RC_NOT_INITIALIZED;
 
   // Construct the message and send it through IPC to the agent
   res = emp_sendmessage(command, type, &rid, payload, payloadsize);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("EMP", DEBUG, "%s: emp_sendmessage failed, res %d\n", __FUNCTION__, res);
     return res;
@@ -756,12 +756,12 @@ swi_status_t emp_send_and_wait_response(EmpCommand command, uint8_t type, const 
   {
     SWI_LOG("EMP", ERROR, "%s: [%d] timeout for response expired\n", __FUNCTION__, rid);
     parser->commandInProgress[rid].respPayload = NULL;
-    parser->commandInProgress[rid].respStatus = SWI_STATUS_IPC_TIMEOUT;
+    parser->commandInProgress[rid].respStatus = RC_TIMEOUT;
     parser->commandInProgress[rid].status = EMP_RID_TIMEDOUT;
   }
 
   // Only log unexpected errors, not handled at all by EMP
-  if (parser->commandInProgress[rid].status == EMP_RID_ERROR && parser->commandInProgress[rid].respStatus != SWI_STATUS_IPC_BROKEN)
+  if (parser->commandInProgress[rid].status == EMP_RID_ERROR && parser->commandInProgress[rid].respStatus != RC_CLOSED)
     SWI_LOG("EMP", ERROR, "%s: [%d] Unexpected error %d raised by reader thread\n", __FUNCTION__, rid, parser->commandInProgress[rid].respStatus);
 
   res = parser->commandInProgress[rid].respStatus;

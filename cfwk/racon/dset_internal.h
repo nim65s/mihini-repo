@@ -34,26 +34,26 @@ typedef struct swi_dset_Element{
   } val;
 }swi_dset_Element_t;
 
-//swi_status_t swi_dset_CreateElement(swi_dset_Element_t** elt);
-//swi_status_t swi_dset_DestroyElement(swi_dset_Element_t* elt);
+//rc_ReturnCode_t swi_dset_CreateElement(swi_dset_Element_t** elt);
+//rc_ReturnCode_t swi_dset_DestroyElement(swi_dset_Element_t* elt);
 
-swi_status_t swi_dset_Create(swi_dset_Iterator_t** set);
-swi_status_t swi_dset_Rewind(swi_dset_Iterator_t *set);
+rc_ReturnCode_t swi_dset_Create(swi_dset_Iterator_t** set);
+rc_ReturnCode_t swi_dset_Rewind(swi_dset_Iterator_t *set);
 /*
  * Push fct: to be used to populate dset with a new
  * swi_dset_Element_t malloc'ed in each fct.
  * those fcts don't change current element.
  */
-swi_status_t swi_dset_PushInteger(swi_dset_Iterator_t* set, const char* name,  size_t nameLength, uint64_t val);
-swi_status_t swi_dset_PushFloat(swi_dset_Iterator_t* set, const char* name,  size_t nameLength, double val);
-swi_status_t swi_dset_PushString(swi_dset_Iterator_t* set, const char* name, size_t nameLength, const char* val, size_t valLength);
-swi_status_t swi_dset_PushNull(swi_dset_Iterator_t *set, const char *name, size_t nameLength);
-swi_status_t swi_dset_PushBool(swi_dset_Iterator_t *set, const char *name, size_t nameLength, bool val);
-swi_status_t swi_dset_PushUnsupported(swi_dset_Iterator_t *set, const char *name, size_t nameLength);
+rc_ReturnCode_t swi_dset_PushInteger(swi_dset_Iterator_t* set, const char* name,  size_t nameLength, uint64_t val);
+rc_ReturnCode_t swi_dset_PushFloat(swi_dset_Iterator_t* set, const char* name,  size_t nameLength, double val);
+rc_ReturnCode_t swi_dset_PushString(swi_dset_Iterator_t* set, const char* name, size_t nameLength, const char* val, size_t valLength);
+rc_ReturnCode_t swi_dset_PushNull(swi_dset_Iterator_t *set, const char *name, size_t nameLength);
+rc_ReturnCode_t swi_dset_PushBool(swi_dset_Iterator_t *set, const char *name, size_t nameLength, bool val);
+rc_ReturnCode_t swi_dset_PushUnsupported(swi_dset_Iterator_t *set, const char *name, size_t nameLength);
 /*
  * To remove an element
  * The current element is discarded, dset iteration will restart from scratch.
  */
-swi_status_t swi_dset_RemoveByName(swi_dset_Iterator_t* set, const char* name, swi_dset_Element_t ** elt);
+rc_ReturnCode_t swi_dset_RemoveByName(swi_dset_Iterator_t* set, const char* name, swi_dset_Element_t ** elt);
 
 #endif /* SWI_DSETINTERNAL_INCLUDE_GUARD */

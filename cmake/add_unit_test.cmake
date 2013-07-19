@@ -49,6 +49,8 @@ function(add_unit_test target sourceFile)
     foreach(dep ${runtime_dependencies})
       target_link_libraries(unittest_${target} ${dep})
     endforeach(dep ${runtime_dependencies})
+    # As each native unit test should use testutils.h , it implicitly uses functions from the returncodes module
+    target_link_libraries(unittest_${target} lib_returncodes)
 
     set(_target ${target})
 

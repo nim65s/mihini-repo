@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include "swi_status.h"
+#include "returncodes.h"
 #include "swi_dset.h"
 
 /**
@@ -82,11 +82,11 @@ typedef enum
 
 typedef int (*EmpMessageCB)(EmpCommand command,
     uint8_t type, char* payload, uint32_t payloadsize, void *udat);
-typedef swi_status_t (*EmpSendCB)(const char* payload, uint32_t payloadsize, void *udat);
+typedef rc_ReturnCode_t (*EmpSendCB)(const char* payload, uint32_t payloadsize, void *udat);
 typedef uint32_t (*EmpReadCB)(char* buffer, uint32_t size, void *udat);
 
 
-typedef swi_status_t (*emp_command_hdl_t)(  uint32_t payloadsize, char* payload );
+typedef rc_ReturnCode_t (*emp_command_hdl_t)(  uint32_t payloadsize, char* payload );
 typedef void (*emp_ipc_broken_hdl_t)(void);
 
 #define EMP_MAX_CMD 64
@@ -96,7 +96,7 @@ typedef struct
 {
   uint8_t status;
   sem_t respSem;
-  swi_status_t respStatus;
+  rc_ReturnCode_t respStatus;
   char *respPayload;
   uint32_t respPayloadLen;
 } emp_command_ctx_t;
@@ -119,9 +119,9 @@ typedef struct EmpParser_s
 #define SWI_EMP_INIT_NO_CMDS 0,NULL,NULL,NULL
 #define SWI_EMP_DESTROY_NO_CMDS 0,NULL,NULL
 
-swi_status_t emp_parser_init(size_t nbCmds, EmpCommand* cmds, emp_command_hdl_t* cmdHdlrs, emp_ipc_broken_hdl_t ipcHdlr);
-swi_status_t emp_parser_destroy(size_t nbCmds, EmpCommand* cmds, emp_ipc_broken_hdl_t ipcHdlr);
-swi_status_t emp_send_and_wait_response(EmpCommand command, uint8_t type,
+rc_ReturnCode_t emp_parser_init(size_t nbCmds, EmpCommand* cmds, emp_command_hdl_t* cmdHdlrs, emp_ipc_broken_hdl_t ipcHdlr);
+rc_ReturnCode_t emp_parser_destroy(size_t nbCmds, EmpCommand* cmds, emp_ipc_broken_hdl_t ipcHdlr);
+rc_ReturnCode_t emp_send_and_wait_response(EmpCommand command, uint8_t type,
 const char* payload, uint32_t payloadsize, char **respPayload, uint32_t* respPayloadLen);
 void emp_freemessage(char* buffer);
 

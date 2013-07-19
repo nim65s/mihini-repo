@@ -118,7 +118,6 @@
 #include <poll.h>
 #include <grp.h>
 //internal includes
-#include "awt_std.h"
 #include "swi_log.h"
 #include "pointer_list.h"
 
@@ -611,8 +610,8 @@ static app_t* add_app(char* wd, char* prog, int privileged)
   app->start_count = 0; //never started yet!
   app->id = ++next_app_id;
   app->privileged = privileged;
-  swi_status_t res = 0;
-  if (SWI_STATUS_OK != (res = PointerList_PushLast(apps, app)))
+  rc_ReturnCode_t res = 0;
+  if (RC_OK != (res = PointerList_PushLast(apps, app)))
   {
     SWI_LOG("APPMON", ERROR, "add_app error: PointerList_PushLast failed[AwtStatus=%d]\n", res);
     free(app);
@@ -656,7 +655,7 @@ static app_t* find_by_id(uint32_t id)
 static int clean_all()
 {
   app_t* tmp = NULL;
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   if (apps != NULL)
   {
 
@@ -1282,8 +1281,8 @@ int main(int argc, char** argv)
               PointerList_Peek(apps, i, (void**) &app);
               if (app->id == id)
               {
-                swi_status_t res = 0;
-                if (SWI_STATUS_OK != (res = PointerList_Remove(apps, i, (void**) &app)))
+                rc_ReturnCode_t res = 0;
+                if (RC_OK != (res = PointerList_Remove(apps, i, (void**) &app)))
                 {
                   send_result(fill_output_buf("Remove: PointerList_Remove failed, AwtStatus =%d", res));
                 }

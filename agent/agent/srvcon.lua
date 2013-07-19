@@ -21,7 +21,7 @@ local timer       = require "timer"
 local lock        = require "sched.lock"
 local ltn12       = require "ltn12"
 local checks      = require "checks"
-local errnum      = require "status".tonumber
+local errnum      = require "returncodes".tonumber
 require 'coxpcall'
 require 'socket.url'
 require 'print'
@@ -165,7 +165,7 @@ end
 --- Responds to request to connect to server sent through EMP messages.
 local function EMPConnectToServer(assetid, latency)
     local s, err = M.connect(latency)
-    if not s then return errnum 'SERVER_FAILURE', err else return 0 end
+    if not s then return errnum 'COMMUNICATION_ERROR', err else return 0 end
 end
 
 --- Sets up the module according to agent.config settings.

@@ -23,7 +23,7 @@ local srvcon   = require 'agent.srvcon'
 local upath    = require 'utils.path'
 local utable   = require 'utils.table'
 local m3da     = require 'm3da.bysant'
-local errnum   = require 'status'.tonumber
+local errnum   = require 'returncodes'.tonumber
 
 --------------------------------------------------------------------------------
 -- A policy features:
@@ -158,20 +158,20 @@ function handle.TableNew(asset, x)
     local path = upath.concat(asset, x.path)
     local table_id = get_table_id (path, x.storage, x.columns)
     local P = POLICIES[x.policy or 'default']
-    if not P then return errnum 'WRONG_PARAMS', "no such policy" end
+    if not P then return errnum 'BAD_PARAMETER', "no such policy" end
 
     -- check whether the table is created or reused from existing
     local t = TABLES[table_id]
     if t then
         -- table already exists, if it is a destination table, it is incorrect
         -- to retrieve it from a this method
-        if t.src_table then return errnum 'WRONG_PARAMS', "cannot create or retrieve "..table_id.." because it is a destination table." end
+        if t.src_table then return errnum 'BAD_PARAMETER', "cannot create or retrieve "..table_id.." because it is a destination table." end
         if x.purge then
             local ok, msg = M.close_table(nil, table_id)
-            if not ok then return errnum 'UNKNOWN_ERROR', msg end
+            if not ok then return errnum 'BAD_PARAMETER', msg end
             t = nil
         elseif not match_columns(t, x.columns) then
-            return errnum 'WRONG_PARAMS', "cannot reuse "..table_id..": columns does not match"
+            return errnum 'BAD_PARAMETER', "cannot reuse "..table_id..": columns does not match"
         end
     end
 
@@ -179,7 +179,7 @@ function handle.TableNew(asset, x)
     if not t then
         log('DATAMGR', 'DEBUG', "Create new table %s", table_id)
         local sdb, errmsg = stagedb(table_id, x.columns)
-        if not sdb then return errnum 'UNKNOWN_ERROR', errmsg end
+        if not sdb then return errnum 'UNSPECIFIED_ERROR', errmsg end
         t = { id=table_id, path=path, sdb=sdb }
     else log('DATAMGR', 'DEBUG', "Retrieving existing table %s", table_id) end
 
@@ -198,7 +198,7 @@ function handle.PAcknowledge(asset, x)
     local msg
     local policy = x.policy or 'now'
     local P = POLICIES[policy]
-    if not P then return errnum 'WRONG_PARAMS', "no such policy" end
+    if not P then return errnum 'BAD_PARAMETER', "no such policy" end
     log('DATAMGR', 'DEBUG', "Storing ACK for ticket #%d under policy %q",
         x.ticket, policy)
     local item = { ticket=x.ticket, status=x.status, message=x.message }
@@ -219,14 +219,14 @@ end
 function handle.PData(asset, x)
     asset=x.asset--Need to work with assetname
     local P = POLICIES[x.policy or 'default']
-    if not P then return errnum 'WRONG_PARAMS', "no such policy" end
+    if not P then return errnum 'BAD_PARAMETER', "no such policy" end
     --local lb = LOCKED_POLICIES[x.Queue]
     --if lb then lb :add(x, payload); return true end
 
     -- Extract flat records, register them in the appropriate table.
     local function put_in_records(path, record)
         local columns, with_subrecords = record_support (record)
-        if not columns then return errnum 'WRONG_PARAMS', with_subrecords end -- support error
+        if not columns then return errnum 'BAD_PARAMETER', with_subrecords end -- support error
         if not with_subrecords then
             record_insert(P, columns, path, record)
         else -- separate top-level record from sub-records
@@ -234,7 +234,7 @@ function handle.PData(asset, x)
             for k, v in pairs(record) do
                 if type(v)=='table' then
                     local r, err = put_in_records(path..'.'..k, v)
-                    if not r then return errnum 'UNKNOWN_ERROR', err end
+                    if not r then return errnum 'BAD_PARAMETER', err end
                 elseif string.find(k, '.', 1, true) then -- multi-segment key
                     local suffix, k2 = upath.split(k, -1)
                     put_in_records(path..'.'..suffix, { [k2] = v})
@@ -248,7 +248,7 @@ function handle.PData(asset, x)
     if type(record)=='table' then
         r, msg = put_in_records(upath.concat(asset, x.path), record)
     else -- extract last path segment, use it as a single key for the non-table value
-        if x.path == '' then return errnum 'WRONG_PARAMS', "no path and no key" end
+        if x.path == '' then return errnum 'BAD_PARAMETER', "no path and no key" end
         local path, key = upath.split(x.path, -1)
         r, msg = put_in_records(upath.concat(asset, path), {[key]=record})
     end
@@ -509,10 +509,10 @@ function handle.PFlush(asset, x)
             if name ~= 'never' then c = send_policy(P) or c end
         end
     elseif x.policy == 'never' then
-        return errnum 'WRONG_PARAMS', "Don't flush the 'never' policy"
+        return errnum 'BAD_PARAMETER', "Don't flush the 'never' policy"
     else
         local P = POLICIES[x.policy or 'default']
-        if not P then return errnum 'WRONG_PARAMS', "no such policy" end
+        if not P then return errnum 'BAD_PARAMETER', "no such policy" end
         c = send_policy(P)
     end
     if c then return 0, srvcon.connect() end
@@ -522,7 +522,7 @@ end
 function handle.ConsoNew(asset, x)
     local src_table_id = x.src
     local src = TABLES[src_table_id]
-    if not src then return errnum 'WRONG_PARAMS', "no such source table" end
+    if not src then return errnum 'BAD_PARAMETER', "no such source table" end
     local assetname = upath.split(src.path, 1)
 
     local dst_path = upath.concat(assetname, x.path)
@@ -531,10 +531,10 @@ function handle.ConsoNew(asset, x)
 
     local SP = POLICIES[x.send_policy or 'default']
     local CP = POLICIES[x.conso_policy or 'default']
-    if not SP then return errnum 'WRONG_PARAMS', "no such send policy" end
-    if not CP then return errnum 'WRONG_PARAMS', "no such consolidation policy" end
+    if not SP then return errnum 'BAD_PARAMETER', "no such send policy" end
+    if not CP then return errnum 'BAD_PARAMETER', "no such consolidation policy" end
     if src.send_policy ~= POLICIES.never and CP ~= POLICIES.never then
-        return errnum 'WRONG_PARAMS', "either send or consolidation policy for source must be 'never'"
+        return errnum 'BAD_PARAMETER', "either send or consolidation policy for source must be 'never'"
     end
 
     if dst then
@@ -547,7 +547,7 @@ function handle.ConsoNew(asset, x)
             if src.conso_table then return nil, src_table_id.." already has a consolidation table" end
             if not x.purge then return nil, "table already exists" end
             local ok, msg = M.close_table(nil, dst_table_id)
-            if not ok then return errnum 'UNKNOWN_ERROR', msg end
+            if not ok then return errnum 'UNSPECIFIED_ERROR', msg end
             dst = nil
         end
     end
@@ -555,7 +555,7 @@ function handle.ConsoNew(asset, x)
     if not dst then
         log('DATAMGR', 'DEBUG', "Creating consolidation table %s for %s", dst_table_id, src_table_id)
         local dst_sdb, errmsg = src.sdb :newconsolidation(dst_table_id, x.columns)
-        if not dst_sdb then return errnum 'UNKNOWN_ERROR', errmsg end
+        if not dst_sdb then return errnum 'UNSPECIFIED_ERROR', errmsg end
         dst = { id=dst_table_id, path=dst_path, sdb=dst_sdb, src_table=src }
     end
 
@@ -570,28 +570,28 @@ end
 
 function handle.ConsoTrigger(asset, x)
     local t = TABLES[x.table]
-    if not t then return errnum 'WRONG_PARAMS', "no such table" end
+    if not t then return errnum 'BAD_PARAMETER', "no such table" end
     if consolidate(t, x.dont_reset) then return 0, srvcon.connect() end
     return 0
 end
 
 function handle.SendTrigger(asset, x)
     local t = TABLES[x.table]
-    if not t then return errnum 'WRONG_PARAMS', "no such table" end
+    if not t then return errnum 'BAD_PARAMETER', "no such table" end
     if tbl2srv(t, x.dont_reset) then  return 0, srvcon.connect() end
     return 0
 end
 
 function handle.TableReset(asset, x)
     local t = TABLES[x.table]
-    if not t then return errnum 'WRONG_PARAMS', "no such table" end
+    if not t then return errnum 'BAD_PARAMETER', "no such table" end
     t.sdb:reset()
     return 0
 end
 
 function handle.TableSetMaxRows(asset, x)
     local t = TABLES[x.table]
-    if not t then return errnum 'WRONG_PARAMS', "no such table" end
+    if not t then return errnum 'BAD_PARAMETER', "no such table" end
     t.maxrows = x.maxrows
     return 0
 end

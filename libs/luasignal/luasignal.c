@@ -29,7 +29,6 @@
 #include <stdarg.h>
 #include <assert.h>
 #include "luasignal.h"
-#include "awt_std.h"
 
 #define MAGIC               0xf56a2fa6
 #define LUASIGNAL_ADDRESS   "127.0.0.1"
@@ -265,11 +264,11 @@ static void* reader_routine(void* c)
   return 0;
 }
 
-swi_status_t LUASIGNAL_Init(LuaSignalCtx** c, int port, const char* emitters[], HookCB hook)
+rc_ReturnCode_t LUASIGNAL_Init(LuaSignalCtx** c, int port, const char* emitters[], HookCB hook)
 {
   // This is an error to give a hook but no emitters to receive from !
   if (!c || (hook && (!emitters || !emitters[0])))
-    return SWI_STATUS_WRONG_PARAMS;
+    return RC_BAD_PARAMETER;
 
   struct sockaddr_in serv_addr;
   socklen_t addrlen;
@@ -278,7 +277,7 @@ swi_status_t LUASIGNAL_Init(LuaSignalCtx** c, int port, const char* emitters[], 
 
   ctx = malloc(sizeof(*ctx));
   if (!ctx)
-    return SWI_STATUS_ALLOC_FAILED;
+    return RC_NO_MEMORY;
 
   ctx->magic = MAGIC;
   ctx->hook = hook;
@@ -289,7 +288,7 @@ swi_status_t LUASIGNAL_Init(LuaSignalCtx** c, int port, const char* emitters[], 
   if (ctx->sockfd < 0)
   {
     LUASIGNAL_Destroy(ctx);
-    return SWI_STATUS_RESOURCE_INITIALIZATION_FAILED;
+    return RC_UNSPECIFIED_ERROR;
   }
 
   // Configure the socket to connect to the Agent
@@ -302,7 +301,7 @@ swi_status_t LUASIGNAL_Init(LuaSignalCtx** c, int port, const char* emitters[], 
   if (connect(ctx->sockfd, (const struct sockaddr*) &serv_addr, addrlen) != 0)
   {
     LUASIGNAL_Destroy(ctx);
-    return SWI_STATUS_RESOURCE_INITIALIZATION_FAILED;
+    return RC_UNSPECIFIED_ERROR;
   }
 
   // Send the emitters names to receive signals from
@@ -311,7 +310,7 @@ swi_status_t LUASIGNAL_Init(LuaSignalCtx** c, int port, const char* emitters[], 
   if (status != 0)
   {
     LUASIGNAL_Destroy(ctx);
-    return SWI_STATUS_IPC_WRITE_ERROR;
+    return RC_IO_ERROR;
   }
 
   // Only create a thread if there is a hook ! (the user cannot give a hook with no emitters to receive from)
@@ -321,45 +320,45 @@ swi_status_t LUASIGNAL_Init(LuaSignalCtx** c, int port, const char* emitters[], 
     if (pthread_create(&ctx->reader, 0, reader_routine, (void*)ctx) != 0)
     {
       LUASIGNAL_Destroy(ctx);
-      return SWI_STATUS_RESOURCE_INITIALIZATION_FAILED;
+      return RC_UNSPECIFIED_ERROR;
     }
   }
 
   *c = ctx;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 
-swi_status_t LUASIGNAL_SignalT(LuaSignalCtx* ctx, const char* emitter, const char* event, const char* args[])
+rc_ReturnCode_t LUASIGNAL_SignalT(LuaSignalCtx* ctx, const char* emitter, const char* event, const char* args[])
 {
   if (ctx->magic != MAGIC)
-    return SWI_STATUS_RESOURCE_NOT_INITIALIZED;
+    return RC_BAD_PARAMETER;
 
   int status;
   status = send_text_frame(ctx->sockfd, emitter, event, args);
   if (status != 0)
-    return SWI_STATUS_IPC_WRITE_ERROR;
+    return RC_IO_ERROR;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t LUASIGNAL_SignalB(LuaSignalCtx* ctx, const char* emitter, const char* event, const char* args[], const uint16_t args_length[])
+rc_ReturnCode_t LUASIGNAL_SignalB(LuaSignalCtx* ctx, const char* emitter, const char* event, const char* args[], const uint16_t args_length[])
 {
   if (ctx->magic != MAGIC)
-    return SWI_STATUS_RESOURCE_NOT_INITIALIZED;
+    return RC_BAD_PARAMETER;
 
   int status;
   status = send_binary_frame(ctx->sockfd, emitter, event, args, args_length);
   if (status != 0)
-    return SWI_STATUS_IPC_WRITE_ERROR;
+    return RC_IO_ERROR;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t LUASIGNAL_Destroy(LuaSignalCtx* ctx)
+rc_ReturnCode_t LUASIGNAL_Destroy(LuaSignalCtx* ctx)
 {
   if (!ctx || ctx->magic != MAGIC)
-    return SWI_STATUS_RESOURCE_NOT_INITIALIZED;
+    return RC_BAD_PARAMETER;
 
   ctx->magic = ~MAGIC;
 
@@ -370,5 +369,5 @@ swi_status_t LUASIGNAL_Destroy(LuaSignalCtx* ctx)
     pthread_join(ctx->reader, 0);
 
   free(ctx);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }

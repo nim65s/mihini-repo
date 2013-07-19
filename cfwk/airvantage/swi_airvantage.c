@@ -27,9 +27,9 @@
 #include "yajl_helpers.h"
 
 #define ASSET_MAGIC_ID 0x32aeb53a // For CHECK_CONTEXT
-#define CHECK_ASSET(asset)  if (!asset || asset->magic != ASSET_MAGIC_ID) return SWI_STATUS_CONTEXT_IS_CORRUPTED
+#define CHECK_ASSET(asset)  if (!asset || asset->magic != ASSET_MAGIC_ID) return RC_BAD_PARAMETER
 
-#define CHECK_RETURN(a) do { if ((res=(a)) != SWI_STATUS_OK){ return res;} } while(0)
+#define CHECK_RETURN(a) do { if ((res=(a)) != RC_OK){ return res;} } while(0)
 
 #define SWI_AV_TABLE_ENTRY_STRING 0
 #define SWI_AV_TABLE_ENTRY_INT 1
@@ -43,8 +43,8 @@ static char initialized = 0;
  */
 static swi_dset_Iterator_t* assetList;
 
-static swi_status_t empSendDataHdlr(uint32_t payloadsize, char* payload);
-static swi_status_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload);
+static rc_ReturnCode_t empSendDataHdlr(uint32_t payloadsize, char* payload);
+static rc_ReturnCode_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload);
 static EmpCommand empCmds[] = { EMP_SENDDATA, EMP_SOFTWAREUPDATE };
 static emp_command_hdl_t empHldrs[] = { empSendDataHdlr, empUpdateNotifHdlr };
 static pthread_mutex_t assets_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -83,9 +83,9 @@ struct swi_av_Table
   } row;
 };
 
-static swi_status_t send_asset_registration(swi_av_Asset_t *asset)
+static rc_ReturnCode_t send_asset_registration(swi_av_Asset_t *asset)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload = NULL, *respPayload = NULL;
   size_t payloadLen;
   uint32_t respPayloadLen = 0;
@@ -108,26 +108,26 @@ static swi_status_t send_asset_registration(swi_av_Asset_t *asset)
 static void empReregisterServices()
 {
   swi_av_Asset_t *asset;
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
-  while (swi_dset_Next(assetList) != SWI_STATUS_DA_NOT_FOUND)
+  while (swi_dset_Next(assetList) != RC_NOT_FOUND)
   {
     asset = (swi_av_Asset_t *)(intptr_t)swi_dset_ToInteger(assetList);
     res = send_asset_registration(asset);
-    if (res != SWI_STATUS_OK)
+    if (res != RC_OK)
       SWI_LOG("AV", WARNING, "Failed to register back asset %s, res = %d\n", asset->assetId, res);
   }
   swi_dset_Rewind(assetList);
 }
 
-swi_status_t swi_av_Init()
+rc_ReturnCode_t swi_av_Init()
 {
   if (initialized)
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   //init emp parser, registering 2 emp command handlers
-  swi_status_t res = emp_parser_init(2, empCmds, empHldrs, empReregisterServices);
-  if (res != SWI_STATUS_OK)
+  rc_ReturnCode_t res = emp_parser_init(2, empCmds, empHldrs, empReregisterServices);
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "error while init emp lib, res=%d\n", res);
     return res;
@@ -135,7 +135,7 @@ swi_status_t swi_av_Init()
 
   //create internal data
   res = swi_dset_Create(&assetList);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "error while creating, res=%d\n", res);
     swi_av_Destroy();
@@ -143,17 +143,17 @@ swi_status_t swi_av_Init()
   }
   initialized = 1;
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_Destroy()
+rc_ReturnCode_t swi_av_Destroy()
 {
   if (!initialized)
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   //destroy emp parser, un-registerering the 2 EMP command callbacks
-  swi_status_t res = emp_parser_destroy(2, empCmds, empReregisterServices);
-  if (res != SWI_STATUS_OK)
+  rc_ReturnCode_t res = emp_parser_destroy(2, empCmds, empReregisterServices);
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "error while destroying emp lib, res=%d\n", res);
     return res;
@@ -164,19 +164,19 @@ swi_status_t swi_av_Destroy()
   pthread_mutex_lock(&assets_lock);
   res = swi_dset_Destroy(assetList);
   pthread_mutex_unlock(&assets_lock);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "error while destroying dset, res=%d\n", res);
     return res;
   }
 
   initialized = 0;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_ConnectToServer(unsigned int latency)
+rc_ReturnCode_t swi_av_ConnectToServer(unsigned int latency)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char* payload, *respPayload = NULL;
   size_t payloadLen;
   uint32_t respPayloadLen = 0;
@@ -184,7 +184,7 @@ swi_status_t swi_av_ConnectToServer(unsigned int latency)
 
   SWI_LOG("AV", DEBUG, "%s: latency=%u\n", __FUNCTION__, latency);
   if (latency == SWI_AV_CX_SYNC)
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   YAJL_GEN_ALLOC(gen);
 
@@ -195,7 +195,7 @@ swi_status_t swi_av_ConnectToServer(unsigned int latency)
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (SWI_STATUS_OK != res)
+  if (RC_OK != res)
   {
     SWI_LOG("AV", ERROR, "%s: failed to send EMP cmd, res = %d\n", __FUNCTION__, res);
     if (respPayload)
@@ -206,19 +206,19 @@ swi_status_t swi_av_ConnectToServer(unsigned int latency)
     return res;
   }
   free(respPayload);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_TriggerPolicy(const char* policyPtr)
+rc_ReturnCode_t swi_av_TriggerPolicy(const char* policyPtr)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char* payload, *respPayload = NULL;
   size_t payloadLen;
   uint32_t respPayloadLen = 0;
   yajl_gen gen;
 
   if (policyPtr == NULL )
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   YAJL_GEN_ALLOC(gen);
 
@@ -235,7 +235,7 @@ swi_status_t swi_av_TriggerPolicy(const char* policyPtr)
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (SWI_STATUS_OK != res)
+  if (RC_OK != res)
   {
     SWI_LOG("AV", ERROR, "%s: failed to send EMP cmd, res = %d\n", __FUNCTION__, res);
     if (respPayload)
@@ -246,18 +246,18 @@ swi_status_t swi_av_TriggerPolicy(const char* policyPtr)
     return res;
   }
   free(respPayload);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_asset_Create(swi_av_Asset_t** asset, const char* assetIdPtr)
+rc_ReturnCode_t swi_av_asset_Create(swi_av_Asset_t** asset, const char* assetIdPtr)
 {
   swi_av_Asset_t* a = NULL;
   if (NULL == assetIdPtr || 0 == strlen(assetIdPtr) || NULL == asset)
-    return SWI_STATUS_WRONG_PARAMS;
+    return RC_BAD_PARAMETER;
 
   a = malloc(sizeof(*a) + strlen(assetIdPtr) + 1);
   if (NULL == a)
-    return SWI_STATUS_ALLOC_FAILED;
+    return RC_NO_MEMORY;
   a->assetId = (char*) (a + 1); //assetId space starts right after the struct space
   strcpy(a->assetId, assetIdPtr);
 
@@ -265,20 +265,20 @@ swi_status_t swi_av_asset_Create(swi_av_Asset_t** asset, const char* assetIdPtr)
   a->magic = ASSET_MAGIC_ID;
 
   *asset = a;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_asset_Start(swi_av_Asset_t* asset)
+rc_ReturnCode_t swi_av_asset_Start(swi_av_Asset_t* asset)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   CHECK_ASSET(asset);
 
   if (asset->started)
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   res = send_asset_registration(asset);
-  if (SWI_STATUS_OK != res)
+  if (RC_OK != res)
   {
     SWI_LOG("AV", ERROR, "%s: failed to register, res = %d\n", __FUNCTION__, res);
     return res;
@@ -289,7 +289,7 @@ swi_status_t swi_av_asset_Start(swi_av_Asset_t* asset)
   //once the asset is started/registered, it is ready to received update/dataWriting.
   //if register cmd has succeeded, RA ensure assetId can't be repeated, so it's ok to add it to dset
   res = swi_dset_PushInteger(assetList, asset->assetId, strlen(asset->assetId), (uintptr_t) asset);
-  if (SWI_STATUS_OK != res)
+  if (RC_OK != res)
   {
     SWI_LOG("AV", ERROR, "%s: failed to add asset to list, res = %d\n", __FUNCTION__, res);
   }
@@ -297,18 +297,18 @@ swi_status_t swi_av_asset_Start(swi_av_Asset_t* asset)
   return res;
 }
 
-swi_status_t swi_av_asset_Destroy(swi_av_Asset_t* asset)
+rc_ReturnCode_t swi_av_asset_Destroy(swi_av_Asset_t* asset)
 {
   CHECK_ASSET(asset);
   swi_dset_Element_t* elt = NULL;
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char* payload, *respPayload = NULL;
   size_t payloadLen;
   uint32_t respPayloadLen = 0;
   yajl_gen gen;
 
   if (!asset->started)
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   YAJL_GEN_ALLOC(gen);
 
@@ -319,7 +319,7 @@ swi_status_t swi_av_asset_Destroy(swi_av_Asset_t* asset)
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (SWI_STATUS_OK != res)
+  if (RC_OK != res)
   {
     SWI_LOG("AV", ERROR, "%s: failed to unregister, res = %d\n", __FUNCTION__, res);
     return res;
@@ -351,7 +351,7 @@ typedef enum PDataType
  * parentPath and varName will be allocated by this fct, need to be freed by caller.
  * using example "toto.titi.tutu", parentPath is "toto.titi", varName is "tutu"
  */
-swi_status_t get_path_element(int first, const char* pathPtr, char** remainingPath, char** varName)
+rc_ReturnCode_t get_path_element(int first, const char* pathPtr, char** remainingPath, char** varName)
 {
   int pathLeftPartSize = 0;
   const char* pathLeftPartTmp = NULL; //points chars in pathPtr
@@ -362,7 +362,7 @@ swi_status_t get_path_element(int first, const char* pathPtr, char** remainingPa
   SWI_LOG("AV", DEBUG, "%s: %s\n", __FUNCTION__, pathPtr);
   //forbids starting '.', trailing '.' or ".." sequence
   if (pathPtr[0] == '.' || pathPtr[strlen(pathPtr) - 1] == '.' || strstr(pathPtr, ".."))
-    return SWI_STATUS_INVALID_PATH;
+    return RC_BAD_PARAMETER;
 
   if (first)
     pathRightPartTmp = strchr(pathPtr, '.'); //first occurrence of '.'
@@ -399,13 +399,13 @@ swi_status_t get_path_element(int first, const char* pathPtr, char** remainingPa
 
   pathLeftPart = malloc(pathLeftPartSize);
   if (NULL == pathLeftPart)
-    return SWI_STATUS_ALLOC_FAILED;
+    return RC_NO_MEMORY;
   //bzero(pathLeftPart, pathLeftPartSize);
   pathRightPart = malloc(pathRightPartSize);
   if (NULL == pathRightPart)
   {
     free(pathLeftPart);
-    return SWI_STATUS_ALLOC_FAILED;
+    return RC_NO_MEMORY;
   }
   //bzero(pathRightPart, pathRightPartSize);
   strncpy(pathLeftPart, pathLeftPartTmp, pathLeftPartSize - 1);
@@ -428,16 +428,16 @@ swi_status_t get_path_element(int first, const char* pathPtr, char** remainingPa
     SWI_LOG("AV", DEBUG, "%s: remainingPath=%s, varName=%s\n", __FUNCTION__, *remainingPath, *varName);
   }
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 /*
  * internal function to push simple data
  */
-static swi_status_t swi_av_asset_Push(swi_av_Asset_t* asset, const char *pathPtr, const char* policyPtr,
+static rc_ReturnCode_t swi_av_asset_Push(swi_av_Asset_t* asset, const char *pathPtr, const char* policyPtr,
     uint32_t timestamp, PDataType_t dataType, void* valuePtr)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   yajl_gen_status yres = 0;
   char *payload = NULL, *respPayload = NULL, *globalPath = NULL, *varName = NULL;
   size_t payloadLen;
@@ -446,16 +446,16 @@ static swi_status_t swi_av_asset_Push(swi_av_Asset_t* asset, const char *pathPtr
 
   CHECK_ASSET(asset);
   if (NULL == pathPtr || NULL == pathPtr || 0 == strlen(pathPtr))
-    return SWI_STATUS_WRONG_PARAMS;
+    return RC_BAD_PARAMETER;
 
   YAJL_GEN_ALLOC(gen);
 
   //splitting path in parentPath/variableName
   res = get_path_element(0, pathPtr, &globalPath, &varName);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "%s: Failed to get path element, res %d\n", __FUNCTION__, res);
-    return SWI_STATUS_INVALID_PATH;
+    return RC_BAD_PARAMETER;
   }
 
   SWI_LOG("AV", DEBUG, "%s: globalPath=%s, varName=%s\n", __FUNCTION__, globalPath, varName);
@@ -482,7 +482,7 @@ static swi_status_t swi_av_asset_Push(swi_av_Asset_t* asset, const char *pathPtr
       if (((time_t) -1) == time(&t))
       {
         SWI_LOG("AV", ERROR, "%s: time() failed: %s\n", __FUNCTION__, strerror(errno));
-        res = SWI_STATUS_OPERATION_FAILED;
+        res = RC_UNSPECIFIED_ERROR;
       }
       YAJL_GEN_INTEGER(t, "timestamp");
     }
@@ -511,14 +511,14 @@ static swi_status_t swi_av_asset_Push(swi_av_Asset_t* asset, const char *pathPtr
 
     default:
       SWI_LOG("AV", ERROR, "%s: internal error, invalid type\n", __FUNCTION__);
-      res = SWI_STATUS_UNKNOWN_ERROR;
+      res = RC_UNSPECIFIED_ERROR;
       break;
   }
 
   if (yres != yajl_gen_status_ok)
   {
     SWI_LOG("AV", ERROR, "%s: valuePtr serialization failed, res %d\n", __FUNCTION__, yres);
-    return SWI_STATUS_OBJECT_CREATION_FAILED;
+    return RC_BAD_FORMAT;
   }
   yajl_gen_map_close(gen); // close data map
   yajl_gen_map_close(gen); // close eclosing map
@@ -529,7 +529,7 @@ static swi_status_t swi_av_asset_Push(swi_av_Asset_t* asset, const char *pathPtr
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (SWI_STATUS_OK != res)
+  if (RC_OK != res)
   {
     SWI_LOG("AV", ERROR, "%s: failed to send EMP_PFLUSH cmd, res = %d\n", __FUNCTION__, res);
     if (NULL != respPayload)
@@ -545,34 +545,34 @@ static swi_status_t swi_av_asset_Push(swi_av_Asset_t* asset, const char *pathPtr
   free(varName);
   free(respPayload);
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_asset_PushString(swi_av_Asset_t* asset, const char *pathPtr, const char* policyPtr,
+rc_ReturnCode_t swi_av_asset_PushString(swi_av_Asset_t* asset, const char *pathPtr, const char* policyPtr,
     uint32_t timestamp, const char* valuePtr)
 {
   if (NULL == valuePtr)
-    return SWI_STATUS_WRONG_PARAMS;
+    return RC_BAD_PARAMETER;
   return swi_av_asset_Push(asset, pathPtr, policyPtr, timestamp, PData_String, (void *) valuePtr);
 }
 
-swi_status_t swi_av_asset_PushInteger(swi_av_Asset_t* asset, const char *pathPtr, const char* policyPtr,
+rc_ReturnCode_t swi_av_asset_PushInteger(swi_av_Asset_t* asset, const char *pathPtr, const char* policyPtr,
     uint32_t timestamp, int64_t value)
 {
   return swi_av_asset_Push(asset, pathPtr, policyPtr, timestamp, PData_Int, &value);
 }
 
-swi_status_t swi_av_asset_PushFloat(swi_av_Asset_t* asset, const char *pathPtr, const char* policyPtr,
+rc_ReturnCode_t swi_av_asset_PushFloat(swi_av_Asset_t* asset, const char *pathPtr, const char* policyPtr,
     uint32_t timestamp, double value)
 {
   return swi_av_asset_Push(asset, pathPtr, policyPtr, timestamp, PData_Float, &value);
 }
 
-swi_status_t swi_av_table_Create(swi_av_Asset_t* asset, swi_av_Table_t** table, const char* pathPtr, size_t numColumns,
+rc_ReturnCode_t swi_av_table_Create(swi_av_Asset_t* asset, swi_av_Table_t** table, const char* pathPtr, size_t numColumns,
     const char** columnNamesPtr, const char* policyPtr, swi_av_Table_Storage_t persisted, int purge)
 {
   int i;
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload = NULL, *respPayload = NULL;
   const char *storage;
   size_t payloadLen;
@@ -596,7 +596,7 @@ swi_status_t swi_av_table_Create(swi_av_Asset_t* asset, swi_av_Table_t** table, 
       storage = "flash";
       break;
     default:
-      return SWI_STATUS_WRONG_PARAMS;
+      return RC_BAD_PARAMETER;
   }
   YAJL_GEN_STRING(storage, "storage value");
 
@@ -623,7 +623,7 @@ swi_status_t swi_av_table_Create(swi_av_Asset_t* asset, swi_av_Table_t** table, 
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "%s: EMP command failed, res %d\n", __FUNCTION__, res);
     free(respPayload);
@@ -637,7 +637,7 @@ swi_status_t swi_av_table_Create(swi_av_Asset_t* asset, swi_av_Table_t** table, 
     SWI_LOG("AV", ERROR, "%s: Invalid payload received from RA, expected array got type=%u\n",
         __FUNCTION__, yval->type);
     free(respPayload);
-    return SWI_STATUS_INVALID_OBJECT_TYPE;
+    return RC_BAD_FORMAT;
   }
 
   *table = malloc(sizeof(swi_av_Table_t));
@@ -652,13 +652,13 @@ swi_status_t swi_av_table_Create(swi_av_Asset_t* asset, swi_av_Table_t** table, 
   free(payload);
   free(respPayload);
   yajl_tree_free(yval);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_table_Destroy(swi_av_Table_t* table)
+rc_ReturnCode_t swi_av_table_Destroy(swi_av_Table_t* table)
 {
   int i;
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload = NULL, *respPayload = NULL;
   size_t payloadLen;
   uint32_t respPayloadLen = 0;
@@ -679,7 +679,7 @@ swi_status_t swi_av_table_Destroy(swi_av_Table_t* table)
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "%s: EMP command failed, res %d\n", __FUNCTION__, res);
     free(respPayload);
@@ -693,40 +693,40 @@ swi_status_t swi_av_table_Destroy(swi_av_Table_t* table)
   free(table->row.data);
   free(table);
   free(respPayload);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_table_PushFloat(swi_av_Table_t* table, double value)
+rc_ReturnCode_t swi_av_table_PushFloat(swi_av_Table_t* table, double value)
 {
   if (table->row.len >= table->columnSize)
-    return SWI_STATUS_VALUE_OUT_OF_BOUND;
+    return RC_OUT_OF_RANGE;
   table->row.data[table->row.len].type = SWI_AV_TABLE_ENTRY_DOUBLE;
   table->row.data[table->row.len++].u.d = value;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_table_PushInteger(swi_av_Table_t* table, int value)
+rc_ReturnCode_t swi_av_table_PushInteger(swi_av_Table_t* table, int value)
 {
   if (table->row.len >= table->columnSize)
-    return SWI_STATUS_VALUE_OUT_OF_BOUND;
+    return RC_OUT_OF_RANGE;
   table->row.data[table->row.len].type = SWI_AV_TABLE_ENTRY_INT;
   table->row.data[table->row.len++].u.i = value;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_table_PushString(swi_av_Table_t* table, const char* value)
+rc_ReturnCode_t swi_av_table_PushString(swi_av_Table_t* table, const char* value)
 {
   if (table->row.len >= table->columnSize)
-    return SWI_STATUS_VALUE_OUT_OF_BOUND;
+    return RC_OUT_OF_RANGE;
   table->row.data[table->row.len].type = SWI_AV_TABLE_ENTRY_STRING;
   table->row.data[table->row.len++].u.string = strdup(value);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_table_PushRow(swi_av_Table_t* table)
+rc_ReturnCode_t swi_av_table_PushRow(swi_av_Table_t* table)
 {
   int i;
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload = NULL, *respPayload = NULL;
   size_t payloadLen;
   uint32_t respPayloadLen = 0;
@@ -770,7 +770,7 @@ swi_status_t swi_av_table_PushRow(swi_av_Table_t* table)
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "%s: EMP command failed, res %d\n", __FUNCTION__, res);
     free(respPayload);
@@ -782,20 +782,20 @@ swi_status_t swi_av_table_PushRow(swi_av_Table_t* table)
   bzero(table->row.data, table->row.len * sizeof(struct swi_av_table_entry));
   table->row.len = 0;
   free(respPayload);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_RegisterDataWrite(swi_av_Asset_t *asset, swi_av_DataWriteCB cb, void * userDataPtr)
+rc_ReturnCode_t swi_av_RegisterDataWrite(swi_av_Asset_t *asset, swi_av_DataWriteCB cb, void * userDataPtr)
 {
   CHECK_ASSET(asset);
   asset->dwCb = cb;
   asset->dwCbUd = userDataPtr;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_Acknowledge(int ackId, int status, const char* errMsgPtr, const char* policyPtr, int persisted)
+rc_ReturnCode_t swi_av_Acknowledge(int ackId, int status, const char* errMsgPtr, const char* policyPtr, int persisted)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload = NULL, *respPayload = NULL;
   size_t payloadLen;
   uint32_t respPayloadLen = 0;
@@ -828,27 +828,27 @@ swi_status_t swi_av_Acknowledge(int ackId, int status, const char* errMsgPtr, co
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("AV", ERROR, "%s: Acknowlegment failed, res %d\n", __FUNCTION__, res);
     free(respPayload);
     return res;
   }
   free(respPayload);
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_RegisterUpdateNotification(swi_av_Asset_t* asset, swi_av_updateNotificationCB cb, void *userDataPtr)
+rc_ReturnCode_t swi_av_RegisterUpdateNotification(swi_av_Asset_t* asset, swi_av_updateNotificationCB cb, void *userDataPtr)
 {
   CHECK_ASSET(asset);
   asset->updCb = cb;
   asset->updCbUd = userDataPtr;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_av_SendUpdateResult(swi_av_Asset_t* asset, const char* componentNamePtr, int updateResult)
+rc_ReturnCode_t swi_av_SendUpdateResult(swi_av_Asset_t* asset, const char* componentNamePtr, int updateResult)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   char *payload = NULL, *respPayload = NULL;
   size_t payloadLen;
   uint32_t respPayloadLen = 0;
@@ -878,14 +878,14 @@ swi_status_t swi_av_SendUpdateResult(swi_av_Asset_t* asset, const char* componen
   yajl_gen_clear(gen);
   yajl_gen_free(gen);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
 
     SWI_LOG("AV", ERROR, "%s:  Unable to send the result to the agent, res %d\n",
           __FUNCTION__, res);
     return res;
   }
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 /*
@@ -893,9 +893,9 @@ swi_status_t swi_av_SendUpdateResult(swi_av_Asset_t* asset, const char* componen
  * Input : vals, i, name, namelength
  * Ouput : SetOut
  */
-swi_status_t pushDSet(swi_dset_Iterator_t** setOut, yajl_val* vals, int i, const char* name, size_t namelength)
+rc_ReturnCode_t pushDSet(swi_dset_Iterator_t** setOut, yajl_val* vals, int i, const char* name, size_t namelength)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   switch (vals[i]->type)
   {
@@ -939,11 +939,11 @@ swi_status_t pushDSet(swi_dset_Iterator_t** setOut, yajl_val* vals, int i, const
  * Input : yajlValue
  * Output: dset object
  */
-swi_status_t process(yajl_val yajlValue, swi_dset_Iterator_t* setOut)
+rc_ReturnCode_t process(yajl_val yajlValue, swi_dset_Iterator_t* setOut)
 {
   SWI_LOG("AV", DEBUG, "%s\n", __FUNCTION__);
 
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   char* key = NULL;
   int length = yajlValue->type == yajl_t_object ? yajlValue->u.object.len : yajlValue->u.array.len;
   yajl_val* vals = yajlValue->type == yajl_t_object ? yajlValue->u.object.values : yajlValue->u.array.values;
@@ -958,7 +958,7 @@ swi_status_t process(yajl_val yajlValue, swi_dset_Iterator_t* setOut)
       int keyLength = snprintf(key, 0, "%d", i);
       key = malloc(keyLength + 1);
       if (NULL == key)
-        return SWI_STATUS_ALLOC_FAILED;
+        return RC_NO_MEMORY;
       snprintf(key, keyLength + 1, "%d", i);
 
       pushDSet(&setOut, vals, i, key, strlen(key));
@@ -968,21 +968,21 @@ swi_status_t process(yajl_val yajlValue, swi_dset_Iterator_t* setOut)
   return res;
 }
 
-swi_status_t processDataWriting(yajl_val body, swi_dset_Iterator_t* setOut)
+rc_ReturnCode_t processDataWriting(yajl_val body, swi_dset_Iterator_t* setOut)
 {
   SWI_LOG("AV", DEBUG, "%s\n", __FUNCTION__);
 
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   res = process(body, setOut);
 
   return res;
 }
 
-swi_status_t processResponse(yajl_val body)
+rc_ReturnCode_t processResponse(yajl_val body)
 {
   //todo improve
   SWI_LOG("AV", INFO, "Received response\n");
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 /*
@@ -990,11 +990,11 @@ swi_status_t processResponse(yajl_val body)
  *       : body   - is a variable which contains the contents of command, the command will be modified in M3DA style
  * output: setOut - dset object
  * */
-swi_status_t processCommand(yajl_val body, swi_dset_Iterator_t* setOut, char** path)
+rc_ReturnCode_t processCommand(yajl_val body, swi_dset_Iterator_t* setOut, char** path)
 {
   SWI_LOG("AV", DEBUG, "%s\n", __FUNCTION__);
 
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   yajl_val sub_body = NULL;
   const char* commandName = NULL;
 
@@ -1002,7 +1002,7 @@ swi_status_t processCommand(yajl_val body, swi_dset_Iterator_t* setOut, char** p
   {
     SWI_LOG("AV", ERROR, "%s: Invalid body class received from RA, expected object type, got type=%u\n",
         __FUNCTION__, body->type);
-    return res = SWI_STATUS_INVALID_OBJECT_TYPE;
+    return res = RC_BAD_FORMAT;
   }
 
   int i;
@@ -1060,7 +1060,7 @@ swi_status_t processCommand(yajl_val body, swi_dset_Iterator_t* setOut, char** p
         SWI_LOG("AV", ERROR,
             "%s: Invalid sub-body class received from RA, expected object or array type, got type=%u\n",
             __FUNCTION__, sub_body->type);
-        return res = SWI_STATUS_INVALID_OBJECT_TYPE;
+        return res = RC_BAD_FORMAT;
       }
       break;
     }
@@ -1075,7 +1075,7 @@ swi_status_t processCommand(yajl_val body, swi_dset_Iterator_t* setOut, char** p
  * Input  : yval
  * Output : body, body_class, path, ticket_id
  */
-swi_status_t readMessage(yajl_val* yval, yajl_val* body, char ** body_class, char ** path, int* ticket_id)
+rc_ReturnCode_t readMessage(yajl_val* yval, yajl_val* body, char ** body_class, char ** path, int* ticket_id)
 {
   SWI_LOG("AV", DEBUG, "%s...\n", __FUNCTION__);
 
@@ -1157,20 +1157,20 @@ swi_status_t readMessage(yajl_val* yval, yajl_val* body, char ** body_class, cha
   if (format_error || class == NULL || *path == NULL || *body == NULL || strcmp(class, "AWT-DA::Message"))
   {
     SWI_LOG("AV", ERROR, "%s: Invalid payload received from RA, object content invalid\n", __FUNCTION__);
-    return SWI_STATUS_INVALID_OBJECT_TYPE;
+    return RC_BAD_FORMAT;
   }
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 /*
  * This handler needs to free incoming data.
  * This handler is executed in a new thread!
  */
-swi_status_t empSendDataHdlr(uint32_t payloadsize, char* payload)
+rc_ReturnCode_t empSendDataHdlr(uint32_t payloadsize, char* payload)
 {
   SWI_LOG("AV", DEBUG, "%s\n", __FUNCTION__);
 
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   yajl_val yval = NULL, body = NULL;
   swi_dset_Iterator_t* user_set = NULL;
   swi_av_Asset_t* asset = NULL;
@@ -1189,12 +1189,12 @@ swi_status_t empSendDataHdlr(uint32_t payloadsize, char* payload)
   {
     SWI_LOG("AV", ERROR, "%s: Invalid payload received from RA, expected object type, got type=%u\n",
         __FUNCTION__, yval->type);
-    return res = SWI_STATUS_INVALID_OBJECT_TYPE;
+    return res = RC_BAD_FORMAT;
   }
 
   /*Get values in message*/
   res = readMessage(&yval, &body, &body_class, &path, &ticket_id);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
   {
     SWI_LOG("AV", DEBUG, "%s: readMessage failed %d\n", __FUNCTION__, res);
     return res;
@@ -1214,7 +1214,7 @@ swi_status_t empSendDataHdlr(uint32_t payloadsize, char* payload)
   if (asset->dwCb)
   {
     res = swi_dset_Create(&user_set);
-    if (res != SWI_STATUS_OK)
+    if (res != RC_OK)
     {
       SWI_LOG("AV", ERROR, "%s: can't create dset to forward parameters field to user callback\n", __FUNCTION__);
       return res;
@@ -1234,7 +1234,7 @@ swi_status_t empSendDataHdlr(uint32_t payloadsize, char* payload)
     else /*unsupported type!!*/
     {
       SWI_LOG("AV", ERROR, "%s: Invalid payload received from RA, object body class invalid\n", __FUNCTION__);
-      return res = SWI_STATUS_INVALID_OBJECT_TYPE;
+      return res = RC_BAD_FORMAT;
     }
 
     asset->dwCb(asset, remaining_path, user_set, ticket_id, asset->dwCbUd);
@@ -1250,7 +1250,7 @@ swi_status_t empSendDataHdlr(uint32_t payloadsize, char* payload)
  * This handler needs to free incoming data.
  * This handler is executed in a new thread!
  */
-swi_status_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload)
+rc_ReturnCode_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload)
 {
   SWI_LOG("AV", DEBUG, "%s\n", __FUNCTION__);
 
@@ -1258,7 +1258,7 @@ swi_status_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload)
   char* asset_id = NULL, *remaining_path = NULL;
   swi_av_Asset_t* asset = NULL;
   swi_dset_Iterator_t* parameters_set = NULL;
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   int64_t addr = 0;
   yajl_val yval;
   uint8_t condition;
@@ -1272,14 +1272,14 @@ swi_status_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload)
   {
     SWI_LOG("AV", ERROR, "%s: Invalid payload received from RA, expected array got type=%u\n",
         __FUNCTION__, yval->type);
-    return res = SWI_STATUS_INVALID_OBJECT_TYPE;
+    return res = RC_BAD_FORMAT;
   }
 
   if (yval->u.array.len < 3)
   {
     SWI_LOG("AV", ERROR, "%s: Invalid array received from RA, expected an array of at least 3 elements\n",
         __FUNCTION__);
-    return res = SWI_STATUS_INVALID_OBJECT_TYPE;
+    return res = RC_BAD_FORMAT;
   }
 
   condition = (yval->u.array.values[0]->type == yval->u.array.values[1]->type)
@@ -1288,7 +1288,7 @@ swi_status_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload)
   if (condition == 0)
   {
     SWI_LOG("AV", ERROR, "%s: Invalid array from RA, expected an array of strings\n", __FUNCTION__);
-    return res = SWI_STATUS_INVALID_OBJECT_TYPE;
+    return res = RC_BAD_FORMAT;
   }
   componentName = yval->u.array.values[0]->u.string;
   componentVersion = yval->u.array.values[1]->u.string;
@@ -1305,7 +1305,7 @@ swi_status_t empUpdateNotifHdlr(uint32_t payloadsize, char* payload)
   if (asset->updCb)
   {
     res = swi_dset_Create(&parameters_set);
-    if (res != SWI_STATUS_OK)
+    if (res != RC_OK)
     {
       SWI_LOG("AV", ERROR, "%s: can't create dset to forward parameters field to user callback\n", __FUNCTION__);
       return res;

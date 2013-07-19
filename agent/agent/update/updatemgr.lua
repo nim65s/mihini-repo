@@ -20,7 +20,7 @@ local pathutils = require"utils.path"
 local sched = require"sched"
 local timer = require"timer"
 local lfs = require"lfs"
-local errnum = require 'status'.tonumber
+local errnum = require 'returncodes'.tonumber
 local data = common.data
 local state = {} -- stepfinished to be given at init
 
@@ -175,7 +175,7 @@ local function EMPSoftwareUpdateResult(assetid, payload)
     local cmpname, updateresult = unpack(payload)
     if not updateresult then
         log("UPDATE","ERROR","Received SoftwareUpdateResult command with an incorrect payload, result ignored")
-        return errnum 'WRONG_PARAMS'
+        return errnum 'BAD_PARAMETER'
     end
 
     --check that the UpdateResult come from the current component being updated.
@@ -184,7 +184,7 @@ local function EMPSoftwareUpdateResult(assetid, payload)
     or data.currentupdate.manifest.components[data.currentupdate.index].result -- only first received result is used
     then
         log("UPDATE", "DETAIL",  "SoftwareUpdateResult for component[%s]: status [%d], no update in progress for that component, update result discarded", cmpname, updateresult);
-        return errnum 'WRONG_PARAMS'
+        return errnum 'BAD_PARAMETER'
     end
 
     log("UPDATE", "DETAIL", "SoftwareUpdateResult for component[%s]: resultcode [%d]", cmpname, updateresult)

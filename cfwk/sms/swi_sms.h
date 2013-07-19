@@ -23,7 +23,7 @@
 #define SWI_SMS_INCLUDE_GUARD
 
 
-#include "swi_status.h"
+#include "returncodes.h"
 
 
 
@@ -31,17 +31,17 @@
 * Initializes the module.
 * A call to init is mandatory to enable SMS library APIs.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_sms_Init();
+rc_ReturnCode_t swi_sms_Init();
 
 
 /**
 * Destroys the Sms library.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_sms_Destroy();
+rc_ReturnCode_t swi_sms_Destroy();
 
 
 /**
@@ -64,11 +64,11 @@ typedef enum swi_sms_Format{
 /**
 * Sends an SMS.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE when network status made the SMS sending fail
-* @return SWI_STATUS_UNSUPPORTED_FORMAT when selected SMS format is not supported.
+* @return RC_OK on success
+* @return RC_SERVICE_UNAVAILABLE when network status made the SMS sending fail
+* @return RC_BAD_FORMAT when selected SMS format is not supported.
 */
-swi_status_t swi_sms_Send
+rc_ReturnCode_t swi_sms_Send
 (
     const char *recipientPtr, ///< [IN] phone number to send the SMS to.
     const char* messagePtr,   ///< [IN] string containing the message
@@ -87,7 +87,7 @@ swi_status_t swi_sms_Send
 * @param messagePtr [IN] message content
 *
 */
-typedef swi_status_t (*swi_sms_ReceptionCB_t)
+typedef rc_ReturnCode_t (*swi_sms_ReceptionCB_t)
 (
     const char* senderPtr, ///<
     const char* messagePtr ///<
@@ -103,9 +103,9 @@ typedef void * swi_sms_regId_t;
 *
 * New SMS will be notified if the content (sender or message) of the SMS matches the given patterns.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_sms_Register
+rc_ReturnCode_t swi_sms_Register
 (
     swi_sms_ReceptionCB_t callback, ///< [IN] function to be called on sms reception matching both patterns.
     const char* senderPatternPtr,   ///< [IN] string, regex pattern that matches the sender address, NULL means "no filtering".
@@ -117,9 +117,9 @@ swi_status_t swi_sms_Register
 /**
 * Cancels a callback registration on SMS reception.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_sms_Unregister
+rc_ReturnCode_t swi_sms_Unregister
 (
     swi_sms_regId_t regId ///< [IN] identifier of the registration to cancel, the id returned by previous SMS_Register call.
 );

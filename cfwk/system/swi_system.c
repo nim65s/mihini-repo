@@ -22,23 +22,23 @@
 
 static uint8_t module_initialized = 0;
 
-swi_status_t swi_sys_Init()
+rc_ReturnCode_t swi_sys_Init()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   if (module_initialized)
-    return SWI_STATUS_OK;
+    return RC_OK;
 
   res = emp_parser_init(SWI_EMP_INIT_NO_CMDS);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   module_initialized = 1;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
-swi_status_t swi_sys_Destroy()
+rc_ReturnCode_t swi_sys_Destroy()
 {
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
 
   if (module_initialized)
   {
@@ -48,11 +48,11 @@ swi_status_t swi_sys_Destroy()
   return res;
 }
 
-swi_status_t swi_sys_Reboot(const char* reasonPtr)
+rc_ReturnCode_t swi_sys_Reboot(const char* reasonPtr)
 {
   char *payload = NULL;
   size_t payloadLen = 0;
-  swi_status_t res;
+  rc_ReturnCode_t res;
   yajl_gen gen;
 
   YAJL_GEN_ALLOC(gen);

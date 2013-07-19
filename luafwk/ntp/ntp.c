@@ -16,7 +16,7 @@
 #include <string.h>
 
 #include "ntp.h"
-//#include "awt_std.h"
+
 //#include "swi_log.h"
 
 /*

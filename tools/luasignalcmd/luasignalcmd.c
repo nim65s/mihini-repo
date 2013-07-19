@@ -10,7 +10,7 @@
  *******************************************************************************/
 #include "swi_log.h"
 #include "luasignal.h"
-#include "awt_std.h"
+#include <stdlib.h>
 
 #define LUASIGTRC 1
 
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
   //to use luaSignal API
   static LuaSignalCtx* luaSigCtx = NULL;
   const char* listen_emitters[] = { 0 };
-  swi_status_t res;
+  rc_ReturnCode_t res;
   if (argc < 3)
   {
     SWI_LOG("LUASIGTRC", ERROR, "Param errors: need at least 2 params: EMITTER, EVENT\n");
@@ -43,14 +43,14 @@ int main(int argc, char** argv)
   }
 
   res = LUASIGNAL_Init(&luaSigCtx, port, listen_emitters, NULL);
-  if (SWI_STATUS_OK != res)
+  if (RC_OK != res)
   {
     SWI_LOG("LUASIGTRC", ERROR, "LUASIGNAL_Init failed with error [%d], exiting\n", res);
     return 1;
   }
 
   res = LUASIGNAL_SignalT(luaSigCtx, argv[2], argv[3], (const char**)argv+4);
-  if (SWI_STATUS_OK != res){
+  if (RC_OK != res){
     SWI_LOG("LUASIGTRC", ERROR, "LUASIGNAL_SignalT failed with error [%d]\n", res);
   }
 

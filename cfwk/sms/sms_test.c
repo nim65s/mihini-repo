@@ -66,79 +66,79 @@ static void sms_handler(const char *sender, const char *message)
 
 static int test_sms_Init()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = swi_sms_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_sms_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_sms_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 static int test_sms_Destroy()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = swi_sms_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_sms_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_sms_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 static int test_sms_Register(swi_sms_ReceptionCB_t callback, const char* senderPatternPtr,
                  const char* messagePatternPtr, swi_sms_regId_t *regIdPtr)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = swi_sms_Register(callback, senderPatternPtr, messagePatternPtr, regIdPtr);
 
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   exec_lua_code();
   while(waiting_for_sms)
     ;
   waiting_for_sms = 1;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 static int test_sms_Register_failure()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   swi_sms_regId_t regId;
 
   res = swi_sms_Register((swi_sms_ReceptionCB_t)sms_handler, NULL, NULL, NULL);
-  if (res != SWI_STATUS_WRONG_PARAMS)
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_sms_Register(NULL, NULL, NULL, &regId);
-  if (res != SWI_STATUS_WRONG_PARAMS)
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_sms_Register(NULL, NULL, NULL, NULL);
-  if (res != SWI_STATUS_WRONG_PARAMS)
+  if (res != RC_BAD_PARAMETER)
     return res;
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 static int test_sms_Send(const char *recipientPtr, const char* messagePtr, swi_sms_Format_t format)
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = swi_sms_Send(recipientPtr, messagePtr, format);
   return res;
@@ -151,20 +151,20 @@ static int test_sms_Unregister(swi_sms_regId_t regId)
 
 static int test_sms_Unregister_failure()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = test_sms_Unregister((swi_sms_regId_t)0);
-  if (res != SWI_STATUS_WRONG_PARAMS)
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = test_sms_Unregister((swi_sms_regId_t)-1);
-   if (res != SWI_STATUS_WRONG_PARAMS)
+   if (res != RC_BAD_PARAMETER)
     return res;
 
   res = test_sms_Unregister((swi_sms_regId_t)-2);
-   if (res != SWI_STATUS_WRONG_PARAMS)
+   if (res != RC_BAD_PARAMETER)
      return res;
-   return SWI_STATUS_OK;
+   return RC_OK;
 }
 
 int main(void)

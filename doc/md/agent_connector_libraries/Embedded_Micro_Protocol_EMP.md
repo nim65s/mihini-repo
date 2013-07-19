@@ -66,7 +66,7 @@ Frame section                    Size and description
 status                           2 bytes: if status == 0 the command went OK, \ 
                                           if status != 0 an error  occurred. \
                                  The status value is to be interpreted as a \ 
-                                 [swi_status_t](../c/swi__status_8h.html) type.
+                                 [rc_ReturnCode_t](../c/returncodes_8h.html) type.
 
 payload                          payload '`payloadsize-2`' bytes of JSON
 ------------------------------------------------------------------------------------

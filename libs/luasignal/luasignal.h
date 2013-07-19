@@ -19,7 +19,7 @@
 #define SIGNAL_H_
 
 #include <stdint.h>
-#include "swi_status.h"
+#include "returncodes.h"
 
 /*
  * Usage notes:
@@ -36,9 +36,9 @@
 typedef void (*HookCB)(const char* emitter, const char* event, const char* args[], const uint16_t args_length[]);
 typedef struct LuaSignalCtx LuaSignalCtx;
 
-swi_status_t LUASIGNAL_Init(LuaSignalCtx** ctx, int port, const char* emitters[], HookCB hook);
-swi_status_t LUASIGNAL_SignalT(LuaSignalCtx* ctx, const char* emitter, const char* event, const char* args[]);
-swi_status_t LUASIGNAL_SignalB(LuaSignalCtx* ctx, const char* emitter, const char* event, const char* args[], const uint16_t args_length[]);
-swi_status_t LUASIGNAL_Destroy(LuaSignalCtx* ctx);
+rc_ReturnCode_t LUASIGNAL_Init(LuaSignalCtx** ctx, int port, const char* emitters[], HookCB hook);
+rc_ReturnCode_t LUASIGNAL_SignalT(LuaSignalCtx* ctx, const char* emitter, const char* event, const char* args[]);
+rc_ReturnCode_t LUASIGNAL_SignalB(LuaSignalCtx* ctx, const char* emitter, const char* event, const char* args[], const uint16_t args_length[]);
+rc_ReturnCode_t LUASIGNAL_Destroy(LuaSignalCtx* ctx);
 
 #endif /* SIGNAL_H_ */

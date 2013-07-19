@@ -19,6 +19,7 @@
 
 #include "modbus_types.h"
 #include "serial_serializer.h"
+#include "serial_types.h"
 
 typedef struct ModbusRequest_ {
     uint8_t slaveId;               // slave id
@@ -57,24 +58,24 @@ typedef struct ModbusSpecifics_ {
 } ModbusSpecifics;
 
 /* init,release serializer */
-swi_status_t MODBUS_SER_InitSerializer(Serializer* pSerializer, /*ModbusRequestMode*/void* mode);
+SerialStatus MODBUS_SER_InitSerializer(Serializer* pSerializer, /*ModbusRequestMode*/void* mode);
 void MODBUS_SER_ReleaseSerializer(Serializer* pSerializer);
 
 /* create request */
-swi_status_t MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/void* pRequestData);
+SerialStatus MODBUS_SER_CreateRequest(Serializer* pSerializer, /*ModbusRequest*/void* pRequestData);
 /* a separate function is needed for custom requests in order to be able to create custom request with
  * known function codes.
  * Fields used in ModbusRequest are slaveId, function, byteCount and value.pValues */
-swi_status_t MODBUS_SER_CreateCustomRequest(Serializer* pSerializer, /*ModbusRequest*/void* pRequestData);
+SerialStatus MODBUS_SER_CreateCustomRequest(Serializer* pSerializer, /*ModbusRequest*/void* pRequestData);
 
 /* parse */
 uint8_t MODBUS_SER_IsResponseComplete(Serializer* pSerializer);
-swi_status_t MODBUS_SER_CheckResponse(Serializer* pSerializer);
-swi_status_t MODBUS_SER_AnalyzeResponse(Serializer* pSerializer, swi_status_t status);
+SerialStatus MODBUS_SER_CheckResponse(Serializer* pSerializer);
+SerialStatus MODBUS_SER_AnalyzeResponse(Serializer* pSerializer, SerialStatus status);
 
 /* utils */
-swi_status_t MODBUS_SER_GetRequestPDU(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength);
-swi_status_t MODBUS_SER_GetResponsePDU(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength);
+SerialStatus MODBUS_SER_GetRequestPDU(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength);
+SerialStatus MODBUS_SER_GetResponsePDU(Serializer* pSerializer, uint8_t** ppBuffer, uint16_t* pBufferLength);
 uint16_t MODBUS_SER_GetExpectedResponseLength(Serializer* pSerializer);
 const char* MODBUS_SER_GetExceptionString(ModbusExceptionCode exception);
 

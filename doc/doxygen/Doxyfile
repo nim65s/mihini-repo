@@ -596,24 +596,13 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  =  mainpage.txt                                \
-                          ../../libs/common/swi_status.h                    \
+                          ../../libs/common/returncodes.h                    \
                           ../../cfwk/racon/swi_dset.h        \
                           ../../cfwk/airvantage/swi_airvantage.h  \
                           ../../cfwk/update/swi_update.h      \
                           ../../cfwk/devicetree/swi_devicetree.h  \
                           ../../cfwk/sms/swi_sms.h         \
                           ../../cfwk/system/swi_system.h
-
-#                         ../../libs/c/AwtDaProtocol/common/libAwtDaProtocol.h \
-#                         ../../libs/c/AwtCom/common/libAwtCom_async.h \
-#                         ../../libs/c/AwtCom/linux/libAwtCom_sync.h \
-#                         ../../libs/c/AwtCom/common/libAwtCom.h \
-#                         ../../libs/c/AwtDaHL/common/libAwtDaHL.h \
-#                         ../../libs/c/AwtDaHL/linux/libAwtDaHL_sync.h \
-#                         ../../libs/c/AwtDaHL/common/libAwtDaHL_async.h \
-#                         ../../libs/c/AwtDaHL/common/libAwtDaHL_containers.h \
-#                         ../../libs/c/common/awt_async.h \
-#                         ../../libs/c/common/swi_trace.h
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is

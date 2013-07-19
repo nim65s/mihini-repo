@@ -36,7 +36,7 @@
 #define SWI_AIRVANTAGE_INCLUDE_GUARD
 
 #include <stdlib.h>
-#include "swi_status.h"
+#include "returncodes.h"
 #include "swi_dset.h"
 
 /**
@@ -57,17 +57,17 @@
 * Initializes the Airvantage library.
 * A call to swi_av_Init is mandatory to enable AirVantage library APIs.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return RC_OK on success
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
 */
-swi_status_t swi_av_Init();
+rc_ReturnCode_t swi_av_Init();
 
 /**
 * Destroys the Airvantage library.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_av_Destroy();
+rc_ReturnCode_t swi_av_Destroy();
 
 
 #define SWI_AV_CX_SYNC UINT_MAX ///< Value to be used to request synchronous connection to server using #swi_av_ConnectToServer
@@ -84,10 +84,10 @@ swi_status_t swi_av_Destroy();
 *  - valid values for latency are 0 to INT_MAX.
 *  - 0 value means the connection will be asynchronous, but will be done as soon as possible.
 *
-*  @return SWI_STATUS_OK on success
-*  @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+*  @return RC_OK on success
+*  @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
 */
-swi_status_t swi_av_ConnectToServer
+rc_ReturnCode_t swi_av_ConnectToServer
 (
     unsigned int latency ///< [IN] latency in seconds before initiating the connection to the server,
                          ///<  use SWI_AV_CX_SYNC to specify synchronous connection.
@@ -108,11 +108,11 @@ swi_status_t swi_av_ConnectToServer
 * For a description of how policies allow to manage data reporting from the assets to the server,
 * see Mihini Agent product documentation.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_UNKNOWN_COMMAND if the requested policy name is not found.
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return RC_OK on success
+* @return RC_BAD_PARAMETER if the requested policy name is not found.
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
 */
-swi_status_t swi_av_TriggerPolicy
+rc_ReturnCode_t swi_av_TriggerPolicy
 (
     const char* policyPtr ///< [IN] name of the policy queue to be flushed. Flush all policies if policy=='*';
                           ///<      only flush the default policy if policy is omitted.
@@ -136,12 +136,12 @@ typedef struct swi_av_Asset swi_av_Asset_t;
 *
 * See #swi_av_asset_Start to start the newly created instance.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
-* @return SWI_STATUS_WRONG_PARAMS if the supplied parameters are invalid
+* @return RC_OK on success
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
+* @return RC_BAD_PARAMETER if the supplied parameters are invalid
 *
 */
-swi_status_t swi_av_asset_Create
+rc_ReturnCode_t swi_av_asset_Create
 (
     swi_av_Asset_t** asset, ///< [OUT] pointer to hold the newly created asset.
                             ///<       The AirVantage library is responsible for allocating the resources of this asset.
@@ -160,10 +160,10 @@ swi_status_t swi_av_asset_Create
 * Starts a newly created asset.
 * Allows the asset instance to send and receive messages to/from the servers.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return RC_OK on success
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
 */
-swi_status_t swi_av_asset_Start
+rc_ReturnCode_t swi_av_asset_Start
 (
     swi_av_Asset_t* asset ///< [IN] the asset to start
 );
@@ -174,10 +174,10 @@ swi_status_t swi_av_asset_Start
 * Once this destructor method has been called, no more message can be sent
 * nor received by the instance and update for this asset will be automatically rejected.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_CONTEXT_IS_CORRUPTED if asset parameter is invalid
+* @return RC_OK on success
+* @return RC_BAD_FORMAT if asset parameter is invalid
 */
-swi_status_t swi_av_asset_Destroy
+rc_ReturnCode_t swi_av_asset_Destroy
 (
     swi_av_Asset_t* asset ///< [IN] the asset to stop
 );
@@ -213,10 +213,10 @@ typedef enum swi_av_timestamp{
 *
 * String parameters can be released by user once the call has returned.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return RC_OK on success
+* @return RC_NOT__AVAILABLE if the Agent cannot be accessed.
 */
-swi_status_t swi_av_asset_PushString
+rc_ReturnCode_t swi_av_asset_PushString
 (
     swi_av_Asset_t* asset, ///< [IN] the asset used to send the data
     const char *pathPtr,   ///< [IN] the datastore path under which data will be stored relative to the asset node,
@@ -240,10 +240,10 @@ swi_status_t swi_av_asset_PushString
 *
 * String parameters can be released by user once the call has returned.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return RC_OK on success
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
 */
-swi_status_t swi_av_asset_PushInteger
+rc_ReturnCode_t swi_av_asset_PushInteger
 (
     swi_av_Asset_t* asset, ///< [IN] the asset used to send the data
     const char *pathPtr,   ///< [IN] the datastore path under which data will be stored relative to the asset node,
@@ -266,10 +266,10 @@ swi_status_t swi_av_asset_PushInteger
 *
 * String parameters can be released by user once the call has returned.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
+* @return RC_OK on success
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
 */
-swi_status_t swi_av_asset_PushFloat
+rc_ReturnCode_t swi_av_asset_PushFloat
 (
     swi_av_Asset_t* asset, ///< [IN] the asset used to send the data
     const char *pathPtr,   ///< [IN] the datastore path under which data will be stored relative to the asset node,
@@ -311,11 +311,11 @@ typedef enum
 *
 * String parameters can be released by user once the call has returned.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
-* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the Agent)
+* @return RC_OK on success
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
+* @return RC_BAD_FORMAT if error occurred during the payload generation (iternally used to echange data with the Agent)
 */
-swi_status_t swi_av_table_Create
+rc_ReturnCode_t swi_av_table_Create
 (
     swi_av_Asset_t* asset,      ///< [IN] the asset used to send the data
     swi_av_Table_t** table,     ///< [OUT] pointer to hold the newly created table.
@@ -337,11 +337,11 @@ swi_status_t swi_av_table_Create
 * Destroys table instance, releasing associated resources.
 * Partial data not pushed yet to the agent will be lost.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
-* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the Agent)
+* @return RC_OK on success
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
+* @return RC_BAD_FORMAT if error occurred during the payload generation (iternally used to echange data with the Agent)
 */
-swi_status_t swi_av_table_Destroy
+rc_ReturnCode_t swi_av_table_Destroy
 (
     swi_av_Table_t* table ///< [IN] the table to destroy
 );
@@ -353,10 +353,10 @@ swi_status_t swi_av_table_Destroy
 * swi_av_table_Push* functions have be called in the correct order to match the table definition created in swi_av_table_Create.
 * Until a row is complete and sent to the Agent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_VALUE_OUT_OF_BOUND maximum len for the current row has been reached, the value cannot be pushed
+* @return RC_OK on success
+* @return RC_OUT_OF_RANGE maximum len for the current row has been reached, the value cannot be pushed
 */
-swi_status_t swi_av_table_PushFloat
+rc_ReturnCode_t swi_av_table_PushFloat
 (
     swi_av_Table_t* table, ///< [IN] the table where to push the value
     double value           ///< [IN] the float to push
@@ -370,10 +370,10 @@ swi_status_t swi_av_table_PushFloat
 * swi_av_table_Push* functions have be called in the correct order to match the table definition created in swi_av_table_Create.
 * Until a row is complete and sent to the Agent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_VALUE_OUT_OF_BOUND maximum len for the current row has been reached, the value cannot be pushed
+* @return RC_OK on success
+* @return RC_OUT_OF_RANGE maximum len for the current row has been reached, the value cannot be pushed
 */
-swi_status_t swi_av_table_PushInteger
+rc_ReturnCode_t swi_av_table_PushInteger
 (
     swi_av_Table_t* table, ///< [IN] the table where to push the value
     int value              ///< [IN] the integer to push
@@ -385,10 +385,10 @@ swi_status_t swi_av_table_PushInteger
 * swi_av_table_Push* functions have be called in the correct order to match the table definition created in swi_av_table_Create.
 * Until a row is complete and sent to the Agent by invoking swi_av_table_PushRow(), data is only pushed locally in the table database.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_VALUE_OUT_OF_BOUND maximum len for the current row has been reached, the value cannot be pushed
+* @return RC_OK on success
+* @return RC_OUT_OF_RANGE maximum len for the current row has been reached, the value cannot be pushed
 */
-swi_status_t swi_av_table_PushString
+rc_ReturnCode_t swi_av_table_PushString
 (
     swi_av_Table_t* table, ///< [IN] the table where to push the value
     const char* value      ///< [IN] the string to push
@@ -401,11 +401,11 @@ swi_status_t swi_av_table_PushString
 * Once the current row has been pushed to the Agent, it is totally freed in the database,
 * And the table is ready to received new pushed data using swi_av_table_Push*() functions.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_SERVICE_UNAVAILABLE if the Agent cannot be accessed.
-* @return SWI_STATUS_OBJECT_CREATION_FAILED if error occurred during the payload generation (iternally used to echange data with the Agent)
+* @return RC_OK on success
+* @return RC_NOT_AVAILABLE if the Agent cannot be accessed.
+* @return RC_BAD_FORMAT if error occurred during the payload generation (iternally used to echange data with the Agent)
 */
-swi_status_t swi_av_table_PushRow
+rc_ReturnCode_t swi_av_table_PushRow
 (
     swi_av_Table_t* table ///< [IN] the table where to push the value
 );
@@ -460,12 +460,12 @@ typedef void (*swi_av_DataWriteCB)
 * int my_datacallback(swi_av_Asset *asset, const char *path, swi_dset_Iterator* data, int ack_id, void *userData){
 *   if(! strncmp(path, "command.setvalue", strlen("command.setvalue")) ){
 *    int64_t cmd_value;
-*    assert(SWI_STATUS_OK == swi_dset_GetIntegerByName(data, "cmd_value", &cmd_value) );
+*    assert(RC_OK == swi_dset_GetIntegerByName(data, "cmd_value", &cmd_value) );
 *    setvalue(cmd_value);
 *   }
 *   else{ //unknown command
 *      printf("received data on path[%s]:\n", path);
-*      while(SWI_STATUS_DA_NOT_FOUND != swi_dset_Next(data) ){
+*      while(RC_NOT_FOUND != swi_dset_Next(data) ){
 *        printf("data name: [%s]\n", swi_dset_GetName(data));
 *        //...
 *      }
@@ -484,10 +484,10 @@ typedef void (*swi_av_DataWriteCB)
 * }
 * @endcode
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_CONTEXT_IS_CORRUPTED if provided asset param is invalid
+* @return RC_OK on success
+* @return RC_BAD_FORMAT if provided asset param is invalid
 */
-swi_status_t swi_av_RegisterDataWrite
+rc_ReturnCode_t swi_av_RegisterDataWrite
 (
     swi_av_Asset_t *asset, ///< [IN] the asset listening to incoming data.
     swi_av_DataWriteCB cb, ///< [IN] the callback function to register to receive the data.
@@ -500,10 +500,10 @@ swi_status_t swi_av_RegisterDataWrite
 * No automatic acknowledge will be done, so application that wants the server
 * to receive acknowledge needs to call this function.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_UNKNOWN_COMMAND if the requested policy name is not found.
+* @return RC_OK on success
+* @return RC_BAD_PARAMETER if the requested policy name is not found.
 */
-swi_status_t swi_av_Acknowledge
+rc_ReturnCode_t swi_av_Acknowledge
 (
     int ackId,             ///< [IN] the id to acknowledge, as given to the data reception callback.
     int status,            ///< [IN] status of the acknowledge: 0 means success, other values mean error
@@ -552,12 +552,11 @@ swi_status_t swi_av_Acknowledge
 *
 *
 *
-* @return SWI_STATUS_OK when the callback ran correctly (it doesn't necessarily means the update was successful, see #swi_av_SendUpdateResult),
+* @return RC_OK when the callback ran correctly (it doesn't necessarily means the update was successful, see #swi_av_SendUpdateResult),
 *                       any other return value will be interpreted as error.
-* @return SWI_STATUS_ASYNC when the application requests to delay the update result, this cancels the retry mechanism for this component.
 *
 */
-typedef swi_status_t (*swi_av_updateNotificationCB)
+typedef rc_ReturnCode_t (*swi_av_updateNotificationCB)
 (
     swi_av_Asset_t *asset,               ///<
     const char* componentNamePtr,        ///<
@@ -597,10 +596,10 @@ typedef swi_status_t (*swi_av_updateNotificationCB)
 *   request will be sent again, and the hook should report a success immediately.
 *
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_CONTEXT_IS_CORRUPTED if provided asset param is invalid
+* @return RC_OK on success
+* @return RC_BAD_FORMAT if provided asset param is invalid
 */
-swi_status_t swi_av_RegisterUpdateNotification
+rc_ReturnCode_t swi_av_RegisterUpdateNotification
 (
     swi_av_Asset_t* asset,           ///< [IN] the asset listening to update notification, can be a started or non-started asset.
     swi_av_updateNotificationCB cb,  ///< [IN] the callback function to register to receive asset update notification
@@ -612,10 +611,10 @@ swi_status_t swi_av_RegisterUpdateNotification
 /**
 * Sends the result of the software update request previously received by an asset.
 *
-* @return SWI_STATUS_OK on success
-* @return SWI_STATUS_WRONG_PARAMS when no update request is matching asset and component name, the update result is discarded.
+* @return RC_OK on success
+* @return RC_BAD_PARAMETER when no update request is matching asset and component name, the update result is discarded.
 */
-swi_status_t swi_av_SendUpdateResult
+rc_ReturnCode_t swi_av_SendUpdateResult
 (
     swi_av_Asset_t* asset,        ///< [IN] the asset that was targeted by the software update request.
     const char* componentNamePtr, ///< [IN] this must be the same value as the one that was given as argument to the swi_av_updateNotificationCB.
@@ -631,4 +630,3 @@ swi_status_t swi_av_SendUpdateResult
 /// @}
 
 #endif /* SWI_AIRVANTAGE_INCLUDE_GUARD */
-

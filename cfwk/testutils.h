@@ -11,24 +11,24 @@
 
 #include <unistd.h>
 #include "swi_log.h"
-#include "swi_status.h"
+#include "returncodes.h"
 
-#define INIT_TEST(name)                \
-  static const char *__testname = name;        \
+#define INIT_TEST(name)                         \
+  static const char *__testname = name;         \
   swi_log_setlevel(INFO, __testname, NULL)
 
-#define CHECK_TEST(call)            \
-do {                                    \
-  swi_status_t res;                \
-  res = call;                    \
-  while (res == SWI_STATUS_IPC_BROKEN) {        \
+#define CHECK_TEST(call)                        \
+do {                                            \
+  rc_ReturnCode_t res;                          \
+  res = call;                                   \
+  while (res == RC_CLOSED) {                    \
     res = call;                                 \
     sleep(2);                                   \
   }                                             \
-  SWI_LOG(__testname, (res == SWI_STATUS_OK) ? INFO : ERROR,  #call "...%s\n", (res == SWI_STATUS_OK) ? "OK" : "FAIL");  \
-  if (res != SWI_STATUS_OK)                                                                       \
-  {                                    \
-      SWI_LOG(__testname, ERROR, "Test failed with status code %d\n", res);                                              \
-      return 1;                                \
-  }                                                                                   \
+  SWI_LOG(__testname, (res == RC_OK) ? INFO : ERROR,  #call "...%s\n", (res == RC_OK) ? "OK" : "FAIL");         \
+  if (res != RC_OK)                                                                                             \
+  {                                                                                                             \
+      SWI_LOG(__testname, ERROR, "Test failed with status code %d (%s)\n", res, rc_ReturnCodeToString(res));     \
+      return 1;                                                                                                 \
+  }                                                                                                             \
 } while(0)

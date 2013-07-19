@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "awt_std.h"
+
 #include "swi_log.h"
 #include "ntp.h"
 

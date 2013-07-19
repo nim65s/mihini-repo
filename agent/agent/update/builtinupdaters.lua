@@ -37,7 +37,7 @@ local function dispatch( name, version, path, parameters)
 
     if not updatepath then
         log("UPDATE", "INFO", "Built-in update for package %s: Update path is not valid", tostring(name))
-        return errnum 'INVALID_UPDATE_PATH'
+        return errnum 'BAD_PARAMETER'
     end
     --dispatch the update
     if updatepath=="update" then
@@ -48,7 +48,7 @@ local function dispatch( name, version, path, parameters)
         res = appconinstall(name, version, path, parameters)
     else
         log("UPDATE", "INFO", "Built-in update for package %s: Sub path is not valid", tostring(name))
-        res = errnum 'INVALID_UPDATE_PATH'
+        res = errnum 'BAD_PARAMETER'
     end
 
     return res
@@ -62,12 +62,12 @@ function installscript(name, version, path, parameters)
     local scriptpath = path.."/install.lua"
     if not lfs.attributes(scriptpath) then
         log("UPDATE", "ERROR", "Built-in update: installscript for package %s: file install.lua does not exist", name)
-        return errnum 'MISSING_INSTALL_SCRIPT'
+        return errnum 'BAD_PARAMETER'
     end
     local f, err = loadfile(scriptpath)
     if not f then
         log("UPDATE", "ERROR", "Built-in update: installscript for package %s: Cannot load install.lua script, err=%s",name,  err or "nil")
-        return errnum 'CANNOT_LOAD_INSTALL_SCRIPT'
+        return errnum 'IO_ERROR'
     end
 
     --parameters given to the install to ease its work, add other parameters in the param table, so that API is kept.
@@ -76,7 +76,7 @@ function installscript(name, version, path, parameters)
     local res, err = copcall(f, runtimeparams)
     if not res then
         log("UPDATE", "ERROR", "Built-in update: installscript for package %s: script execution error, err=%s", name, err or "nil");
-        return errnum 'CANNOT_RUN_INSTALL_SCRIPT'
+        return errnum 'UNSPECIFIED_ERROR'
     end
 
     return errnum 'OK'
@@ -85,7 +85,7 @@ end
 function appconinstall(name, version, appdata, parameters)
     if not config.get('appcon.activate') then
         log("UPDATE", "ERROR", "Built-in update: ApplicationContainer updater cannot be run because ApplicationContainer is not activated!")
-        return errnum 'APPLICATION_CONTAINER_NOT_RUNNING' end
+        return errnum 'NOT_AVAILABLE' end
     local appcon = require"agent.appcon"
     --name = appcon.some.thing, let's remove "appcon" from name
     local _, appname = pathutils.split(name, 1)
@@ -98,7 +98,7 @@ function appconinstall(name, version, appdata, parameters)
         res, err = appcon.uninstall(appname)
     end
     log("UPDATE", "INFO", "Built-in update: ApplicationContainer updater result: res=%s, err=%s", tostring(res), tostring(err))
-    return errnum (res and 'OK' or 'UPDATER_ERROR')
+    return errnum (res and 'OK' or 'UNSPECIFIED_ERROR')
 end
 
 M.dispatch = dispatch

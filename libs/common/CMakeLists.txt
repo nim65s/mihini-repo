@@ -19,10 +19,11 @@ SET_TARGET_PROPERTIES(lib_pointerlist PROPERTIES
     COMPILE_FLAGS -fPIC # necessary so that the lib can be used linked in a static code or a shared library
     OUTPUT_NAME pointerlist)
 
-ADD_PUBLIC_HEADER(lib_pointerlist swi_status.h)
 
 ADD_LIBRARY(lib_swi_log SHARED swi_log.c)
 SET_TARGET_PROPERTIES(lib_swi_log PROPERTIES OUTPUT_NAME Swi_log)
 
-ADD_LIBRARY(lib_swi_statusname SHARED swi_statusname.c)
-SET_TARGET_PROPERTIES(lib_swi_statusname PROPERTIES OUTPUT_NAME Swi_statusname)
+ADD_LIBRARY(lib_returncodes SHARED returncodes.c)
+SET_TARGET_PROPERTIES(lib_returncodes PROPERTIES OUTPUT_NAME returncodes)
+ADD_PUBLIC_HEADER(lib_returncodes returncodes.h)
+

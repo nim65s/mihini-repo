@@ -15,7 +15,7 @@ local messaging = require "messaging"
 local asscon = require "agent.asscon"
 local log = require "log"
 local mime = require"mime"
-local errnum = require 'status'.tonumber
+local errnum = require 'returncodes'.tonumber
 
 local table = table
 local string = string
@@ -66,7 +66,7 @@ end
 local function EMPUnregisterSMSListener(assetid, id)
     if not id then return nil, "no id provided to unregister" end
     local res, err = unregister(assetid, id)
-    if not res then return errnum 'OPERATION_FAILED', err
+    if not res then return errnum 'UNSPECIFIED_ERROR', err
     else return 0, nil end
 end
 
@@ -98,7 +98,7 @@ end
 local function EMPRegisterSMSListener(assetid, payload)
     local senderp, messagep = unpack(payload)
     local res, err = register(assetid, senderp, messagep)
-    if not res then return errnum 'OPERATION_FAILED', err
+    if not res then return errnum 'UNSPECIFIED_ERROR', err
     else return 0, res end
 end
 
@@ -109,7 +109,7 @@ local function EMPSendSMS(assetid, payload)
     if not s then
         err = tostring(err)
         log("SMS", "ERROR", "Failed to send SMS from asset (%s), '%s'", tostring(assetid), err)
-        return errnum 'SERVICE_UNAVAILABLE', err
+        return errnum 'NOT_AVAILABLE', err
     end
     return 0
 end

@@ -30,7 +30,7 @@
 static volatile char waiting_notification = 1;
 static char result = 1;
 
-swi_status_t get_path_element(int first, const char* pathPtr, char** remainingPath, char** varName);
+rc_ReturnCode_t get_path_element(int first, const char* pathPtr, char** remainingPath, char** varName);
 
 /* add random id number in to str: */
 char* addTicketId(const char* str)
@@ -114,12 +114,12 @@ static void updateNotificationCb(swi_av_Asset_t *asset, const char* componentNam
     waiting_notification = 0;
     return;
   }
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   /*check received values*/
   double float_val = 0;
   res = swi_dset_GetFloatByName(customParams, "float", &float_val);
-  if (res != SWI_STATUS_OK || float_val != 0.23)
+  if (res != RC_OK || float_val != 0.23)
   {
     result = 83;
     waiting_notification = 0;
@@ -128,7 +128,7 @@ static void updateNotificationCb(swi_av_Asset_t *asset, const char* componentNam
 
   const char* string_val = NULL;
   res = swi_dset_GetStringByName(customParams, "foo", &string_val);
-  if (res != SWI_STATUS_OK || strcmp(string_val, "bar"))
+  if (res != RC_OK || strcmp(string_val, "bar"))
   {
     result = 83;
     waiting_notification = 0;
@@ -137,7 +137,7 @@ static void updateNotificationCb(swi_av_Asset_t *asset, const char* componentNam
 
   int64_t int_val = 0;
   res = swi_dset_GetIntegerByName(customParams, "num", &int_val);
-  if (res != SWI_STATUS_OK || int_val != 42)
+  if (res != RC_OK || int_val != 42)
   {
     result = 83;
     waiting_notification = 0;
@@ -173,7 +173,7 @@ static void dwcb_DataWritting(swi_av_Asset_t *asset, ///< [IN] the asset receivi
   }
   char *val1 = NULL;
 
-  if (SWI_STATUS_OK != swi_dset_GetStringByName(data, "foo", (const char**) &val1))
+  if (RC_OK != swi_dset_GetStringByName(data, "foo", (const char**) &val1))
   {
     result = 105;
     waiting_notification = 0;
@@ -220,10 +220,10 @@ static void dwcb_DataWrittingList(swi_av_Asset_t *asset, ///< [IN] the asset rec
     return;
   }
 
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   bool valueOK = true;
   res = swi_dset_Next(data);
-  while (res == SWI_STATUS_OK && valueOK)
+  while (res == RC_OK && valueOK)
   {
     swi_dset_Type_t type = swi_dset_GetType(data);
 
@@ -285,10 +285,10 @@ static void dwcb_DataCommandList(swi_av_Asset_t *asset, ///< [IN] the asset rece
     return;
   }
 
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   bool valueOK = true;
   res = swi_dset_Next(data);
-  while (res == SWI_STATUS_OK && valueOK)
+  while (res == RC_OK && valueOK)
   {
     swi_dset_Type_t type = swi_dset_GetType(data);
 
@@ -326,20 +326,20 @@ static void dwcb_DataCommandList(swi_av_Asset_t *asset, ///< [IN] the asset rece
 
 static int test_1_Init_Destroy()
 {
-  swi_status_t res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  rc_ReturnCode_t res = swi_av_Init();
+  if (res != RC_OK)
     return res;
 
   res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   return 0;
@@ -347,67 +347,67 @@ static int test_1_Init_Destroy()
 
 static int test_2_TriggerPolicy()
 {
-  swi_status_t res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  rc_ReturnCode_t res = swi_av_Init();
+  if (res != RC_OK)
     return res;
 
 //trigger default policy
   res = swi_av_TriggerPolicy(NULL );
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
 //trigger one existing policy
   res = swi_av_TriggerPolicy("now");
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
 //trigger "never" policy: this must fail
   res = swi_av_TriggerPolicy("never");
-  if (res == SWI_STATUS_OK)
+  if (res == RC_OK)
     return res;
 
 //test using unknown policy
   res = swi_av_TriggerPolicy("plop");
-  if (res == SWI_STATUS_OK)
+  if (res == RC_OK)
     return res;
 
   res = swi_av_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   return 0;
 }
 
 static int test_3_ConnectToServer()
 {
-  swi_status_t res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  rc_ReturnCode_t res = swi_av_Init();
+  if (res != RC_OK)
     return res;
 
 //test using requesting SYNC connexion
   res = swi_av_ConnectToServer(SWI_AV_CX_SYNC);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   SWI_LOG("AV_TEST", DEBUG, "sync done\n");
 
 //test using 0 latency: async but "immediate" connection
   res = swi_av_ConnectToServer(0);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
 //test using correct latency
   res = swi_av_ConnectToServer(10);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
 //test using too big latency:
 //expected behavior here: rejected
   res = swi_av_ConnectToServer((unsigned int) INT_MAX + 1);
-  if (res != SWI_STATUS_WRONG_PARAMS)
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_av_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   return 0;
@@ -415,106 +415,107 @@ static int test_3_ConnectToServer()
 
 static int test_4_asset_Create_Start_Destroy()
 {
-  swi_status_t res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  rc_ReturnCode_t res = swi_av_Init();
+  if (res != RC_OK)
     return res;
 
   swi_av_Asset_t* asset;
   /*
    res = swi_av_asset_Create(&asset, NULL);
-   if (res != SWI_STATUS_WRONG_PARAMS)
+   if (res != RC_BAD_PARAMETER)
    return 1;
 
    res = swi_av_asset_Create(NULL, "test_asset");
-   if (res != SWI_STATUS_WRONG_PARAMS)
+   if (res != RC_BAD_PARAMETER)
    return 1;
    */
   res = swi_av_asset_Create(&asset, ASSET_ID);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
+
   res = swi_av_asset_Start(NULL );
-  if (res != SWI_STATUS_CONTEXT_IS_CORRUPTED)
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_av_asset_Start(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
-  res = swi_av_asset_Destroy(NULL );
-  if (res != SWI_STATUS_CONTEXT_IS_CORRUPTED)
+  res = swi_av_asset_Destroy(NULL);
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_av_asset_Destroy(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
-  return 0;
+  return RC_OK;
 }
 
 static int test_5_asset_pushData()
 {
 
-  swi_status_t res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  rc_ReturnCode_t res = swi_av_Init();
+  if (res != RC_OK)
     return 1;
 
   swi_av_Asset_t* asset;
 
   res = swi_av_asset_Create(&asset, ASSET_ID);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_Start(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
 //"long" path
   res = swi_av_asset_PushInteger(asset, "titi.test.toto1", "now", SWI_AV_TSTAMP_AUTO, 42);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 //"short" path
   res = swi_av_asset_PushInteger(asset, "titi.toto2", "now", SWI_AV_TSTAMP_AUTO, 43);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 //"shortest" path
   res = swi_av_asset_PushInteger(asset, "toto3", "now", SWI_AV_TSTAMP_AUTO, 44);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 //"shortest" path, no timestamp
   res = swi_av_asset_PushInteger(asset, "toto4", "now", SWI_AV_TSTAMP_NO, 45);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 //"shortest" path, no timestamp, no policy
   res = swi_av_asset_PushInteger(asset, "toto5", NULL, SWI_AV_TSTAMP_AUTO, 46);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 //"shortest" path, manual timestamp, no policy
   res = swi_av_asset_PushInteger(asset, "toto6", NULL, 23, 47);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_PushFloat(asset, "toto7", "now", SWI_AV_TSTAMP_AUTO, 47.455555);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_PushString(asset, "toto8", "now", SWI_AV_TSTAMP_AUTO, "foo");
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_PushString(asset, "toto8", "now", SWI_AV_TSTAMP_AUTO, NULL );
-  if (res != SWI_STATUS_WRONG_PARAMS)
+  if (res != RC_BAD_PARAMETER)
     return res;
 
   res = swi_av_TriggerPolicy("*");
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_Destroy(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   return 0;
@@ -522,18 +523,18 @@ static int test_5_asset_pushData()
 
 static int test_6_Acknowledge()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_Acknowledge(0, 0, "BANG BANG BANG", "now", 0);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_TriggerPolicy("now");
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   return 0;
 }
@@ -541,14 +542,14 @@ static int test_6_Acknowledge()
 static int test_7_path_utils()
 {
 
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
 
   char* var = NULL;
   char *remain = NULL;
   const char* path = "toto.titi.tata";
   res = get_path_element(0, path, &remain, &var);
   SWI_LOG("AV_TEST", DEBUG, "last: var=[%s], remain=[%s]\n", var, remain);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   if (strcmp("tata", var))
     return res;
@@ -562,7 +563,7 @@ static int test_7_path_utils()
 
   res = get_path_element(1, path, &remain, &var);
   SWI_LOG("AV_TEST", DEBUG, "first: var=[%s], remain=[%s]\n", var, remain);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   if (strcmp("titi.tata", remain))
     return res;
@@ -578,7 +579,7 @@ static int test_7_path_utils()
 
   res = get_path_element(1, path, &remain, &var);
   SWI_LOG("AV_TEST", DEBUG, "first: var=[%s], remain=[%s]\n", var, remain);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   if (strcmp("", remain))
     return res;
@@ -592,7 +593,7 @@ static int test_7_path_utils()
 
   res = get_path_element(0, path, &remain, &var);
   SWI_LOG("AV_TEST", DEBUG, "last: var=[%s], remain=[%s]\n", var, remain);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   if (strcmp("", remain))
     return res;
@@ -611,22 +612,22 @@ static int test_7_path_utils()
 
 static int test_8_UpdateNotification()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   swi_av_Asset_t* asset = NULL;
   waiting_notification = 1;
 
   res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_Create(&asset, ASSET_ID);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   res = swi_av_asset_Start(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   res = swi_av_RegisterUpdateNotification(asset, (swi_av_updateNotificationCB) updateNotificationCb, "userData");
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   const char *cmd_SoftwareUpdate ="'SoftwareUpdate', { 'TOTO.my_pkg', 'my_version', '/toto/my_file', {foo='bar', num=42, float=0.23}})\n";
@@ -636,7 +637,7 @@ static int test_8_UpdateNotification()
     ;
 
   swi_av_asset_Destroy(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   return result;
@@ -644,49 +645,49 @@ static int test_8_UpdateNotification()
 
 static int test_9_TableManipulation()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
   swi_av_Asset_t* asset = NULL;
   swi_av_Table_t *table = NULL;
   const char *columns[] = { "column1", "column2", "column3" };
 
   res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_Create(&asset, ASSET_ID);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_Start(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_table_Create(asset, &table, "test", 3, columns, "now", STORAGE_RAM, 0);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_table_PushInteger(table, 1234);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_table_PushFloat(table, 1234.1234);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_table_PushString(table, "test");
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_table_PushString(table, "fake push");
-  if (res != SWI_STATUS_VALUE_OUT_OF_BOUND)
+  if (res != RC_OUT_OF_RANGE)
     return res;
 
   res = swi_av_table_PushRow(table);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_table_Destroy(table);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
   swi_av_asset_Destroy(asset);
   return 0;
@@ -694,25 +695,25 @@ static int test_9_TableManipulation()
 
 static int test_10_asset_receiveDataWriting()
 {
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   waiting_notification = 1;
 
   res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   swi_av_Asset_t* asset;
 
   res = swi_av_asset_Create(&asset, ASSET_ID);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_RegisterDataWrite(asset, dwcb_DataWritting, NULL );
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_Start(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   /*command sends to TOTO asset*/
@@ -725,11 +726,11 @@ static int test_10_asset_receiveDataWriting()
     ;
 
   res = swi_av_asset_Destroy(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   free(cmd_SendDataWriting);
@@ -738,25 +739,25 @@ static int test_10_asset_receiveDataWriting()
 
 static int test_11_asset_receiveDataWritingList()
 {
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   waiting_notification = 1;
 
   res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   swi_av_Asset_t* asset;
 
   res = swi_av_asset_Create(&asset, ASSET_ID);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_RegisterDataWrite(asset, dwcb_DataWrittingList, NULL );
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_Start(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   const char* str = "'SendData', { Path = 'TOTO.sub.path', Body = { 42, 'bar' }, TicketId = %u, Type = 5, __class = 'AWT-DA::Message' })\n";
@@ -768,11 +769,11 @@ static int test_11_asset_receiveDataWritingList()
     ;
 
   res = swi_av_asset_Destroy(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   free(cmd_SendDataWrittingList);
@@ -781,25 +782,25 @@ static int test_11_asset_receiveDataWritingList()
 
 static int test_12_asset_receiveDataCommandList()
 {
-  swi_status_t res = SWI_STATUS_OK;
+  rc_ReturnCode_t res = RC_OK;
   waiting_notification = 1;
 
   res = swi_av_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   swi_av_Asset_t* asset;
 
   res = swi_av_asset_Create(&asset, ASSET_ID);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_RegisterDataWrite(asset, dwcb_DataCommandList, NULL );
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_asset_Start(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   const char* str = "'SendData', { Path = 'TOTO.sub.path', Body = { Command = 'plop',  Args = {42, 'bar'}, __class = 'AWT-DA::Command' },  TicketId = %u, Type = 2,  __class = 'AWT-DA::Message' })\n";
@@ -811,11 +812,11 @@ static int test_12_asset_receiveDataCommandList()
     ;
 
   res = swi_av_asset_Destroy(asset);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   res = swi_av_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return res;
 
   free(cmd_SendDataCommandList);

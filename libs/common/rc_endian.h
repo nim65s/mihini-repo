@@ -8,8 +8,8 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-#ifndef AWT_ENDIAN_H_
-#define AWT_ENDIAN_H_
+#ifndef RC_ENDIAN_H_
+#define RC_ENDIAN_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -54,4 +54,4 @@ void hton(void* value, size_t value_size, int value_endian);
  */
 #define ntoh hton
 
-#endif /* AWT_ENDIAN_H_ */
+#endif /* RC_ENDIAN_H_ */

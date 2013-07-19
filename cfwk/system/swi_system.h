@@ -20,29 +20,29 @@
 #ifndef SWI_SYSTEM_INCLUDE_GUARD
 #define SWI_SYSTEM_INCLUDE_GUARD
 
-#include "swi_status.h"
+#include "returncodes.h"
 
 /**
 * Initializes the module.
 * A call to init is mandatory to enable System library API.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_sys_Init();
+rc_ReturnCode_t swi_sys_Init();
 
 /**
 * Destroys the System library.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_sys_Destroy();
+rc_ReturnCode_t swi_sys_Destroy();
 
 /**
 * Requests a reboot of the system, with an optional reason passed as a string, which will be logged.
 *
-* @return SWI_STATUS_OK on success
+* @return RC_OK on success
 */
-swi_status_t swi_sys_Reboot
+rc_ReturnCode_t swi_sys_Reboot
 (
     const char* reasonPtr ///< [IN] the (logged) reason why the reboot is requested
 );

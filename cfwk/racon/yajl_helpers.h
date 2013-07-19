@@ -14,12 +14,12 @@
 
 #define SWI_YA_ERROR 1
 
-#define YAJL_GEN_ALLOC(gen)    \
-gen = yajl_gen_alloc(NULL); \
-if (gen == NULL)        \
-{                                    \
+#define YAJL_GEN_ALLOC(gen)                                                         \
+gen = yajl_gen_alloc(NULL);                                                         \
+if (gen == NULL)                                                                    \
+{                                                                                   \
   SWI_LOG("YAJL_HLPS", ERROR, "%s: Failed to allocate serializer\n", __FUNCTION__); \
- return SWI_STATUS_ALLOC_FAILED;                    \
+ return RC_NO_MEMORY;                                                               \
 }
 
 #define YAJL_GEN_ELEMENT(func, id)                                                          \
@@ -28,7 +28,7 @@ do {                                                                            
   if (yres != yajl_gen_status_ok)                                                           \
   {                                                                                         \
     SWI_LOG("YAJL_HLPS", ERROR, "%s: %s serialization failed, res %d\n", __FUNCTION__, id, yres); \
-    return SWI_STATUS_OBJECT_CREATION_FAILED;                                               \
+    return RC_BAD_PARAMETER;                                                                \
   }                                                                                         \
 } while(0)
 
@@ -49,8 +49,8 @@ do {                                                                            
   yajl_gen_status yres = yajl_gen_get_buf(gen, (const unsigned char **)&payload, &payloadLen);      \
   if (yres != yajl_gen_status_ok)                                                                   \
   {                                                                                                 \
-    SWI_LOG("YAJL_HLPS", ERROR, "%s: Failed to generate payload, res = %d\n", __FUNCTION__, yres); \
-    return SWI_STATUS_OBJECT_CREATION_FAILED;                                                       \
+    SWI_LOG("YAJL_HLPS", ERROR, "%s: Failed to generate payload, res = %d\n", __FUNCTION__, yres);  \
+    return RC_BAD_FORMAT;                                                                           \
   }                                                                                                 \
 } while(0)
 
@@ -59,8 +59,8 @@ do {                                                                            
   yval = yajl_tree_parse(payload, NULL, 0);                                                         \
   if (yval == NULL)                                                                                 \
   {                                                                                                 \
-    SWI_LOG("YAJL_HLPS", ERROR, "%s: Failed to parse payload\n", __FUNCTION__); \
-    return SWI_STATUS_OBJECT_CREATION_FAILED;                                                       \
+    SWI_LOG("YAJL_HLPS", ERROR, "%s: Failed to parse payload\n", __FUNCTION__);                     \
+    return RC_BAD_FORMAT;                                                                           \
   }                                                                                                 \
 } while(0)
 
