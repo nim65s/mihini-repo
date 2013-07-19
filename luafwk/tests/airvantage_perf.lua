@@ -104,7 +104,7 @@ function t:test_multipleassets()
     local assets = {}
     --create and register
     for i=1,100 do
-        local newasset = racon.newasset(string.format("asset%d", i))
+        local newasset = racon.newasset(string.format("asset-test-perf-%d", i))
         u.assert_not_nil(newasset)
         local status = newasset:start()
         u.assert_equal("ok", status)
