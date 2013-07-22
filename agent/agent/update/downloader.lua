@@ -172,7 +172,7 @@ local function do_m3da_download(dwlstate, headers, hrange)
         }
         --if the download was interrupted (user request received while using state.stepprogress),
         -- then just quit, don't use state.stepfinished, correct update state is set by state.stepprogress
-        if needtostop then log("UPDATE", "ERROR", "download: http request aborted") return "interrupted" end
+        if needtostop then log("UPDATE", "WARNING", "download: http request aborted") return "interrupted" end
         log("UPDATE", "DETAIL", "download: http request done")
         -- if we got here then http request went to its end, clean download stuff: kill periodictask.
         downloadfinalizer()
