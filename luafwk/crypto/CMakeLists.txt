@@ -43,4 +43,7 @@ TARGET_LINK_LIBRARIES(crypto_openaes_core lib_openaes)
 SET_TARGET_PROPERTIES(crypto_openaes_core PROPERTIES OUTPUT_NAME core)
 
 ADD_LUA_LIBRARY(crypto_aes aes.lua DESTINATION crypto)
-INSTALL(TARGETS crypto_cipher crypto_hmac crypto_hash crypto_rng crypto_aes aes.lua LIBRARY DESTINATION lua/crypto)
+INSTALL(TARGETS crypto_hmac LIBRARY DESTINATION lua/crypto)
+INSTALL(FILES aes.lua DESTINATION lua/crypto)
+INSTALL(TARGETS crypto_md5 crypto_sha1 crypto_keystore crypto_random LIBRARY DESTINATION lua/crypto)
+INSTALL(TARGETS crypto_openaes_core LIBRARY DESTINATION lua/crypto/openaes)

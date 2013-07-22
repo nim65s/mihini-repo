@@ -20,3 +20,4 @@ SET_TARGET_PROPERTIES(lib_openaes PROPERTIES
     OUTPUT_NAME openaes
     COMPILE_FLAGS -fPIC) # necessary so that the lib can be used linked in a static code or a shared library
 TARGET_LINK_LIBRARIES(lib_openaes lib_keystore)
+INSTALL(TARGETS lib_openaes LIBRARY DESTINATION lib)

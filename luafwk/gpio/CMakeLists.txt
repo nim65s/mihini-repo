@@ -17,4 +17,5 @@ ADD_LUA_LIBRARY(gpio gpio.lua gpio.c)
 ADD_DEPENDENCIES(gpio gpio_core sched lib_swi_log)
 TARGET_LINK_LIBRARIES(gpio lib_swi_log)
 
-
+INSTALL(TARGETS gpio LIBRARY DESTINATION lua)
+INSTALL(FILES gpio.lua DESTINATION lua)

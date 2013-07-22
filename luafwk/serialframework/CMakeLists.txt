@@ -46,4 +46,4 @@ ADD_LUA_LIBRARY(test_modbusserializer DESTINATION tests EXCLUDE_FROM_ALL
 ADD_DEPENDENCIES(test_modbusserializer modbus_serializer)
 
 INSTALL(FILES modbus/modbus.lua DESTINATION lua)
-INSTALL(TARGETS modbus_serializer LIBRARY DESTINATION lua/modbus)
+#INSTALL(TARGETS modbus_serializer LIBRARY DESTINATION lua/modbus)  TODO
