@@ -224,6 +224,27 @@ void GetConfigLevel(lua_State* L, int index, SerialGPIOWriteModeLevel* level) {
     }
 }
 
-const char* statusToString(swi_status_t status) {
-    return swi_status2string( status);
+static const char *const SerialStatusString[] = {
+    "SERIAL_STATUS_OK",
+    "SERIAL_STATUS_STACK_NOT_READY",
+    "SERIAL_STATUS_RESPONSE_INVALID_FRAME",
+    "SERIAL_STATUS_RESPONSE_SHORT_FRAME",
+    "SERIAL_STATUS_RESPONSE_BAD_SLAVE",
+    "SERIAL_STATUS_RESPONSE_BAD_FUNCTION",
+    "SERIAL_STATUS_RESPONSE_BAD_CHECKSUM",
+    "SERIAL_STATUS_RESPONSE_INCOMPLETE_FRAME",
+    "SERIAL_STATUS_RESPONSE_EXCEPTION",
+    "SERIAL_STATUS_RESPONSE_TIMEOUT",
+    "SERIAL_STATUS_ALLOC_FAILED",
+    "SERIAL_STATUS_WRONG_PARAMS",
+    "SERIAL_STATUS_CORRUPTED_CONTEXT",
+    "SERIAL_STATUS_REQUEST_PARAMETER_ERROR",
+    "SERIAL_STATUS_UNEXPECTED_ERROR"
+};
+
+const char* statusToString(SerialStatus status) {
+    if(status < SERIAL_STATUS_OK || status > SERIAL_STATUS_UNEXPECTED_ERROR)
+        return "Invalid SerialStatus";
+    else
+        return SerialStatusString[status];
 }

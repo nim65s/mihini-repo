@@ -95,6 +95,8 @@ typedef enum {
  * @enum SerialStatus
  * \brief the serial status code
  */
+//when adding status code here, also add it in SerialStatusString
+//and update statusToString function in lua_serial_fwk.c
 typedef enum {
     SERIAL_STATUS_OK = 0,
     SERIAL_STATUS_STACK_NOT_READY = 1,
@@ -112,6 +114,7 @@ typedef enum {
     SERIAL_STATUS_REQUEST_PARAMETER_ERROR = 13,
     SERIAL_STATUS_UNEXPECTED_ERROR = 14
 } SerialStatus;
+
 
 /**
  * @struct SerialConfig_

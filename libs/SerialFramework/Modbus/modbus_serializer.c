@@ -11,7 +11,7 @@
 
 #include "modbus_serializer.h"
 
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 

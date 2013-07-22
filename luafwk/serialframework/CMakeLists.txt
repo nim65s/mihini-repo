@@ -29,7 +29,7 @@ INCLUDE_DIRECTORIES(
 # Transport-independent part
 ADD_LUA_LIBRARY(modbus_serializer DESTINATION modbus EXCLUDE_FROM_ALL ${MODBUS_SRC})
 SET_TARGET_PROPERTIES(modbus_serializer PROPERTIES OUTPUT_NAME serializer)
-TARGET_LINK_LIBRARIES(modbus_serializer lib_modbus lib_swi_statusname)
+TARGET_LINK_LIBRARIES(modbus_serializer lib_modbus)
 ADD_DEPENDENCIES(modbus_serializer sched serial)
 
 # Modbus over UART

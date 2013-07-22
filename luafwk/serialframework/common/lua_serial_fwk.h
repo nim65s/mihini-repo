@@ -13,7 +13,6 @@
 #define __LUA_SERIAL_FWK_H__
 
 #include "serial_types.h"
-#include "swi_status.h"
 
 #include "lua.h"
 #include "lauxlib.h"
@@ -37,6 +36,6 @@ void GetConfigRetry(lua_State* L, int index, uint16_t* retry);
 // Retrieves the GPIO level
 void GetConfigLevel(lua_State* L, int index, SerialGPIOWriteModeLevel* level);
 
-const char* statusToString(swi_status_t status);
+const char* statusToString(SerialStatus status);
 
 #endif /*__LUA_SERIAL_FWK_H__*/

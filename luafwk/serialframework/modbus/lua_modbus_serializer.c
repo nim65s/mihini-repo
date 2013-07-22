@@ -32,7 +32,7 @@ typedef struct ModbusUserData_ {
 static int ProcessRequest(lua_State *L, ModbusUserData* pModbusUserData, uint8_t isCustom);
 
 static int l_MODBUS_InitContext(lua_State *L) {
-    swi_status_t status = SWI_STATUS_SERIAL_ERROR;
+    SerialStatus status = SERIAL_STATUS_UNEXPECTED_ERROR;
     ModbusRequestMode mode = MODBUS_RTU;
 
     // store a modbuscontext address
@@ -61,16 +61,13 @@ static int l_MODBUS_InitContext(lua_State *L) {
     }
 
     status = MODBUS_SER_InitSerializer(&(pModbusUserData->serializer), (void*)mode);
-    if (status != SWI_STATUS_OK) {
+    if (status != SERIAL_STATUS_OK) {
         MODBUS_SER_ReleaseSerializer(&(pModbusUserData->serializer));
-    }
-
-    // return status
-    if (status != SWI_STATUS_SERIAL_INIT_STACK_READY) {
         lua_pushnil(L);
         lua_pushstring(L, statusToString(status));
         return 2;
-    } else {
+    }
+    else {
         return 1;
     }
 }
@@ -90,14 +87,14 @@ static int l_MODBUS_ReleaseContext(lua_State *L) {
 static int ProcessRequest(lua_State *L, ModbusUserData* pModbusUserData, uint8_t isCustom) {
     uint8_t* pBuffer = NULL;
     uint16_t bufferLength = 0;
-    swi_status_t status;
+    SerialStatus status;
 
     if (isCustom) {
         status = MODBUS_SER_CreateCustomRequest(&(pModbusUserData->serializer), &(pModbusUserData->request));
     } else {
         status = MODBUS_SER_CreateRequest(&(pModbusUserData->serializer), &(pModbusUserData->request));
     }
-    if (status != SWI_STATUS_OK) {
+    if (status != SERIAL_STATUS_OK) {
         if (pModbusUserData->allocated != NULL) {
             free(pModbusUserData->allocated);
             pModbusUserData->allocated = NULL;
@@ -310,10 +307,10 @@ static int l_MODBUS_ReceiveResponse(lua_State *L) {
     pModbusUserData->serializer.responseBufferLength = bufferLength;
 
     // extract data from response
-    swi_status_t status = MODBUS_SER_AnalyzeResponse(&(pModbusUserData->serializer), MODBUS_SER_CheckResponse(&(pModbusUserData->serializer)));
+    SerialStatus status = MODBUS_SER_AnalyzeResponse(&(pModbusUserData->serializer), MODBUS_SER_CheckResponse(&(pModbusUserData->serializer)));
     // push results
     switch (status) {
-    case SWI_STATUS_OK:
+    case SERIAL_STATUS_OK:
       if (pSpecifics->isCustom) {
         lua_pushlstring(L, pSpecifics->response.value.pValues, pSpecifics->response.byteCount);
         n = 1;
@@ -352,7 +349,7 @@ static int l_MODBUS_ReceiveResponse(lua_State *L) {
         }
         break;
 
-    case SWI_STATUS_SERIAL_RESPONSE_EXCEPTION:
+    case SERIAL_STATUS_RESPONSE_EXCEPTION:
         // push nil
         lua_pushnil(L);
         // push error string
