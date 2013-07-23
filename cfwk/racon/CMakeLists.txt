@@ -19,4 +19,4 @@ ADD_LIBRARY(Emp SHARED emp.c)
 TARGET_LINK_LIBRARIES(Emp Swi_DSet pthread lib_swi_log)
 
 ADD_UNIT_TEST(dset_test dset_test.c RUNTIME_DEPENDENCIES lib_swi_log Swi_DSet)
-ADD_UNIT_TEST(emp_test emp_test.c TEST_DEPENDENCY emp_server RUNTIME_DEPENDENCIES lib_swi_log Emp pthread lib_yajl)
+ADD_UNIT_TEST(emp_test emp_test.c TEST_DEPENDENCY emp_server TEST_OPT 1234 RUNTIME_DEPENDENCIES lib_swi_log Emp pthread lib_yajl)

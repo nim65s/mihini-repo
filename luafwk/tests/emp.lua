@@ -45,7 +45,7 @@ local function send_cmd(id)
 end
 
 function t: setup()
-   emp.port = 1234
+   emp.port = 1235
    emp.retry = 2
    emp.timeout = 2
    require 'racon.empparser'.cmd_timeout = 2

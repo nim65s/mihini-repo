@@ -29,6 +29,14 @@ function(add_unit_test target sourceFile)
       endif(DEFINED test_dependency AND "${test_dependency}" STREQUAL "")
     endif(${_currentArg} STREQUAL "TEST_DEPENDENCY")
 
+    if(${_currentArg} STREQUAL "TEST_OPT")
+      set(test_opt "")
+    else()
+      if(DEFINED test_opt AND "${test_opt}" STREQUAL "")
+	set(test_opt ${_currentArg})
+      endif()
+    endif()
+
     if(${_currentArg} STREQUAL "RUNTIME_DEPENDENCIES")
       set(runtime_dependencies "")
     else(${_currentArg} STREQUAL "RUNTIME_DEPENDENCIES")
@@ -68,9 +76,14 @@ function(add_unit_test target sourceFile)
   if (DEFINED test_type)
     set(testwrapper_options "-t ${test_type}")
   endif()
+
   if (DEFINED test_dependency)
     set(testwrapper_options "${testwrapper_options} -l ${test_dependency}")
-  endif(DEFINED test_dependency)
+  endif()
+
+  if (DEFINED test_opt)
+    set(testwrapper_options "${testwrapper_options} -o ${test_opt}")
+  endif()
 
   set(test_command "ADD_TEST(${_target} ${UNITTEST_PREFIX_CMD} ${EMBEDDED_REMOTE_TARGET_DIR}/bin/lua ${EMBEDDED_REMOTE_TARGET_DIR}/racontestwrapper.lua ${testwrapper_options} ${_target})")
 

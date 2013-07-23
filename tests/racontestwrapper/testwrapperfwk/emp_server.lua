@@ -75,11 +75,11 @@ local function simulatecrash_handler(payload)
    return 0, nil
 end
 
-local function empserver()
+local function empserver(port)
    local i = 0
 
-   print("EMP testing server...")
-   skt = socket.bind("localhost", 1234, connectionhandler)
+   print("EMP testing server on port", port)
+   skt = socket.bind("localhost", port, connectionhandler)
 
    while true do
       idle()
@@ -87,12 +87,12 @@ local function empserver()
    end
 end
 
-function M.setup(dir)
+function M.setup(dir, args)
    cmdhandler["TriggerTimeout"] = triggertimeout_handler
    cmdhandler["SendCmd"] = sendcmd_handler
    cmdhandler["IpcBroken"] = ipcbroken_handler
    cmdhandler["SimulateCrash"] = simulatecrash_handler
-   sched.run(empserver)
+   sched.run(empserver, tonumber(args))
    sched.wait("emp_server", "running")
 end
 
