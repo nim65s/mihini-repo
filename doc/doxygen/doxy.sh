@@ -23,7 +23,7 @@ done
 cd $BASEDIR
 
 if [ -n "$ga_tracker_path" ]; then
-    doxygen -w html headertmp tmp1 tmp2 Doxyfile
+    doxygen -w html headertmp footer doxygen.css
     #ensure headertmp has one extra line at the end before calling the sed command
     echo "" >> headertmp
     sed "\,</head>, {
@@ -32,11 +32,10 @@ if [ -n "$ga_tracker_path" ]; then
             g
             N
     }" headertmp > header
+    #cleanup
+    rm headertmp
        
 else
-    doxygen -w html header tmp1 tmp2 Doxyfile
+    doxygen -w html header footer doxygen.css 
 fi
-
-#cleanup
-rm -rf tmp1 tmp2 headertmp
 
