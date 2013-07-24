@@ -193,7 +193,13 @@ function t:test_asset_connectreboot()
     --create/register
     local newasset = u.assert(racon.newasset("connectreboot"))
     u.assert(newasset :start())
-    u.assert(racon.connecttoserver())
+    local res, err = racon.connecttoserver()
+
+    -- We assume that getting a message "connection already in progress" is not a real error.
+    -- All other messages are considered as critical
+    if not res and type(err) == "string" and  err:match(": (.*)]") ~= "connection already in progress" then
+       u.assert(nil)
+    end
 
     local system = require 'racon.system'
     system.init()
