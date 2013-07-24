@@ -93,7 +93,10 @@ typedef rc_ReturnCode_t (*swi_sms_ReceptionCB_t)
     const char* messagePtr ///<
 );
 
-
+/**
+ * Registration identifier.
+ * Used to identify an registration so that it can be unregistered afterwards.
+ */
 typedef void * swi_sms_regId_t;
 
 /**
@@ -110,7 +113,7 @@ rc_ReturnCode_t swi_sms_Register
     swi_sms_ReceptionCB_t callback, ///< [IN] function to be called on sms reception matching both patterns.
     const char* senderPatternPtr,   ///< [IN] string, regex pattern that matches the sender address, NULL means "no filtering".
     const char* messagePatternPtr,  ///< [IN] string, regex pattern that matches the message, NULL means "no filtering".
-    swi_sms_regId_t *regIdPtr                   ///< [OUT] identifier of the registration, to be used to cancel it afterward using SMS_Unregister function.
+    swi_sms_regId_t *regIdPtr       ///< [OUT] identifier of the registration, to be used to cancel it afterward using SMS_Unregister function.
 );
 
 
