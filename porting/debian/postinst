@@ -103,6 +103,11 @@ EOF
 
 chmod +x /etc/init.d/mihini
 
+if [[ ! -d /etc/ld.so.conf.d ]]
+then
+    echo "include /etc/ld.so.conf.d/*.conf" >> /etc/ld.so.conf
+    mkdir /etc/ld.so.conf.d
+fi
 echo "/opt/mihini/lib" > /etc/ld.so.conf.d/01-mihini.conf
 ldconfig
 
