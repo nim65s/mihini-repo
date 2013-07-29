@@ -37,7 +37,7 @@ local function send_cmd(id)
    while true do
       local s, p = emp.sendcmd(cmdmaps["SendCmd"], "sendcmd_payload")
 
-      if not s and p ~= "error 517 [hint: ipc broken]" then
+      if not s and p ~= "error -13 [hint: ipc broken]" then
      log("EMP_TEST", "ERROR", "EMP sender thread #%d failed: %s", id, p)
      os.exit(1)
       end
@@ -45,7 +45,7 @@ local function send_cmd(id)
 end
 
 function t: setup()
-   emp.port = 1234
+   emp.port = 1235
    emp.retry = 2
    emp.timeout = 2
    require 'racon.empparser'.cmd_timeout = 2
@@ -77,7 +77,7 @@ end
 
 function t: test_02_trigger_response_timeout()
    local s, p = emp.sendcmd(cmdmaps["TriggerTimeout"])
-   assert(not s and p == "error 516 [hint: timeout for ack expired]")
+   assert(not s and p == "error -7 [hint: timeout for ack expired]")
 end
 
 function t: test_03_stop_mt_cmd()

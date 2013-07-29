@@ -38,6 +38,7 @@
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#include "returncodes.h"
 
 //#include "swi_log.h"
 
@@ -61,8 +62,8 @@ typedef struct Gpio
   int id;
 } Gpio_t;
 
-static int setparam(int id, const char* param, const char* value);
-static int enable(int id);
+static rc_ReturnCode_t setparam(int id, const char* param, const char* value);
+static rc_ReturnCode_t enable(int id);
 static int isenable(int id);
 static int enable_config(lua_State* L, int id, const char* direction, const char* edge, const char* active);
 
@@ -135,7 +136,8 @@ static char* getgpiopath(int id, const char* func)
   gpioidstr = NULL;
 
   if (res != len)
-  { free(buf);
+  {
+    free(buf);
     buf = NULL;
     return NULL;
   }
@@ -405,9 +407,9 @@ static inline int checkps(lua_State* L, const char* table_field, const char* gpi
   if (!lua_isnil(L, -1))
   {
     const char* value = lua_tostring(L, -1);
-    int s = setparam(id, gpio_param, value);
-    if (s != 0)
-      L_RETURN_ERROR("Error while trying to set parameter %s, error=%d", gpio_param, s);
+    rc_ReturnCode_t s = setparam(id, gpio_param, value);
+    if (s != RC_OK)
+      L_RETURN_ERROR("Error while trying to set parameter %s, error=%s", gpio_param, rc_ReturnCodeToString(s));
     res = 0; //success
   }
   else
@@ -592,21 +594,28 @@ int isenable(int id)
  * Enables a GPIO, doesn"t test if already enabled,
  * this needs to be done be by caller.
  *
- * @return 0 on success
- *         2 on error (nil, err msg pushed on Lua stack)
+ * @return RC_OK on success
+ *         other rc_ReturnCode_t on error
  */
-int enable(int id)
+rc_ReturnCode_t enable(int id)
 {
   int res = 0;
 
   char* id_buf = getgpioidstr(id);
   if (NULL == id_buf)
-    return 1;
+    return RC_UNSPECIFIED_ERROR;
 
   int fd = open(GPIO_PATH_EXPORT, O_WRONLY); //can't read "export" file
   if (fd < 0)
   {
-    return 2;
+    int errnotmp = errno;
+    free(id_buf);
+    id_buf = NULL;
+    if (EPERM == errnotmp || EACCES == errnotmp)
+      return RC_NOT_PERMITTED;
+    if (ENOENT == errnotmp)
+      return RC_NOT_AVAILABLE;
+    return RC_UNSPECIFIED_ERROR;
   }
 
   size_t len = strlen(id_buf);
@@ -617,9 +626,9 @@ int enable(int id)
   close(fd);
 
   if (res <= 0 || res < len)
-    return 3;
+    return RC_UNSPECIFIED_ERROR;
 
-  return 0;
+  return RC_OK;
 }
 
 /* Checks a GPIO is already activated;
@@ -635,15 +644,15 @@ int enable_config(lua_State* L, int id, const char* direction, const char* edge,
     return 0;
   else
   {
-    int res = 0;
-    if ((res = enable(id)))
-      L_RETURN_ERROR("Error while enabling gpio, error=%d", res);
+    rc_ReturnCode_t res = RC_OK;
+    if (RC_OK != (res = enable(id)))
+      L_RETURN_ERROR("Error while enabling gpio, error=%s", rc_ReturnCodeToString(res));
     if ((res = setparam(id, "direction", direction)))
-      L_RETURN_ERROR("Error while setting direction, error=%d", res);
+      L_RETURN_ERROR("Error while setting direction, error=%s", rc_ReturnCodeToString(res));
     if ((res = setparam(id, "edge", edge)))
-      L_RETURN_ERROR("Error while setting edge, error=%d", res);
+      L_RETURN_ERROR("Error while setting edge, error=%s", rc_ReturnCodeToString(res));
     if ((res = setparam(id, "active_low", active)))
-      L_RETURN_ERROR("Error while setting active_low, error=%d", res);
+      L_RETURN_ERROR("Error while setting active_low, error=%s", rc_ReturnCodeToString(res));
 
     return 0;
   }
@@ -663,23 +672,28 @@ int enable_config(lua_State* L, int id, const char* direction, const char* edge,
  *
  *  @see `configure` public API for complete parameter documentation.
  *
- *  @return 0 on success, 1,2,3 on error (just do differentiate the error)
+ *  @return RC_OK on success, other rc_ReturnCode_t on error
  */
-int setparam(int id, const char* param, const char* value)
+rc_ReturnCode_t setparam(int id, const char* param, const char* value)
 {
   int res = 0;
   int fd = -1;
 //create the full path to edge file
   char* file = getgpiopath(id, param);
   if (NULL == file)
-    return 1;
+    return RC_UNSPECIFIED_ERROR;
 
   fd = open(file, O_RDWR);
   if (fd < 0)
   {
+    int errnotmp = errno;
     free(file);
     file = NULL;
-    return 2;
+    if (EPERM == errnotmp || EACCES == errnotmp)
+      return RC_NOT_PERMITTED;
+    if (ENOENT == errnotmp)
+      return RC_NOT_AVAILABLE;
+    return RC_UNSPECIFIED_ERROR;
   }
   //write the "command"
   size_t len = strlen(value);
@@ -692,10 +706,10 @@ int setparam(int id, const char* param, const char* value)
 
   if (res != len)
   {
-    return 3;
+    return RC_UNSPECIFIED_ERROR;
   }
 
-  return 0;
+  return RC_OK;
 }
 
 static inline int check_io(lua_State* L, Gpio_t* io)

@@ -11,7 +11,7 @@
 
 ---
 --GPIO device tree handler.
---This handler highly relies on [GPIO module](http://download.eclipse.org/mihini/api/lua/log.html),
+--This handler highly relies on [GPIO module](http://download.eclipse.org/mihini/api/lua/gpio.html),
 --please read its documentation before.
 --
 -- Especially, have a look on:
@@ -41,11 +41,11 @@
 --
 --Notes:
 --
--- * When listing system.gpio and system.gpio.settings., only GPIO already enabled are returned.
+-- * When listing system.gpio and system.gpio.settings, only GPIO already enabled are returned.
 -- * When reading/writing/configuring a GPIO that was never used before on the system (since last reboot),
---    the GPIO is automatically configured with the most appropriate values to .
+--    the GPIO is automatically configured with the most appropriate values.
 -- * When reading/writing/configuring a GPIO that was already used on the system (since last reboot),
---    the GPIO is left with its current configured even though it can't fulfill the current operation.
+--    the GPIO is left with its current configuration even though it can't fulfill the current operation.
 --
 --
 --

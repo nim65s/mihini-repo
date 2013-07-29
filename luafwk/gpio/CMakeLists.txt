@@ -14,8 +14,8 @@ PROJECT(MIHINI_GPIO)
 INCLUDE_DIRECTORIES(${LIB_MIHINI_COMMON_SOURCE_DIR})
 
 ADD_LUA_LIBRARY(gpio gpio.lua gpio.c)
-ADD_DEPENDENCIES(gpio gpio_core sched lib_swi_log)
-TARGET_LINK_LIBRARIES(gpio lib_swi_log)
+ADD_DEPENDENCIES(gpio gpio_core sched lib_swi_log lib_returncodes)
+TARGET_LINK_LIBRARIES(gpio lib_swi_log lib_returncodes)
 
 INSTALL(TARGETS gpio LIBRARY DESTINATION lua)
 INSTALL(FILES gpio.lua DESTINATION lua)
