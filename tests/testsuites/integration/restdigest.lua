@@ -406,14 +406,10 @@ function t:test_WriteDeviceTreeConfigServer()
   local url = baseurl.."devicetree/config/server"
   local exp_url = "tcp://mycustomurl.com:35784"
   local exp_port = 8080
-  local exp_retrytimes = 15
-  local exp_retryperiod = 3333
   local exp_serverId = "MyCustomServerId"
   local exp_autocon_period = 10
   local testserver = {
     serverId = exp_serverId,
-    retrytimes = exp_retrytimes,
-    retryperiod = exp_retryperiod,
     url = exp_url,
     port = exp_port,
     autoconnect = { period = exp_autocon_period }}
@@ -425,15 +421,13 @@ function t:test_WriteDeviceTreeConfigServer()
   local f = rpcclient:newexec(getDT)
   local serverleaf, servernode = f("config.server")
   local serverIdleaf, serverIdnode = f("config.server.serverId")
-  local retrytimesleaf, retrytimesnode = f("config.server.retrytimes")
-  local retryperiodleaf, retryperiodnode = f("config.server.retryperiod")
   local urlleaf, urlnode = f("config.server.url")
   local portleaf, portnode = f("config.server.port")
   local autoconnectleaf, autoconnectnode = f("config.server.autoconnect")
   local periodleaf, periodnode = f("config.server.autoconnect.period")
 
   rpcclient:call('os.exit', 0)
-  local exp_servernodes = { "config.server.serverId", "config.server.url", "config.server.port", "config.server.autoconnect", "config.server.retryperiod", "config.server.retrytimes" }
+  local exp_servernodes = { "config.server.serverId", "config.server.url", "config.server.port", "config.server.autoconnect" }
   local exp_autoconnectnodes = {"config.server.autoconnect.period" }
 
   -- Assert all the results for the "config.server" table
@@ -444,12 +438,6 @@ function t:test_WriteDeviceTreeConfigServer()
   
   u.assert_not_nil(serverIdleaf)
   u.assert_nil(serverIdnode)
-  
-  u.assert_not_nil(retrytimesleaf)
-  u.assert_nil(retrytimesnode)
-  
-  u.assert_not_nil(retryperiodleaf)
-  u.assert_nil(retryperiodnode)
   
   u.assert_not_nil(urlleaf)
   u.assert_nil(urlnode)
@@ -465,8 +453,6 @@ function t:test_WriteDeviceTreeConfigServer()
   
   u.assert_equal(exp_url, urlleaf)
   u.assert_equal(exp_port, portleaf)
-  u.assert_equal(exp_retrytimes, retrytimesleaf)
-  u.assert_equal(exp_retryperiod, retryperiodleaf)
   u.assert_equal(exp_serverId, serverIdleaf)
   u.assert_equal(exp_autocon_period, periodleaf)
   
