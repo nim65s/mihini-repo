@@ -43,7 +43,7 @@ DAEMON=/opt/mihini/bin/appmon_daemon
 AGENT=/opt/mihini/bin/agent
 ROOTDIR=/opt/mihini
 
-. /lib/lsb/init-functions
+. /etc/init.d/functions
 
 test -f \$DAEMON || exit 0
 test -f \$AGENT || exit 0
@@ -55,45 +55,39 @@ case "\$1" in
             \$DAEMON -a \$AGENT -w \$ROOTDIR -u mihini -g mihini -n 5 2>&1 | logger -t Mihini &
             if [ "\$?" -eq 0  ]
             then
-                log_success_msg "\$NAME started"
+                echo "\$NAME started"
             else
-                log_failure_msg "\$NAME failed to start"
+                echo "\$NAME failed to start"
             fi
             sleep 1
         fi
         ;;
 
     stop)
-        log_daemon_msg "Stopping \$NAME agent"
+        echo "Stopping \$NAME agent..."
         echo "destroy" | nc localhost 4242 > /dev/null 2>&1
         killproc \$AGENT
-        log_end_msg \$?
+        sleep 1
 
-        log_daemon_msg "Stopping \$NAME daemon"
+        echo "Stopping \$NAME daemon..."
         killproc \$DAEMON
-        log_end_msg \$?
         sleep 1
         ;;
 
     restart)
         \$0 stop
         \$0 start
-        sleep 3
+        sleep 5
         \$0 status
-        ;;
-
-    status)
-        status_of_proc \$DAEMON "\$NAME daemon"
-        status_of_proc \$AGENT "\$NAME agent"
         ;;
 
     purge)
         rm -rf /var/opt/mihini/persist/*
-        log_daemon_msg "Mihini's persist folder cleared"
+        echo "Mihini's persist folder cleared"
         ;;
 
     *)
-      echo "Usage: \$0 {start|stop|restart|status|purge}"
+      echo "Usage: \$0 {start|stop|restart|purge}"
       exit 1
       ;;
 esac
@@ -103,6 +97,12 @@ EOF
 
 chmod +x /etc/init.d/mihini
 
+
+if [[ ! -d /etc/ld.so.conf.d ]]
+then
+    echo "include /etc/ld.so.conf.d/*.conf" >> /etc/ld.so.conf
+    mkdir /etc/ld.so.conf.d
+fi
 echo "/opt/mihini/lib" > /etc/ld.so.conf.d/01-mihini.conf
 ldconfig
 
