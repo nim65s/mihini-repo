@@ -18,6 +18,9 @@ markdown_list="
     agent/security.md
     agent/Logging_framework.md
     agent/Migration.md
+    agent/Migration_MigrationScript_c.md
+    agent/Migration_MigrationScript_h.md
+    agent/Migration_CMakeLists_txt.md
     agent/Network_Manager.md
     agent/Software_Update_Framework.md
     agent/Software_Update_Module.md
@@ -32,7 +35,7 @@ markdown_list="
     agent/Monitoring.md
     agent_connector_libraries/Racon_Lua_library.md
     agent_connector_libraries/Embedded_Micro_Protocol_EMP.md
-	agent_connector_libraries/Agent_UserGuide.md
+    agent_connector_libraries/Agent_UserGuide.md
     utilitary_libraries/Lua_RPC.md
     utilitary_libraries/Modbus.md
     utilitary_libraries/Serialize_Deserialize_Lua_objects.md
