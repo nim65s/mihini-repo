@@ -14,12 +14,8 @@ The Update module is only available on **Linux** devices.\
 Update module expects that Agent is run in working directory with
 **no ' character** in it.
 
-3. Device models
-================
 
-TODO
-
-4. Functionalities
+3. Functionalities
 ==================
 
 The Update module can:
@@ -36,10 +32,10 @@ The Update module can:
     ) to server using M3DA Command ReadNode.
 -   ...
 
-5. API
+4. API
 ======
 
-#### 5.1. functions
+#### 4.1. functions
 
 ~~~{.lua}
 init()
@@ -87,12 +83,12 @@ to wait for the end of the whole update process.
     or during package processing if blocking behavior was requested)
 ~~~
 
-#### 5.2. data tables
+#### 4.2. data tables
 
 Those data tables contain a great part of the state of the Update
 module.
 
-##### 5.2.1. data tables access
+##### 4.2.1. data tables access
 
 There are ways to access them:
 
@@ -113,7 +109,7 @@ p(updatec.data.swlist)
 -   "@sys.update.table_name" where table\_name is the name of the exact
     table to retrieve.
 
-##### 5.2.2. data tables content
+##### 4.2.2. data tables content
 
 -   **swlist**\
     This table contains the software inventory: there are 2 main part :
@@ -170,17 +166,17 @@ Here is a small sample:
      This table is **flushed** (set to **nil**) when the current job is
     **finished**.
 
-6. Protocols
+5. Protocols
 ============
 
 The Update module can use several protocol to retrieve update package.
 
-#### 6.1. M3DA update command
+#### 5.1. M3DA update command
 
 See SoftwareUpdate command in [Device Management
 commands](Device_Management.html)
 
-7. Update package Process
+6. Update package Process
 =========================
 
 They must conform with [Software Update Package
@@ -191,13 +187,13 @@ The workflow is quite simple, and can be illustrated like this:\
 
 The following sections give more details about each step.
 
-#### 7.1. Delivery using M3DA Command
+#### 6.1. Delivery using M3DA Command
 
 SoftwareUpdate command description in [Device Management
-commands](Device%2BManagement.html) gives some clues, but package
+commands](Device_Management.html) gives some clues, but package
 hosting is still to be defined.
 
-#### 7.2. Software update package process in Update Module
+#### 6.2. Software update package process in Update Module
 
 When some Software Update Package has been downloaded, Update module
 will be alerted and then:
@@ -221,7 +217,7 @@ There is two types of update, the **target path** will be used to
 1.  Agent internal update feature\
      Target path must be begin with : "@sys."\
      This will trigger internal update feature, see [Software Update
-    Package](Software%2BUpdate%2BPackage.html) to get more details about
+    Package](Software_Update_Package.html) to get more details about
     it.\
      For instance, this will be used to update application managed by
     ApplicationContainer module.
@@ -233,8 +229,8 @@ There is two types of update, the **target path** will be used to
     with it's own update, or update some third party software\
      The update package will be forwarded to the application using
     [Embedded Micro Protocol
-    (EMP)](Embedded%2BMicro%2BProtocol%2B%2528EMP%2529.html), and
-    Racon APIS provides corresponding functionalities.\
+    (EMP)](../agent_connector_libraries/Embedded_Micro_Protocol_EMP.html), and
+    Racon APIs provides corresponding functionalities.\
     The application must report update execution status; so it has to
     either:
     -   handle unsupported EMP message to alert synchronously that the
@@ -247,7 +243,7 @@ Rq. Choice of update type may be done on a case by case basis. For
 example, OSGI bundle update is likely to be done with type \#2 because
 OSGI framework is responsible to update OSGI bundles.
 
-#### 7.3. Update of each component
+#### 6.3. Update of each component
 
 As previously stated, Update module forward the update of each component
 to asset application or install script execution.
@@ -270,7 +266,7 @@ install script
      -\> it is the responsibility of the install script or application
     to copy the files needed by the application to a different location.
 
-##### 7.3.1. Retries and Timeout
+##### 6.3.1. Retries and Timeout
 
 The aims of those retries and timeout is:
 
@@ -309,7 +305,7 @@ retries and timeout:
 The retry number and the timeout duration can be configured using update
 configuration table.
 
-#### 7.4. Final stage and error management
+#### 6.4. Final stage and error management
 
 The update will be successful only if all components are correctly
 updated; so if any of the component update failed, the whole update job
@@ -330,7 +326,7 @@ protocol that provided the update.
 Finally, when Update module can compute the overall result of the
 update, it will report it to the server using the appropriate protocol.
 
-8. Install script within Software Update Package
+7. Install script within Software Update Package
 ================================================
 
 The install script functionality is triggered when an update package
@@ -345,7 +341,7 @@ other Component**:
 -   will be updated with the **same rules** about location, VersionFrom
     and VersionTo fields
 
-#### 8.1. Content Specifications
+#### 7.1. Content Specifications
 
 Some constraints about install script with
 
@@ -386,7 +382,7 @@ $ ls -la HouseApp/
 drwxr-xr-x  2 lbarthelemy lbarthelemy 4096 2009-10-29 17:28 some_data
 ~~~~
 
-#### 8.2. Running environment
+#### 7.2. Running environment
 
 The update script will be run in the Agent environment, with
 **access to all functionalities**.
@@ -403,7 +399,7 @@ script to ease the development of the script:
 -   param.parameters : (optional) a table contains parameters given by
     component in package
 
-#### 8.3. Example
+#### 7.3. Example
 
 This Lua code can be put in an install.lua file in an update package.
 
@@ -419,7 +415,7 @@ if not res then error("Error while running install scrip:"..(err or "nil")) end
 --else success
 ~~~~
 
-9. Local update package installation
+8. Local update package installation
 ====================================
 
 Basic Idea: running an update job using an update package copied on the
@@ -443,7 +439,7 @@ localupdate()
     -   runtime/update/drop folder of your device can be identified by
         running the LUA command ":require'agent.update.common'.dropdir"
     -   the tar archive should have the same format as in
-        [https://confluence.anyware-tech.com/display/PLT/Software+Update+Package](https://confluence.anyware-tech.com/display/PLT/Software+Update+Package),
+        [Software Update Package](Software_Update_Package.html),
         but no md5 involved
     -   Update module looks for a file named \***updatepackage.tar**\*
         file. You can change this name by setting desired name in
@@ -472,7 +468,7 @@ FAQ:
 -   At the end of local update package installation, **no notification**
     is sent to any server.
 
-#### 9.1. Example: simplest local update to do Agent provisioning
+#### 8.1. Example: simplest local update to do Agent provisioning
 
 > **INFO**
 >
@@ -496,7 +492,7 @@ components = {
 } -- end of Manifest
 ~~~~
 
-10. Error code
+9. Error code
 ==============
 
 Those codes are the error code returned by the update module.\
