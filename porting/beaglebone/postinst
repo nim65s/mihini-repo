@@ -43,7 +43,6 @@ DAEMON=/opt/mihini/bin/appmon_daemon
 AGENT=/opt/mihini/bin/agent
 ROOTDIR=/opt/mihini
 
-. /etc/init.d/functions
 
 test -f \$DAEMON || exit 0
 test -f \$AGENT || exit 0
