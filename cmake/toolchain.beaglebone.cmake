@@ -30,4 +30,3 @@
 SET(DEFAULT_BUILD true)
 
 SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "beaglebone")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/porting/beaglebone/postinst;${CMAKE_CURRENT_SOURCE_DIR}/porting/beaglebone/prerm;${CMAKE_CURRENT_SOURCE_DIR}/porting/beaglebone/postrm")
