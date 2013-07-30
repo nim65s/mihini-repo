@@ -10,4 +10,5 @@
 #     Guilhem Saurel for Sierra Wireless - initial script
 #*******************************************************************************
 
-/etc/init.d/mihini stop
+systemctl disable mihini.service
+systemctl stop mihini.service

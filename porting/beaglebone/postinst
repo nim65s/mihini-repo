@@ -24,78 +24,19 @@ done
 
 chown -R mihini:mihini /{var/,}opt/mihini
 
-cat << EOF > /etc/init.d/mihini
-#!/bin/sh
+cat << EOF > /etc/systemd/system/mihini.service
+[Unit]
+Description=Mihini Daemon & agent
+Wants=network.target
+After=network.target
 
-### BEGIN INIT INFO
-# Provides: mihini_agent
-# Required-Start: \$remote_fs \$syslog
-# Required-Stop: \$remote_fs \$syslog
-# Default-Start: 2 3 4 5
-# Default-Stop: 0 1 6
-# Short-Description: Start mihini agent at boot time
-# Description: Enable application framework or M2M services (like device management) provided by mihini agent.
-### END INIT INFO
+[Service]
+ExecStart=/opt/mihini/bin/appmon_daemon -a /opt/mihini/bin/agent -w /opt/mihini -u mihini -g mihini -n 5
+Type=simple
 
-DESC="Mihini agent"
-NAME=Mihini
-DAEMON=/opt/mihini/bin/appmon_daemon
-AGENT=/opt/mihini/bin/agent
-ROOTDIR=/opt/mihini
-
-
-test -f \$DAEMON || exit 0
-test -f \$AGENT || exit 0
-
-case "\$1" in
-    start)
-        if [ ! "`pidof \$DAEMON`" ]
-        then
-            \$DAEMON -a \$AGENT -w \$ROOTDIR -u mihini -g mihini -n 5 2>&1 | logger -t Mihini &
-            if [ "\$?" -eq 0  ]
-            then
-                echo "\$NAME started"
-            else
-                echo "\$NAME failed to start"
-            fi
-            sleep 1
-        fi
-        ;;
-
-    stop)
-        echo "Stopping \$NAME agent..."
-        echo "destroy" | nc localhost 4242 > /dev/null 2>&1
-        killproc \$AGENT
-        sleep 1
-
-        echo "Stopping \$NAME daemon..."
-        killproc \$DAEMON
-        sleep 1
-        ;;
-
-    restart)
-        \$0 stop
-        \$0 start
-        sleep 5
-        \$0 status
-        ;;
-
-    purge)
-        rm -rf /var/opt/mihini/persist/*
-        echo "Mihini's persist folder cleared"
-        ;;
-
-    *)
-      echo "Usage: \$0 {start|stop|restart|purge}"
-      exit 1
-      ;;
-esac
-
-exit 0
+[Install]
+WantedBy=multi-user.target
 EOF
-
-chmod +x /etc/init.d/mihini
-
 
 if [[ ! -d /etc/ld.so.conf.d ]]
 then
@@ -105,4 +46,5 @@ fi
 echo "/opt/mihini/lib" > /etc/ld.so.conf.d/01-mihini.conf
 ldconfig
 
-/etc/init.d/mihini start
+systemctl enable mihini.service
+systemctl start mihini.service
