@@ -459,15 +459,16 @@ static inline int checkps(lua_State* L, const char* table_field, const char* gpi
  */
 static int l_configure(lua_State* L)
 {
-  int res = 0;
+  rc_ReturnCode_t res = RC_OK;
   int status = 0;
   int gpioid = luaL_checkint(L, 1);
   luaL_checktype(L, 2, LUA_TTABLE);
 
   if (!isenable(gpioid))
   {
-    if ((res = enable(gpioid)))
-      L_RETURN_ERROR("Error while enabling gpio, error=%d", res);
+    res = enable(gpioid);
+    if ( RC_OK != res )
+      L_RETURN_ERROR("Error while enabling gpio, error=%s", rc_ReturnCodeToString(res) );
 
     status = checkps(L, "direction", "direction", gpioid);
     if (status < 0) //direction not found
