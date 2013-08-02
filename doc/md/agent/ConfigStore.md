@@ -149,6 +149,20 @@ server.autoconnect.ondemand = 10 -- latency before connection (in seconds) after
                                  -- before it connects to the server (connect will occur at maximum 10 seconds after some data has been written)
 ~~~
 
+#### Communication security settings
+
+~~~{.lua}
+-- Security:
+-- * authentication is either "hmac-md5" or nil (prevents attackers from forging fake messages,
+--   doesn't ensure secrecy).
+-- * encryption is only available when authentication is enabled.
+--   The format is "<cipher>-<chaining>-<length>", the only officially supported configurations are
+--   "aes-cbc-128" and nil.
+-- Both settings must match those on the server, and crypto keys on device and server must also match.
+-- 
+-- server.authentication = 'hmac-md5'
+-- server.encryption = 'aes-cbc-128'
+~~~
 
 <!--- Commented out for now, Mediation not officially supported
 #### Mediation protocol settings
@@ -238,7 +252,7 @@ time.activate = true
 to UTC time (examples: -4 for UTC-1, 23 for UTC+5:45, ...)
 time.timezone = 0
 -- daylight time saving: signed integer (1, -1) to be added to UTC
-time.dst = 0   
+time.dst = 0
 
 -- NTP params
 time.ntpserver = "pool.ntp.org"

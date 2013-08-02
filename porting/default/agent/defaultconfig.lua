@@ -30,11 +30,12 @@
     --server.proxy must be a URL starting by "http://".
     --server.proxy = "http://some.proxy.server:port"
 
-    -- Security: authentication is one of "hmac-sha1" or "hmac-md5" (or nil)
-    -- Encryption cannot be enabled without authentication. It's of the form
-    -- "<cipher>-<chaining>-<length>", where cipher must be "aes", chaining is
-    -- either "ctr" or "cbc", length is either "128" or "256".
-    -- server.authentication = 'hmac-sha1'
+    -- Security:
+    -- * authentication is either "hmac-md5" or nil
+    -- * encryption is only available when authentication is enabled.
+    --   The format is "<cipher>-<chaining>-<length>", the only officially supported configurations are
+    --   "aes-cbc-128" and nil.
+    -- server.authentication = 'hmac-md5'
     -- server.encryption = 'aes-cbc-128'
 
     -- Agent auto connection policy
