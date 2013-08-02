@@ -39,9 +39,3 @@ ADD_DEPENDENCIES(modbus_serial modbus_serializer)
 # Modbus over TCP
 ADD_LUA_LIBRARY(modbus_tcp EXCLUDE_FROM_ALL modbus/modbustcp.lua)
 ADD_DEPENDENCIES(modbus_tcp modbus_serializer socket_sched pack)
-
-# Test
-ADD_LUA_LIBRARY(test_modbusserializer DESTINATION tests EXCLUDE_FROM_ALL
-                test/modbusserializer.lua)
-ADD_DEPENDENCIES(test_modbusserializer modbus_serializer)
-
