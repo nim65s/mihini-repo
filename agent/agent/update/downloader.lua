@@ -268,7 +268,7 @@ function start_m3da_download()
             --prepare HTTP header with range as server supports it.
             hrange = { ["Range"] = "bytes=" .. sz .."-" }
             --to compare with the header that will be sent by the Get response:
-            exphcontentrange = string.format("bytes %d-%d/%d", sz, headers.contentlength, headers.contentlength)
+            exphcontentrange = string.format("bytes %d-%d/%d", sz, headers.contentlength-1, headers.contentlength)
             --update md5 context with current data
             md5 = compute_md5(md5, updatepath)
         else
