@@ -252,7 +252,7 @@ rc_ReturnCode_t swi_dset_Rewind(swi_dset_Iterator_t* data)
 {
   CHECK_CONTEXT(data);
 
-  data->currentIndex = 0;
+  data->currentIndex = DSET_INIT_INDEX;
   return RC_OK;
 }
 
