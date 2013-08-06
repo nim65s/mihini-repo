@@ -45,10 +45,22 @@ local function start_localupdate_download()
     return state.stepfinished("success")
 end
 
+--Normalize the headers while converting all uppercase letters to lowercase.
+local function normalizeHTTPheaders(headers)
+    if type(headers) ~= "table" then return nil end
+    local res = {}
+    for k, v in pairs(headers) do
+        res[string.lower(tostring(k))] = string.lower(tostring(v))
+    end
+    return res
+end
+
+
 --Get the headers of package
 local function getheaderspackage(currenturl)
     local headers = {}
     local r, c, h = http.request { method = "HEAD", url = currenturl }
+    h = normalizeHTTPheaders(h)
     if r~=1 or c~=200 then
         log("UPDATE", "WARNING", "Download: Cannot get the headers of package")
         return nil
@@ -293,14 +305,15 @@ function start_m3da_download()
             return
         elseif result == "ok" then
             log("UPDATE", "DETAIL", "Analyzing http results")
+            result_http.headers=normalizeHTTPheaders(result_http.headers)
             if type(result_http.statuscode) ~= "number" then
                 log("UPDATE", "WARNING", "Download: unexpected status: %s", tostring(result_http.statuscode))
                 need_retry=true
-            elseif result_http.statuscode == 206 and result_http.headers and result_http.headers["Content-Range"]~= exphcontentrange then
+            elseif result_http.statuscode == 206 and result_http.headers and result_http.headers["content-range"]~= exphcontentrange then
                 --we didn't get the expected range
                 --maybe we could do another resume afterwards?
                 --for now we treat this as unsupported resume answer
-                log("UPDATE", "WARNING", "Download: resuming download failed: unexpected Content-Range: %s", tostring(result_http.headers["Content-Range"]))
+                log("UPDATE", "WARNING", "Download: resuming download failed: unexpected Content-Range: %s", tostring(result_http.headers["content-range"]))
                 m3da_dwl_retry_state.resume_error = true
                 need_retry=true
             elseif result_http.statuscode == 200 and hrange then
