@@ -154,11 +154,11 @@ Install a new monitoring script.\
 **name** is the name identifying the monitoring script\
 **script** is the script content as a Lua string\
 **autoenable** when set to true (i.e. non false value), the script is
-installed and will be automatically enabled on next ReadyAgent boot.\
+installed and will be automatically enabled on next Agent boot.\
 when set to "now", the script is started right now, but not installed
 nor enabled (test purpose),\
 when set to false value, the script is installed but not enable for
-the next ReadyAgent boot,\
+the next Agent boot,\
 when set to nil (or absent), the enable flag will stay unchanged
 (meaning equal to the flag of a script that was installed with the
 same name)
@@ -181,7 +181,7 @@ enable(name)
 ~~~~
 
 Enable an installed monitoring script: the script will be started on
-next ReadyAgent boot.\
+next Agent boot.\
 **name** is the name identifying the monitoring script to enable
 
 ~~~~{.lua}
@@ -189,7 +189,7 @@ disable(name)
 ~~~~
 
 Disable an installed monitoring script: the script will not be started
-on next ReadyAgent boot.\
+on next Agent boot.\
 **name** is the name identifying the monitoring script to disable\
 Note: The script remains installed
 

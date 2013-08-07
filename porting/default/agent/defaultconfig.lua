@@ -19,26 +19,24 @@
     server = {}
 
     server.serverId = "AIRVANTAGE"
-    server.retrytimes = 10
-    server.retryperiod = 60
 
     -- Determines the protocol, host, port, and optionally other things such
     -- as path, user, password
     server.url = "tcp://m2m.eclipse.org:44900"
-    --server.url = "http://localhost:8070/device/com"
-    --server.url = "http://webplt-qa.anyware-tech.com/device/com"
-    --server.url = "http://webplt-m2m.anyware-tech.com/device/com"
-    --server.url = "http://m2mop.net/device/com"
+    -- when using a local server:
+    --server.url = "tcp://localhost:44900"
+
 
     --When the device is behind a proxy this settings defines a HTTP proxy. This parameter is only relevant for HTTP transport protocol
     --server.proxy must be a URL starting by "http://".
     --server.proxy = "http://some.proxy.server:port"
 
-    -- Security: authentication is one of "hmac-sha1" or "hmac-md5" (or nil)
-    -- Encryption cannot be enabled without authentication. It's of the form
-    -- "<cipher>-<chaining>-<length>", where cipher must be "aes", chaining is
-    -- either "ctr" or "cbc", length is either "128" or "256".
-    -- server.authentication = 'hmac-sha1'
+    -- Security:
+    -- * authentication is either "hmac-md5" or nil
+    -- * encryption is only available when authentication is enabled.
+    --   The format is "<cipher>-<chaining>-<length>", the only officially supported configurations are
+    --   "aes-cbc-128" and nil.
+    -- server.authentication = 'hmac-md5'
     -- server.encryption = 'aes-cbc-128'
 
     -- Agent auto connection policy
@@ -127,7 +125,7 @@
     --network.retryperiod = 10 --use only if network.bearer.XXX.retryperiod not defined
     --network.smsfallback = "+33102345879" -- address to send outgoing sms to (e.g. server SMS reception number)
     network.bearer = {}
-    network.bearer.GPRS = {apn = "internet-entreprise", retry = 2, retryperiod = 10, automount = true}
+    network.bearer.GPRS = {apn = "yourapn", retry = 2, retryperiod = 10, automount = true}
     network.bearer.ETH = {mode = "dhcp", retry = 2, retryperiod = 10, automount = true}
     --network.bearer.ETH = {mode = "static", retry = 2, retryperiod = 50, automount = true, address = "10.0.2.87", netmask = "255.255.0.0", broadcast = "10.0.255.255", gateway= "10.0.0.254", nameserver1 = "10.6.0.224", nameserver2 = "10.6.0.225"}
 

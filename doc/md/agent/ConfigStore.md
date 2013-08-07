@@ -21,17 +21,21 @@ In the Lua Shell you can access the configuration table thanks to the
 ~~~{.lua}
 -- Load/retrieve the config module
 c = require 'agent.config'
--- print all config from the mediation sub category
-p(c.mediation)
--- assign a new parameter (de-activate mediation stuff)
-c.mediation.activate = false
+-- print all config from the rest sub category
+p(c.rest)
+-- assign a new parameter (de-activate rest stuff)
+c.rest.activate = false
 ~~~
 
 #### From an Asset Application
 
 See `DeviceTree` library API. A couple of function for setting and reading
-variables are provided. Generated doc is available here:
-[http://docs.anyware/platform/embedded/](http://docs.anyware/platform/embedded/)
+variables are provided. 
+
+Generated doc is available here:
+
+* [Lua DeviceTree API](http://download.eclipse.org/mihini/api/lua/devicetree.html)
+* [C DeviceTree API](http://download.eclipse.org/mihini/api/c/swi__devicetree_8h.html)
 
 Most likely, user will need the following command:
 
@@ -108,8 +112,8 @@ Configuration parameters that can be applied to Mihini
 agent.assetport = 9999
 
 --Address on which the agent is accepting connection in order to communicate with the assets
---Pattern is accepted: can be set to "\*" to accept connection from any address, by default shell accepts only localhost connection.
-agent.assetaddress = "\*"
+--Pattern is accepted: can be set to "*" to accept connection from any address, by default shell accepts only localhost connection.
+agent.assetaddress = "*"
 
 --Devices ID used to communicate with the platform server
 agent.deviceId = "012345678901234"
@@ -138,13 +142,29 @@ server.proxy = "some.proxy.server"
 
 --Agent auto connection policy
 server.autoconnect = {}
---server.autoconnect.onboot = true -- connect a few seconds after the agent started
---server.autoconnect.period = 5 -- period in minute (connect every 5 minutes)
---server.autoconnect.cron = "0 0 \* \* \*" -- cron entry (connect once a day at midnight)
-server.autoconnect.ondemand = 10 -- latency before connection (inseconds) after some data has been given to the Agent
+server.autoconnect.onboot = true -- connect a few seconds after the agent started
+server.autoconnect.period = 5 -- period in minute (connect every 5 minutes)
+server.autoconnect.cron = "0 0 * * *" -- cron entry (connect once a day at midnight)
+server.autoconnect.ondemand = 10 -- latency before connection (in seconds) after some data has been given to the Agent
                                  -- before it connects to the server (connect will occur at maximum 10 seconds after some data has been written)
 ~~~
 
+#### Communication security settings
+
+~~~{.lua}
+-- Security:
+-- * authentication is either "hmac-md5" or nil (prevents attackers from forging fake messages,
+--   doesn't ensure secrecy).
+-- * encryption is only available when authentication is enabled.
+--   The format is "<cipher>-<chaining>-<length>", the only officially supported configurations are
+--   "aes-cbc-128" and nil.
+-- Both settings must match those on the server, and crypto keys on device and server must also match.
+-- 
+-- server.authentication = 'hmac-md5'
+-- server.encryption = 'aes-cbc-128'
+~~~
+
+<!--- Commented out for now, Mediation not officially supported
 #### Mediation protocol settings
 
 ~~~{.lua}
@@ -153,11 +173,11 @@ mediation.activate = true
 --Connection timeout (in seconds)
 mediation.timeout = 5
 --Defines the ordered list of mediation server to connect to
-mediation.servers = { {addr = "webplt-qa.anyware-tech.com", port = 2048}, {addr = "m2mop.anyware-tech.com", port = 2048} }
+mediation.servers = { {addr = "srv1.com", port = 2048}, {addr = "srv2.com", port = 2048} }
 --this is equivalent to
---mediation.servers[1].addr = "webplt-qa.anyware-tech.com"
+--mediation.servers[1].addr = "srv1.com"
 --mediation.servers[1].port = 2048
---mediation.servers[2].addr = "m2mop.anyware-tech.com"
+--mediation.servers[2].addr = "srv2.com"
 --mediation.servers[2].port = 2048
 
 --Defines the polling period (in seconds) of the mediation protocol according to each bearer
@@ -174,6 +194,8 @@ mediation.servers.retries = 5
 --Mediation restart after failure delay (in seconds), default value (if not set) is 1800 seconds (30 minutes)
 mediation.retrydelay = 300
 ~~~
+-->
+
 
 #### Shell related settings
 
@@ -182,11 +204,42 @@ mediation.retrydelay = 300
 shell.activate = true
 --Local port on which the Lua Shell server is listening
 shell.port = 2000
+
 --Address on which the Lua Shell server is accepting connection
---Pattern is accepted: can be set to "\*" to accept connection from any address, by default shell accepts only localhost connection.
---shell.address = "\*"
+--Pattern is accepted: can be set to "*" to accept connection from any address, by default shell accepts only localhost connection.
+shell.address = "*"
+
 shell.editmode = "edit" -- can be "line" if the trivial line by line mode is wanted
 shell.historysize = 30 -- only valid for edit mode
+~~~
+
+#### REST related settings
+
+~~~{.lua}
+rest = {}
+rest.activate = true
+rest.port = 8357
+
+
+-- http digest authentication
+rest.authentication = {}
+rest.authentication.realm = "username@localhost"
+-- HA1 is the MD5 sum of the string "username:realm:password"
+rest.authentication.ha1 = "your hash here"
+
+
+rest.restricted_uri = {}
+-- Either globally
+rest.restricted_uri["*"] = true
+
+-- Or per URI
+rest.restricted_uri["devicetree/[%w.]+"] = true
+rest.restricted_uri["application$"] = true
+rest.restricted_uri["application/[%w%.]+"] = true
+rest.restricted_uri["application/[%w%.]+/start"] = true
+rest.restricted_uri["application/[%w%.]+/stop"] = true
+rest.restricted_uri["application/[%w%.]+/configure"] = true
+rest.restricted_uri["update[/%w%?]*$"] = true
 ~~~
 
 #### Time related settings
@@ -199,7 +252,7 @@ time.activate = true
 to UTC time (examples: -4 for UTC-1, 23 for UTC+5:45, ...)
 time.timezone = 0
 -- daylight time saving: signed integer (1, -1) to be added to UTC
-time.dst = 0   
+time.dst = 0
 
 -- NTP params
 time.ntpserver = "pool.ntp.org"
@@ -261,7 +314,7 @@ network.bearer = {}
 -- GPRS configuration
 -- retry is the number of retries before switching to the next bearer, MANDATORY
 -- retryperiod is the time (in seconds on linux) between 2 retries on the same bearer, MANDATORY
-network.bearer.GPRS = { retry = 2, retryperiod = 50, apn = "internet-entreprise", username="orange", password="orange"} -- username and password can be not set if not mandatory by the operator
+network.bearer.GPRS = { retry = 2, retryperiod = 50, apn = "yourapn", username="orange", password="orange"} -- username and password can be not set if not mandatory by the operator
 
 -- If network.bearer.XXX.retry and / or network.bearer.XXX.retryperiod are not specified the NetworkManager will try to use those 'global' setting
 network.retry=5
@@ -276,10 +329,9 @@ network.bearer.ETH = {retry = 2, retryperiod = 5, mode = "dhcp" }
 -- network.bearer.ETH = {retry = 2, retryperiod = 5, mode = "static", address = "10.0.2.87", netmask = "255.255.0.0", broadcast = "10.0.255.255", gateway= "10.0.0.254", nameserver1 = "10.6.0.224", nameserver2 = "10.6.0.225"}
 ~~~
 
-#### Device Management and monitoring settings
+#### Device Management 
 
 ~~~{.lua}
--- Device Management and monitoring settings
 -- Activate the Device Management module
 device.activate = true
 -- ip address or host name and port number of the server hosting the ServerAppSide for the TCPRemoteConnect command
@@ -295,13 +347,15 @@ log.defaultlevel = "ALL"
 log.moduleslevel.GENERAL = "ALL"
 log.moduleslevel.SERVER = "INFO"
 -- formating options
--- log.enablecolors = true
+log.enablecolors = true
 -- change default format for all logs
--- log.format = "%t %m-%s: %l"
+log.format = "%t %m-%s: %l"
 -- timestampformat specifies strftime format to print date/time
 -- timestampformat is useful only if %t% is in formatter string
 log.timestampformat = "%F %T"
+~~~
 
+<!--- Commented out: Log policies needs to be reworked
 -- Log policies config : nothing activated by default
 
 -- Log policy is activated only if log.policy is not nil
@@ -322,7 +376,8 @@ log.timestampformat = "%F %T"
 -- Parameter for Log upload command
 -- log.policy.ftpuser = ""
 -- log.policy.ftppwd = ""
-~~~
+-->
+
 
 #### Update framework
 
@@ -333,18 +388,26 @@ update.activate = false
 
 -- Update process settings
 -- retries number per component, default value:2
--- update.retries = 2
+update.retries = 2
 -- timeout in seconds for component update response, default value:40
--- update.timeout = 40
+update.timeout = 40
 
 -- dwlnotifperiod: number of seconds between update notification during downloads, default value is 2s
--- update.dwlnotifperiod = 30
+update.dwlnotifperiod = 30
+~~~
 
+~~~{.lua}
 -- Activate Application Container
 appcon.activate = false
 -- Tcp Port to connect to appmon_daemon.
 -- No need to use this config value if using appmon_daemon default port (4242)
--- appcon.port = 4243
+appcon.port = 4243
+
+appcon.envvars = {}
+-- @LUA_AF_RO_PATH@ is a pattern which is replaced by the runtime path LUA_AF_RO_PATH
+-- when the appcon component is loaded.
+appcon.envvars.PYTHONPATH = "@LUA_AF_RO_PATH@/python"
+appcon.envvars.CLASSPATH = "@LUA_AF_RO_PATH@/java"
 ~~~
 
 #### Monitoring system

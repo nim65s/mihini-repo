@@ -18,8 +18,6 @@
     server = {}
 
     server.serverId = "AIRVANTAGE"
-    server.retrytimes = 10
-    server.retryperiod = 60
 
     -- Determines the protocol, host, port, and optionally other things such
     -- as path, user, password

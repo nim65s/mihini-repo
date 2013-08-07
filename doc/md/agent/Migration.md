@@ -75,14 +75,7 @@ if no Agent version was persisted yet.\
 >
 > It is also the responsibility of the user/project to put the migration
 > code in the application binary.\
->  By default, Agent doesn't embed any migration code, only the
-> migration helper module.
-
-> **INFO**
->
-> To ease the migration code development, specific page provide
-> compatibility breaks and often provide migration templates.\
->  See [https://confluence.anyware-tech.com/display/PLT/Compatibility+breaks](https://confluence.anyware-tech.com/display/PLT/Compatibility+breaks)
+>  By default, Agent only embeds a simple Lua template of migration code.
 
 #### Migration status reporting
 
@@ -105,15 +98,16 @@ For Lua migration script template, pick up migration.lua\
 migration.h\
  CMakeLists.txt is an example of how to compile migration.c using CMake (the default build system used by the agent).
 
------------------------------------------------------------------------------------------------------
-Name                                                          Comment
------------------                                             ---------------------------------------
-[CMakeLists.txt](attachments/Migration_CMakeLists.txt)         How to compile migration.c using CMake
 
-[MigrationScript.h](attachments/Migration_MigrationScript.h)   C-Lua migration script template header
-
-[MigrationScript.c](attachments/Migration_MigrationScript.c)   C-Lua migration script template module
-
-[migration.lua](attachments/Migration_migration.lua)           Lua migration script template
-------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+Name                                                                                                       Comment
+------------------------------------------------------                                                     ------------------------------------------------
+[migration.lua](http://git.eclipse.org/c/mihini/org.eclipse.mihini.git/tree/agent/agent/migration.lua)      Lua migration script template
+                                                                                                           
+[MigrationScript.h](Migration_MigrationScript_h.html)                                                       C-Lua migration script template header
+                                                                                                           
+[MigrationScript.c](Migration_MigrationScript_c.html)                                                       C-Lua migration script template module
+                                                                                                           
+[CMakeLists.txt](Migration_CMakeLists_txt.html)                                                             How to compile MigrationScript.c using CMake
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

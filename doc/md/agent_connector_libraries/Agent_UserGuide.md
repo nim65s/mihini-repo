@@ -37,7 +37,7 @@ the application data store where data and events will be stored.
 
 The next figure illustrates the typical embedded architecture on a Linux
 target.\
-This architecture is composed of the ReadyAgent, ReadyAgent libraries,
+This architecture is composed of the Agent, the Agent libraries,
 and one or more applications.
 
 The Agent may run in a different process (as a daemon) or be
@@ -65,7 +65,7 @@ by the Agent Connector library described below.
 The user libraries is named Agent Connector libraries and addresses several
 needs:
 
--   It enables communication with the ReadyAgent. It is an abstraction
+-   It enables communication with the Agent. It is an abstraction
     of the IPC used to communicate with it
 -   It provides Device Management features like Agent tree access
     (including its configuration)
