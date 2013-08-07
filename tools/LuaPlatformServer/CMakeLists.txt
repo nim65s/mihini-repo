@@ -19,3 +19,4 @@ ADD_LUA_LIBRARY(platformserver EXCLUDE_FROM_ALL
 )
 
 ADD_DEPENDENCIES(platformserver readyagent_transport_servers)
+INSTALL(FILES platform/backend.lua platform/favicon.lua platform/init.lua platform/pages.lua platform/response_templates.lua DESTINATION lua/platform)

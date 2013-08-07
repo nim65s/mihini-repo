@@ -20,3 +20,4 @@ ADD_LUA_LIBRARY(agent_update_tools EXCLUDE_FROM_ALL DESTINATION agent/update/too
 )
 
 INSTALL(FILES init.lua builtinupdaters.lua pkgcheck.lua updatemgr.lua common.lua downloader.lua status.lua DESTINATION lua/agent/update)
+INSTALL(FILES tools/createpkg.lua DESTINATION lua/agent/update/tools)
