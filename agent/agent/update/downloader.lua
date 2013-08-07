@@ -173,6 +173,11 @@ local function do_m3da_download(dwlstate, headers, hrange)
         periodictask,err = timer.periodic(config.update.dwlnotifperiod or 2, downloadnotifier)
         if not periodictask then log("UPDATE", "WARNING", "Can't start periodic task to send download progress, err=%s", tostring(err)) end
 
+        --quite huge log, don't process varargs if the log is not to be displayed.
+        if log.musttrace("UPDATE", "DETAIL") then
+            log("UPDATE", "DETAIL", "Download: GET request: url=%s, headers=%s, file mode=%s.", tostring(data.currentupdate.infos.url), sprint(hrange), tostring(dwlstate.mode))
+        end
+
         --actually start the download
         local body, statuscode, headers, statusline = http.request{
             url = data.currentupdate.infos.url,
@@ -257,24 +262,29 @@ function start_m3da_download()
     local hrange --hrange is left to nil when no download resume is requested
     local exphcontentrange --contains expected content-range to be sent as response to range request
 
-    local need_download = true
-    if sz and sz > 0 then
-        if headers and headers.contentlength and sz == headers.contentlength then
+    local need_download = true -- do we need to actually download something (HTTP GET requtest)
+    local need_retry = false --do we need to do a new try, used after analyzing HTTP request results
+    -- set to false when download is completed, set to true, when GET/HEAD request fail.
+
+    if not headers then
+         log("UPDATE", "WARNING", "Failed to contact server to get package headers, skipping download")
+         need_download = false --no need to try for the download if can't contact the server
+         need_retry = true -- we'll retry later
+    elseif sz and sz > 0 then
+        if headers.contentlength and sz == headers.contentlength then
             log("UPDATE", "INFO", "Download: file is already completed :)")
             md5 = compute_md5(md5, updatepath)
-            need_download = false
-        elseif headers and headers.acceptrange and headers.contentlength then
+            need_download = false --skip download
+        elseif headers.acceptrange and headers.contentlength then
             log("UPDATE", "INFO", "Download: found package with size " ..sz .. ", trying to resume download...")
             --prepare HTTP header with range as server supports it.
             hrange = { ["Range"] = "bytes=" .. sz .."-" }
             --to compare with the header that will be sent by the Get response:
             exphcontentrange = string.format("bytes %d-%d/%d", sz, headers.contentlength-1, headers.contentlength)
-            --update md5 context with current data
-            md5 = compute_md5(md5, updatepath)
         else
             log("UPDATE", "INFO", "Download: download resume not supported by server, starting from scratch")
-            sz = 0
-            mode = "w+"
+            sz = 0 -- start download from first byte
+            mode = "w+" -- discard previous downloaded content
         end
     else
         sz = 0
@@ -289,16 +299,20 @@ function start_m3da_download()
             return state.stepfinished("failure", 555, "Download failure: Not enough free space to download package")
         end
 
-        --cancel resume when previous attempt failure was due to resume issue (the download will start from the beginning)
-        if hrange and m3da_dwl_retry_state.resume_error then
-            log("UPDATE", "INFO", "Download: download resume cancelled due to previous download errors, starting from scratch")
-            hrange = nil
-            sz=0
+        if hrange then -- we can try resume
+            if m3da_dwl_retry_state.resume_error then
+                --cancel resume when previous attempt failure was due to resume issue (the download will start from the beginning)
+                log("UPDATE", "INFO", "Download: download resume cancelled due to previous download errors, starting from scratch")
+                hrange = nil -- don't do a GET with range request
+                sz=0 -- start download from first byte
+                mode = "w+" -- discard previous downloaded content
+            else
+                -- resume will actually be tried, let's update md5 context with current data
+                md5 = compute_md5(md5, updatepath)
+            end
         end
 
         local result, result_http = do_m3da_download({storedsize=sz, md5filter=md5filter, mode = mode, updatepath = updatepath}, headers, hrange)
-
-        local need_retry=false
 
         if result == "interrupted" then
             --download was interrupted by a update request (pause/abort) from user, stop here
@@ -326,6 +340,7 @@ function start_m3da_download()
                 need_retry=true
             elseif result_http.statuscode>=200 and result_http.statuscode < 300 then
                log("UPDATE", "DETAIL", "Download: status code indicates success %s", tostring(result_http.statuscode))
+               need_retry=false
             elseif result_http.statuscode == 416 then
                --HTTP 416: Requested Range Not Satisfiable
                log("UPDATE", "WARNING", "Download: Requested Range Not Satisfiable");
@@ -340,56 +355,54 @@ function start_m3da_download()
             log("UPDATE", "WARNING", "download failed: (%s)", tostring(result_http))
             need_retry = true
         end
+    end -- : downloading is not needed anymore
 
-        if need_retry then
-            if m3da_dwl_retry_state.attempt >= #m3da_dwl_retry_delays then
-                return state.stepfinished("failure", 552, string.format("Download failed: all retries exhausted"))
-            else
-                m3da_dwl_retry_state.attempt =  m3da_dwl_retry_state.attempt +1
+    --
+    --retries management
+    --
 
-                local function dwlretrynotifier()
-                    local function dwlretryfinalizer()
-                        sched.signal("update.dwlretry", "interrupted")
-                    end
-                   --dwlretryfinalizer is called in/by stepprogress only if download is paused/aborted.
-                    state.stepprogress("Waiting for download retry", dwlretryfinalizer)
+    if need_retry then
+        if m3da_dwl_retry_state.attempt >= #m3da_dwl_retry_delays then
+            return state.stepfinished("failure", 552, string.format("Download failed: all retries exhausted"))
+        else
+            m3da_dwl_retry_state.attempt =  m3da_dwl_retry_state.attempt +1
+
+            local function dwlretrynotifier()
+                local function dwlretryfinalizer()
+                    sched.signal("update.dwlretry", "interrupted")
                 end
-
-                --start poller to listen to download request that may be sent while waiting for next retry
-                local periodictask,err = timer.periodic(config.update.dwlnotifperiod or 2, dwlretrynotifier)
-                if not periodictask then log("UPDATE", "WARNING", "Can't start periodic task to send download retry, err=%s", tostring(err)) end
-
-                log("UPDATE", "INFO", "Download: waiting for next retry: %d seconds", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt])
-                local event = sched.wait("update.dwlretry", {"*", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt]} )
-                --ensure timer is cleaned, stopped.
-                timer.cancel(periodictask)
-                periodictask = nil
-
-                --download retry phase was interrupted by a update request (pause/abort) from user, stop here
-                if event == "interrupted" then return end
-                --otherwise restart the download
-                sched.run(start_m3da_download)
-                return
+               --dwlretryfinalizer is called in/by stepprogress only if download is paused/aborted.
+                state.stepprogress("Waiting for download retry", dwlretryfinalizer)
             end
+
+            --start poller to listen to download request that may be sent while waiting for next retry
+            local periodictask,err = timer.periodic(config.update.dwlnotifperiod or 2, dwlretrynotifier)
+            if not periodictask then log("UPDATE", "WARNING", "Can't start periodic task to send download retry, err=%s", tostring(err)) end
+
+            log("UPDATE", "INFO", "Download: waiting for next retry: %d seconds", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt])
+            local event = sched.wait("update.dwlretry", {"*", m3da_dwl_retry_delays[m3da_dwl_retry_state.attempt]} )
+            --ensure timer is cleaned, stopped.
+            timer.cancel(periodictask)
+            periodictask = nil
+
+            --download retry phase was interrupted by a update request (pause/abort) from user, stop here
+            if event == "interrupted" then return end
+            --otherwise restart the download
+            sched.run(start_m3da_download)
+            return
         end
+    end -- end retries
 
-        --
-        --retries management
-        --
+    -- when we get here, download was ok, just need to check signature
+    local hex_checksum = md5:digest(false)
+    data.currentupdate.infos.signature = string.lower(data.currentupdate.infos.signature)
 
-        end -- : downloading is not needed anymore
+    if hex_checksum ~= data.currentupdate.infos.signature then
+        return state.stepfinished("failure", 553, "Download: signature mismatch for update archive")
+    end
 
-
-        local hex_checksum = md5:digest(false)
-        data.currentupdate.infos.signature = string.lower(data.currentupdate.infos.signature)
-
-        if hex_checksum ~= data.currentupdate.infos.signature then
-            return state.stepfinished("failure", 553, "Download: signature mismatch for update archive")
-        end
-
-        --everything went ok, go to next update step
-        return state.stepfinished("success")
-
+    --everything went ok, go to next update step
+    return state.stepfinished("success")
 
 end
 
