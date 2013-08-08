@@ -61,7 +61,7 @@ local function getheaderspackage(currenturl)
     local headers = {}
     local r, c, h = http.request { method = "HEAD", url = currenturl }
     h = normalizeHTTPheaders(h)
-    if r~=1 or c~=200 then
+    if r~=1 or c~=200 or not h then
         log("UPDATE", "WARNING", "Download: Cannot get the headers of package")
         return nil
     end
@@ -69,7 +69,15 @@ local function getheaderspackage(currenturl)
     if h["accept-ranges"] == "bytes" then
         headers.acceptrange = true
     else
-        headers.acceptrange = false
+        log("UPDATE", "DETAIL", "Download: getheaderspackage: attempting second HEAD request")
+        --Last try to detect server resume capabilities  HEAD request with range header
+        r, c, h = http.request { method = "HEAD", url = currenturl, headers = { ["range"] = "bytes=1-" } }
+        h = normalizeHTTPheaders(h)
+        if r~=1 or c~=206 or not h or not h["content-range"] or not h["content-range"]:match("bytes 1%-*")then 
+            headers.acceptrange = false
+        else
+            headers.acceptrange = true
+        end
     end
     return headers
 end
