@@ -189,13 +189,11 @@ ID            Command ID                   Request Direction        Description
                                                                       **Response payload**: \
                                                                        - `status`: 2 bytes acknowledging the command
 
-9              GetVariable                 App-\>Agt                  Retrieve a variable from the Core Agent. \
+9              GetVariable                 App-\>Agt                  Retrieve one or several variable from the Core Agent. \
                                                                       \
-                                                                      **Command payload**: a `list` of 2 objects: \
-                                                                       - `String`: name of the variable to get (usually a string that is a path !)
-                                                                     \
-                                                                       - `Integer`: maximum depth of the variable retrieval. This is useful when
-                                                                     doing a get on a sub tree. This should be a number. \
+                                                                      **Command payload**: \
+                                                                       - `String`: name of the variable to get (usually a string that is a path!)
+                                                                       (it can be a list when getting several variables) \
                                                                      \
                                                                       **Response payload**: \
                                                                       - `status`: 2 bytes acknowledging the command. \
@@ -204,12 +202,13 @@ ID            Command ID                   Request Direction        Description
                                                                      or null if the variable is a table. The second object is a list of all
                                                                      sub tree names
 
-10             SetVariable                 App-\>Agt                  Set a variable on the Core Agent. \
+10             SetVariable                 App-\>Agt                  Set one or several variables on the Core Agent. \
                                                                       \
                                                                       **Command payload**: a `list` of 2 objects: \
                                                                        - 1 `String` representing the variable to set (usually a string that is a
-                                                                     path !) \
-                                                                       - 1 `object` representing the value of the variable (it can be a hashtable)\
+                                                                     path!) \
+                                                                       - 1 `object` representing the value of the variable 
+                                                                       (it can be a hashtable when setting several variables)\
                                                                      \
                                                                       **Response payload**: \
                                                                        - `status`: 2 bytes acknowledging the command.

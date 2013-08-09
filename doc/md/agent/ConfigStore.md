@@ -145,8 +145,7 @@ server.autoconnect = {}
 server.autoconnect.onboot = true -- connect a few seconds after the agent started
 server.autoconnect.period = 5 -- period in minute (connect every 5 minutes)
 server.autoconnect.cron = "0 0 * * *" -- cron entry (connect once a day at midnight)
-server.autoconnect.ondemand = 10 -- latency before connection (in seconds) after some data has been given to the Agent
-                                 -- before it connects to the server (connect will occur at maximum 10 seconds after some data has been written)
+
 ~~~
 
 #### Communication security settings
