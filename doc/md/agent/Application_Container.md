@@ -54,24 +54,24 @@ Sequence diagrams:
 As the application container is starting, the "boot" sequences are
 following :
 
-![](images/Application_Container_boot_init.png)
+![](images/Application_Container_boot_init.svg)
 
 As the application container receives a request to install an
 application, the "install" sequences are following :
 
-![](images/Application_Container_install.png)
+![](images/Application_Container_install.svg)
 
 As the application container receives a request to start an application,
 the "start" sequences are following :
 
-![](images/Application_Container_start.png)
+![](images/Application_Container_start.svg)
 
 \
 
 As the application container receives a request to stop an application,
 the "stop" sequences are following :
 
-![](images/Application_Container_stop.png)
+![](images/Application_Container_stop.svg)
 
 \
 
